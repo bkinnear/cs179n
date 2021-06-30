@@ -4,7 +4,9 @@
 Game::Game():
 	window(sf::VideoMode(800, 600), "CS179N Game"),
 	curState(nullptr)
-{}
+{
+	window.setFramerateLimit(60);
+}
 
 Game::~Game() {
 	window.close();

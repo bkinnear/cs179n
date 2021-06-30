@@ -5,7 +5,7 @@
 // NOTE: we must call the original constructor and pass it the Game pointer
 MenuState::MenuState(Game& game):
 	State(game),
-	shape(50) // initialize our circle
+	shape(50) // initialize our circle to size 50
 {
 	// set circle details
 	shape.setFillColor(sf::Color(0, 0, 255));
@@ -42,6 +42,11 @@ void MenuState::logic() {
 			break;
 		}
 	}
+
+	// move the shape right 4 px every frame (~60/sec)
+	shape.move(4, 0);
+	if (shape.getPosition().x > 900)
+		shape.setPosition(-100, 0);
 }
 
 void MenuState::render() {
