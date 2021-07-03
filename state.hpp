@@ -3,6 +3,9 @@
 
 #include "game.hpp"
 
+#include <vector>
+#include <list>
+
 /* Abstract game state object
  * 
  * Game states define behavior for a given "scene" in the game
@@ -27,6 +30,24 @@ public:
 
 protected:
 	Game& game;
+
+	/* creates texture from image file
+	 * loads file and takes the entire image
+	 * texture is stored in the state, and freed upon state dealloc
+	 * returns ref to texture
+	*/
+	sf::Texture& createTexture(const std::string& fname);
+
+	/* creates texture from image file 
+	 * loads file and takes the subimage specified by a rect
+	 * texture is stored in the state, and freed upon state dealloc
+	 * returns ref to texture
+	*/
+	sf::Texture& createTexture(const std::string& fname, sf::IntRect src);
+
+private:
+	// holds raw textures - only interact through createTexture()
+	std::vector<sf::Texture> textures;
 };
 
 #endif

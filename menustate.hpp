@@ -1,3 +1,6 @@
+#ifndef MENUSTATE_H_
+#define MENUSTATE_H_
+
 #include "state.hpp"
 
 class MenuState : public State {
@@ -9,5 +12,14 @@ public:
 	virtual void render();
 
 private:
-	sf::CircleShape shape;
+	/* view is the camera
+	 * this determines what we see in the window
+	 * any time we modify this, we need to call window.setView(view)
+	 */
+	sf::View view;
+
+	// place any vars we need in this state in here
+	AnimSprite sprPlayButton;
 };
+
+#endif MENUSTATE_H_
