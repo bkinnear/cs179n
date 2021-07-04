@@ -21,8 +21,12 @@ MenuState::MenuState(Game& game):
 
 	// we're not going to store the texture anywhere (because we don't need to modify)
 	// so we just just use the createTexture() return to set the sprite texture
-	sprPlayButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 96}, 2);
-	sprPlayButton.setPosition(320.f, 128.f);
+	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 96}, 2);
+	sprEndlessButton.setPosition(320.f, 128.f);
+
+	sprYoshi.create(createTexture("res/yoshi_strip.png"), { 0, 0, 79, 79 }, 54);
+	sprYoshi.setAnimSpeed(15);
+	sprYoshi.setPosition(0, 0);
 }
 
 MenuState::~MenuState() {
@@ -53,12 +57,12 @@ void MenuState::logic() {
 			break;
 		}
 	}
-
+	
 	// change play button subsprite if being hovered over
-	if (sprPlayButton.getGlobalBounds().contains(mousePos)) {
-		sprPlayButton.setIndex(1);
+	if (sprEndlessButton.getGlobalBounds().contains(mousePos)) {
+		sprEndlessButton.setIndex(1);
 	} else {
-		sprPlayButton.setIndex(0);
+		sprEndlessButton.setIndex(0);
 	}
 }
 
@@ -66,8 +70,11 @@ void MenuState::render() {
 	// clear window
 	game.window.clear();
 
-	// draw the circle we created in the constructor
-	game.window.draw(sprPlayButton);
+	// draw the menu button
+	game.window.draw(sprEndlessButton);
+
+	sprYoshi.animateFrame();
+	game.window.draw(sprYoshi);
 
 	// update window
 	game.window.display();

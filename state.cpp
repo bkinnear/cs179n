@@ -15,13 +15,10 @@ sf::Texture& State::createTexture(const std::string& fname) {
 
 sf::Texture& State::createTexture(const std::string& fname, sf::IntRect src) {
 	// grow textures by 1
-	textures.resize(textures.size() + 1);
-
-	// get new texture
-	sf::Texture& tex = textures.back();
+	textures.push_back(sf::Texture());
 
 	// load texture from image and source rect
-	tex.loadFromFile(fname, src);
+	textures.back().loadFromFile(fname, src);
 
-	return tex;
+	return textures.back();
 }

@@ -19,7 +19,10 @@ private:
 	sf::View view;
 
 	// place any vars we need in this state in here
-	AnimSprite sprPlayButton;
+	AnimSprite sprEndlessButton;
+
+	// example animated sprite
+	AnimSprite sprYoshi;
 };
 
 #endif MENUSTATE_H_

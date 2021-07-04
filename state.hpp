@@ -47,7 +47,7 @@ protected:
 
 private:
 	// holds raw textures - only interact through createTexture()
-	std::vector<sf::Texture> textures;
+	std::list<sf::Texture> textures;
 };
 
 #endif

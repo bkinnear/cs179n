@@ -62,23 +62,27 @@ public:
 		subRect(0,0,0,0),
 		curRect(0,0,0,0),
 		nSubsprites(0),
-		index(0)
+		ticksPerFrame(-1) // default no animation
 	{};
 
-	AnimSprite(sf::Texture& texture, sf::IntRect subRect, unsigned nSubsprites) :
+	AnimSprite(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites) :
 		Sprite(texture),
 		subRect(subRect),
 		curRect(subRect),
 		nSubsprites(nSubsprites),
-		index(0)
-	{};
+		ticksPerFrame(-1) // default no animation
+	{
+		updateSubsprite();
+	};
 
 	/* create animated sprite from texture, first subsprite rect, num of subsprites */
-	void create(sf::Texture& texture, sf::IntRect subRect, unsigned nSubsprites) {
+	void create(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites) {
 		setTexture(texture);
 		this->subRect = subRect;
 		this->curRect = subRect;
 		this->nSubsprites = nSubsprites;
+
+		updateSubsprite();
 	}
 
 	/* sets subsprite index to n
@@ -90,14 +94,24 @@ public:
 		else
 			index = n;
 		updateSubsprite();
-	};
+	}
 
-	/* increments subsprite index by 1 
-	 * loops back to 0 after index = nSubsprites
+	/* sets speed in terms of FPS
+	 * set to -1 for no animation
 	 */
-	void incIndex() {
-		index = (index + 1) % nSubsprites;
-		updateSubsprite();
+	void setAnimSpeed(int spd) {
+		ticksPerFrame = 60/spd;
+	}
+
+	/* increments subsprite index per frame (depending on speed)
+	 * loops back to 0 after drawing all subsprites
+	 */
+	void animateFrame() {
+		if (tick++ >= ticksPerFrame) {
+			tick = 0;
+			index = (index + 1) % nSubsprites;
+			updateSubsprite();
+		}
 	}
 
 	/* returns subsprite index */
@@ -119,10 +133,14 @@ private:
 	sf::IntRect curRect;
 
 	// current subsprite index
-	unsigned index;
+	unsigned index = 0;
 
 	// number of subsprites in texture
 	unsigned nSubsprites;
+
+	// speed of animation (1 => 60FPS, 2 => 30FPS, n => 60/n FPS)
+	int ticksPerFrame;
+	unsigned tick = 0;
 };
 
 #endif
