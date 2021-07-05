@@ -28,9 +28,6 @@ public:
 	/* defines how to render the gamestate */
 	virtual void render() = 0;
 
-protected:
-	Game& game;
-
 	/* creates texture from image file
 	 * loads file and takes the entire image
 	 * texture is stored in the state, and freed upon state dealloc
@@ -38,12 +35,15 @@ protected:
 	*/
 	sf::Texture& createTexture(const std::string& fname);
 
-	/* creates texture from image file 
+	/* creates texture from image file
 	 * loads file and takes the subimage specified by a rect
 	 * texture is stored in the state, and freed upon state dealloc
 	 * returns ref to texture
 	*/
 	sf::Texture& createTexture(const std::string& fname, sf::IntRect src);
+
+protected:
+	Game& game;
 
 private:
 	// holds raw textures - only interact through createTexture()

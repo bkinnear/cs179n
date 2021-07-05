@@ -1,6 +1,8 @@
 #include "menustate.hpp"
+
 #include <iostream>
 #include <cstdlib>
+#include "endless.hpp"
 
 // the main game window
 #define gwindow game.window
@@ -43,7 +45,7 @@ void MenuState::logic() {
 		switch (e.type) {
 		case sf::Event::Closed:
 			// delete this gamestate
-			game.deleteState();
+			game.close();
 
 			// never try to do anything after deleting the gamestate (we are now in a deallocated object)
 			// there are better ways of programming game states, but...
@@ -52,8 +54,19 @@ void MenuState::logic() {
 			// game.curState is now null, so the main game loop, game.run(), will break
 			break;
 		case sf::Event::MouseButtonPressed:
-			if (e.mouseButton.button == sf::Mouse::Left)
-				std::cout << "Mouse Pos: " << mousePos.x << ", " << mousePos.y << std::endl;
+			// user clicked endless button
+			if (sprEndlessButton.getGlobalBounds().contains(mousePos)) {
+				// this is what changing state needs to look like
+				// set new state
+				game.setState(new EndlessState(game));
+
+				// delete old state (or not if you want to keep it loaded in RAM to go back)
+				delete this;
+
+				// break switch case
+				return;
+			}
+
 			break;
 		}
 	}
@@ -68,14 +81,14 @@ void MenuState::logic() {
 
 void MenuState::render() {
 	// clear window
-	game.window.clear();
+	gwindow.clear();
 
 	// draw the menu button
-	game.window.draw(sprEndlessButton);
+	gwindow.draw(sprEndlessButton);
 
 	sprYoshi.animateFrame();
-	game.window.draw(sprYoshi);
+	gwindow.draw(sprYoshi);
 
 	// update window
-	game.window.display();
+	gwindow.display();
 }
