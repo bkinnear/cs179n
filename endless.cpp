@@ -9,6 +9,7 @@
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game) :
 	State(game),
+	tileMap(createTexture("res/big_32x32_tileset.png"), 20, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png"))
 {
@@ -23,6 +24,7 @@ EndlessState::EndlessState(Game& game) :
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
+	player.speed = 2;
 }
 
 EndlessState::~EndlessState() {
@@ -40,14 +42,6 @@ void EndlessState::logic() {
 		case sf::Event::Closed:
 			// delete this gamestate
 			game.close();
-
-			// never try to do anything after deleting the gamestate (we are now in a deallocated object)
-			// there are better ways of programming game states, but...
-			// I'm trying to keep it simple so we can make persistent game states
-
-			// game.curState is now null, so the main game loop, game.run(), will break
-
-			// end function so we don't run this state anymore
 			return;
 		case sf::Event::KeyPressed:
 			switch (e.key.code) {
@@ -94,7 +88,8 @@ void EndlessState::logic() {
 
 	// update player sprite
 	if (player.movingLeft || player.movingUp || player.movingRight || player.movingDown) {
-		player.setAnimSpeed(12);
+		if (player.getAnimSpeed() == -1)
+			player.setAnimSpeed(12);
 		if (player.movingLeft)
 			player.setTexture(texPlayerLeft);
 		if (player.movingRight)
@@ -106,20 +101,29 @@ void EndlessState::logic() {
 	}
 
 	// player movement
-	// TODO implement player.speed to determine how fast player moves
+	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
+	const sf::FloatRect& bounds = player.getGlobalBounds();
 	if (player.movingLeft)
-		player.move(-2, 0);
+		if (!tileMap.isOpaque(((int)bounds.left - player.speed) / TILE_SIZE, (int)bounds.top / TILE_SIZE))
+			player.move(-player.speed, 0);
 	if (player.movingUp)
-		player.move(0, -2);
+		if (!tileMap.isOpaque((int)bounds.left / TILE_SIZE, ((int)bounds.top - player.speed) / TILE_SIZE))
+			player.move(0, -player.speed);
 	if (player.movingRight)
-		player.move(2, 0);
+		if (!tileMap.isOpaque(((int)bounds.left + bounds.width + player.speed) / TILE_SIZE, (int)bounds.top / TILE_SIZE))
+			player.move(player.speed, 0);
 	if (player.movingDown)
-		player.move(0, 2);
+		if (!tileMap.isOpaque((int)bounds.left / TILE_SIZE, ((int)bounds.top + bounds.height + player.speed) / TILE_SIZE))
+			player.move(0, player.speed);
+
 }
 
 void EndlessState::render() {
 	// clear window
 	gwindow.clear(sf::Color(sf::Uint32(0x40AA20FF)));
+
+	// draw the tilemap
+	gwindow.draw(tileMap);
 
 	// draw the player
 	player.animateFrame();

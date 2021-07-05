@@ -4,6 +4,7 @@
 #include "game.hpp"
 #include "state.hpp"
 #include "player.hpp"
+#include "tilemap.hpp"
 
 class EndlessState : public State {
 public:
@@ -19,6 +20,9 @@ private:
 	/* ==v== place any vars we need in this state in here ==v== */
 
 	Player player;
+	
+	TileMap tileMap;
+
 	sf::Texture& texPlayerRight;
 	sf::Texture& texPlayerLeft;
 };
