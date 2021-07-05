@@ -35,9 +35,9 @@ public:
 	State* getState();
 
 	/* deletes the current state and sets it to null
-	 * This should be followed with setState()
+	 * this should only be used for quitting game
 	 */
-	void deleteState();
+	void close();
 
 	/* main game loop: runs the current state indefinitely */
 	void run();

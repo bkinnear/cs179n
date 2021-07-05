@@ -20,7 +20,7 @@ State* Game::getState() {
 	return curState;
 }
 
-void Game::deleteState() {
+void Game::close() {
 	delete curState;
 	curState = nullptr;
 }
