@@ -46,7 +46,9 @@ void EndlessState::logic() {
 			// I'm trying to keep it simple so we can make persistent game states
 
 			// game.curState is now null, so the main game loop, game.run(), will break
-			break;
+
+			// end function so we don't run this state anymore
+			return;
 		case sf::Event::KeyPressed:
 			switch (e.key.code) {
 			case sf::Keyboard::W:
