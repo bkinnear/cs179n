@@ -121,6 +121,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menustate.cpp" />
     <ClCompile Include="state.cpp" />
+    <ClCompile Include="tilemap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="endless.hpp" />
@@ -128,6 +129,7 @@
     <ClInclude Include="menustate.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="state.hpp" />
+    <ClInclude Include="tilemap.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

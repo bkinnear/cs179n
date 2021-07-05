@@ -8,6 +8,9 @@ class Player: public AnimSprite {
 public:
 
 	bool movingLeft = false, movingUp = false, movingDown = false, movingRight = false;
+	
+	// sprite movement speed in px per frame
+	int speed;
 };
 
 #endif

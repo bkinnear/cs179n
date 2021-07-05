@@ -103,6 +103,13 @@ public:
 		ticksPerFrame = 60/spd;
 	}
 
+	/* gets speed in terms of FPS
+	 * -1 implies no animation
+	 */
+	int getAnimSpeed() {
+		return 60/ticksPerFrame;
+	}
+
 	/* increments subsprite index per frame (depending on speed)
 	 * loops back to 0 after drawing all subsprites
 	 */
