@@ -7,21 +7,29 @@
 
 #define TILE_SIZE 32
 
+typedef unsigned char tileType;
+
 struct Tile {
 	/* 0 for empty tile */
-	unsigned char type;
+	tileType type;
 	bool opaque;
 };
 
+/* holds tiles
+ * TODO: make multilevelled tilemap (just add second layer)
+*/
 class TileMap: public sf::Drawable {
 public:
 	TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight);
 
-	void setTile(unsigned x, unsigned y, unsigned char type);
+	// sets tile at (x, y) to type specified
+	void setTile(unsigned x, unsigned y, tileType type);
 
+	// returns whether tile at world coords (x, y) is opaque
 	bool isOpaque(unsigned x, unsigned y);
 
-	static sf::Vector2i getTileTexOffset(unsigned tileType);
+	// returns true if moving sprite's position by <dx, dy> is clear of opaque tiles
+	bool areaClear(const sf::Sprite& spr, float dx, float dy);
 
 	const int mapWidth;
 	const int mapHeight;
@@ -34,6 +42,9 @@ private:
 	sf::Texture& texTileset;
 
 	std::vector<std::vector<Tile>> map;
+
+	// returns texture rect offset of given tile in the tilesheet
+	static sf::Vector2i getTileTexOffset(tileType type);
 };
 
 #endif

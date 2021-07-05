@@ -3,15 +3,15 @@
 /* Hard coded building presets */
 struct building1 {
 	static const int w = 7, h = 7;
-	static const unsigned char array[w][h];
+	static const tileType array[w][h];
 };
 
-const unsigned char building1::array[w][h] =
+const tileType building1::array[w][h] =
 {
 {1, 2, 2, 2, 2, 2, 3},
 {8, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 9, 10},
 {13, 14, 14, 30, 14, 14, 15}
@@ -42,7 +42,7 @@ TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 	}
 };
 
-void TileMap::setTile(unsigned x, unsigned y, unsigned char type) {
+void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 	map[y][x].type = type;
 
 	switch (type) {
@@ -56,14 +56,18 @@ void TileMap::setTile(unsigned x, unsigned y, unsigned char type) {
 }
 
 bool TileMap::isOpaque(unsigned x, unsigned y) {
+	// convert from world to map coordinates
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
+
 	if (x >= 0 && x < mapWidth && y >=0 && y < mapHeight)
 		return map[y][x].opaque;
 
 	return true;
 }
 
-sf::Vector2i TileMap::getTileTexOffset(unsigned tileType) {
-	int i = tileType;
+sf::Vector2i TileMap::getTileTexOffset(tileType type) {
+	int i = type;
 	if (i <= 7)
 		return { (i - 1) * 32, 576 };
 	if (i <= 11)
@@ -104,4 +108,23 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 			target.draw(sprTile, states);
 		}
 	}
+}
+
+bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) {
+	// get spr's world bounds
+	sf::FloatRect bounds = spr.getGlobalBounds();
+
+	// shift bounds by deltas
+	bounds.left += dx;
+	bounds.top += dy;
+
+	bool lt = isOpaque(bounds.left, bounds.top);
+	bool rt = isOpaque(bounds.left + bounds.width, bounds.top);
+	bool ll = isOpaque(bounds.left, bounds.top + bounds.height);
+	bool lr = isOpaque(bounds.left + bounds.width, bounds.top + bounds.height);
+
+	if (lt || rt || ll || lr)
+		return false;
+
+	return true;
 }

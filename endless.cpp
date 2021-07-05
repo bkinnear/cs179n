@@ -104,16 +104,16 @@ void EndlessState::logic() {
 	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
 	const sf::FloatRect& bounds = player.getGlobalBounds();
 	if (player.movingLeft)
-		if (!tileMap.isOpaque(((int)bounds.left - player.speed) / TILE_SIZE, (int)bounds.top / TILE_SIZE))
+		if (tileMap.areaClear(player, -player.speed, 0))
 			player.move(-player.speed, 0);
 	if (player.movingUp)
-		if (!tileMap.isOpaque((int)bounds.left / TILE_SIZE, ((int)bounds.top - player.speed) / TILE_SIZE))
+		if (tileMap.areaClear(player, 0, -player.speed))
 			player.move(0, -player.speed);
 	if (player.movingRight)
-		if (!tileMap.isOpaque(((int)bounds.left + bounds.width + player.speed) / TILE_SIZE, (int)bounds.top / TILE_SIZE))
+		if (tileMap.areaClear(player, player.speed, 0))
 			player.move(player.speed, 0);
 	if (player.movingDown)
-		if (!tileMap.isOpaque((int)bounds.left / TILE_SIZE, ((int)bounds.top + bounds.height + player.speed) / TILE_SIZE))
+		if (tileMap.areaClear(player, 0, player.speed))
 			player.move(0, player.speed);
 
 }
