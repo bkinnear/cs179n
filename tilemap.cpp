@@ -1,8 +1,29 @@
 #include "tilemap.hpp"
+#include <time.h>
 
 /* Hard coded building presets */
 struct building1 {
 	static const int w = 7, h = 7;
+	static const tileType array[w][h];
+};
+
+struct building2 {
+	static const int w = 5, h = 5;
+	static const tileType array[w][h];
+};
+
+struct building3 {
+	static const int w = 9, h = 9;
+	static const tileType array[w][h];
+};
+
+struct building4 {
+	static const int w = 10, h = 10;
+	static const tileType array[w][h];
+};
+
+struct building5 {
+	static const int w = 10, h = 10;
 	static const tileType array[w][h];
 };
 
@@ -11,17 +32,70 @@ const tileType building1::array[w][h] =
 {1, 2, 2, 2, 2, 2, 3},
 {8, 9, 9, 9, 9, 9, 10},
 {0, 9, 9, 9, 9, 9, 10},
-{0, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 41, 9, 9, 10},
 {8, 9, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 9, 10},
 {13, 14, 14, 30, 14, 14, 15}
 };
+
+const tileType building2::array[w][h] =
+{
+{1, 2, 37, 2, 3},
+{8, 9, 9, 9, 10},
+{0, 9, 9, 9, 10},
+{0, 9, 9, 9, 10},
+{13, 14, 14, 14, 15}
+};
+
+const tileType building3::array[w][h] =
+{
+{1, 2, 2, 2, 26, 2, 2, 2, 3},
+{8, 9, 9, 61, 61, 61, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{13, 14, 14, 14, 14, 14, 14, 14, 15}
+};
+
+const tileType building4::array[w][h] =
+{
+{1, 2, 2, 2, 26, 2, 2, 2, 3},
+{8, 9, 9, 61, 61, 61, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 1, 2, 2, 15},
+{8, 9, 9, 9, 9, 10, 0, 0, 0},
+{8, 9, 9, 9, 9, 10, 0, 0, 0},
+{13, 14, 14, 14, 14, 15, 0, 0, 0}
+};
+
+const tileType building5::array[w][h] =
+{
+{1, 2, 2, 2, 2, 2, 2, 2, 3},
+{8, 9, 9, 9, 37, 38, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 9, 9, 10},
+{13, 14, 14, 14, 9, 9, 1, 2, 15},
+{0, 0, 0, 0, 0, 0, 10, 0, 0},
+{0, 0, 0, 0, 0, 0, 10, 0, 0},
+{22, 23, 23, 23, 23, 24, 15, 0, 0}
+};
+
+
 
 TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 	texTileset(tileset),
 	mapWidth(mapWidth),
 	mapHeight(mapHeight)
 {
+
 	// initialize map
 	map.resize(mapHeight);
 	for (unsigned y = 0; y < mapHeight; y++) {
@@ -34,11 +108,53 @@ TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 	}
 
 	// place example building
-	sf::Vector2i offset = { 4, 4 };
-	for (unsigned y = 0; y < building1::h; y++) {
-		for (unsigned x = 0; x < building1::w; x++) {
-			setTile(x+offset.x, y+offset.y, building1::array[y][x]);
+	srand(time(NULL));
+	int bldg_num = rand() % 5 + 1;		//randomly selects one of the building presets
+	int x_offset = rand() % 10 + 2;		//generates a random number to determine the x offset
+	int y_offset = rand() % 8 + 2;		//generates a random number to determine the y offset
+
+	sf::Vector2i offset = { x_offset, y_offset };
+
+	switch (bldg_num) {
+	case 1:
+		for (unsigned y = 0; y < building1::h; y++) {
+			for (unsigned x = 0; x < building1::w; x++) {
+				setTile(x + offset.x, y + offset.y, building1::array[y][x]);
+			}
 		}
+		break;
+	case 2:
+		for (unsigned y = 0; y < building2::h; y++) {
+			for (unsigned x = 0; x < building2::w; x++) {
+				setTile(x + offset.x, y + offset.y, building2::array[y][x]);
+			}
+		}
+		break;
+	case 3:
+		for (unsigned y = 0; y < building3::h; y++) {
+			for (unsigned x = 0; x < building3::w; x++) {
+				setTile(x + offset.x, y + offset.y, building3::array[y][x]);
+			}
+		}break;
+	case 4:
+		for (unsigned y = 0; y < building4::h; y++) {
+			for (unsigned x = 0; x < building4::w; x++) {
+				setTile(x + offset.x, y + offset.y, building4::array[y][x]);
+			}
+		}break;
+	case 5:
+		for (unsigned y = 0; y < building5::h; y++) {
+			for (unsigned x = 0; x < building5::w; x++) {
+				setTile(x + offset.x, y + offset.y, building5::array[y][x]);
+			}
+		}break;
+	default:
+		for (unsigned y = 0; y < building1::h; y++) {
+			for (unsigned x = 0; x < building1::w; x++) {
+				setTile(x + offset.x, y + offset.y, building1::array[y][x]);
+			}
+		}
+
 	}
 };
 
