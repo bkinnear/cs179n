@@ -1,4 +1,5 @@
 #include "tilemap.hpp"
+#include <time.h>
 
 /* Hard coded building presets */
 struct building1 {
