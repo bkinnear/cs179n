@@ -1,5 +1,6 @@
 #include "tilemap.hpp"
 #include <time.h>
+#include <vector>
 
 /* Hard coded building presets */
 struct building1 {
@@ -13,17 +14,22 @@ struct building2 {
 };
 
 struct building3 {
-	static const int w = 9, h = 9;
+	static const int w = 6, h = 6;
 	static const tileType array[w][h];
 };
 
 struct building4 {
-	static const int w = 10, h = 10;
+	static const int w = 6, h = 6;
 	static const tileType array[w][h];
 };
 
 struct building5 {
-	static const int w = 10, h = 10;
+	static const int w = 6, h = 6;
+	static const tileType array[w][h];
+};
+
+struct buildingsmall {
+	static const int w = 4, h = 4;
 	static const tileType array[w][h];
 };
 
@@ -49,43 +55,40 @@ const tileType building2::array[w][h] =
 
 const tileType building3::array[w][h] =
 {
-{1, 2, 2, 2, 26, 2, 2, 2, 3},
-{8, 9, 9, 61, 61, 61, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{0, 9, 9, 9, 9, 9, 9, 9, 10},
-{0, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{13, 14, 14, 14, 14, 14, 14, 14, 15}
+{1, 2, 2, 2, 26,  3},
+{8, 9, 61, 61, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 10},
+{13, 14, 14, 14, 14, 15}
 };
 
 const tileType building4::array[w][h] =
 {
-{1, 2, 2, 2, 26, 2, 2, 2, 3},
-{8, 9, 9, 61, 61, 61, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{0, 9, 9, 9, 9, 9, 9, 9, 10},
-{0, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 1, 2, 2, 15},
-{8, 9, 9, 9, 9, 10, 0, 0, 0},
-{8, 9, 9, 9, 9, 10, 0, 0, 0},
-{13, 14, 14, 14, 14, 15, 0, 0, 0}
+{1, 26, 2, 2, 2, 3},
+{8, 61, 61, 61, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{13, 14, 0, 0, 14, 15}
 };
 
 const tileType building5::array[w][h] =
 {
-{1, 2, 2, 2, 2, 2, 2, 2, 3},
-{8, 9, 9, 9, 37, 38, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 9, 9, 10},
-{13, 14, 14, 14, 9, 9, 1, 2, 15},
-{0, 0, 0, 0, 0, 0, 10, 0, 0},
-{0, 0, 0, 0, 0, 0, 10, 0, 0},
-{22, 23, 23, 23, 23, 24, 15, 0, 0}
+{1, 2, 2, 2, 2, 3},
+{8, 9, 9, 37, 38, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{13, 14, 9, 9, 14, 15}
+};
+
+const tileType buildingsmall::array[w][h] =
+{
+{1, 2, 2, 3},
+{0, 9, 9, 10},
+{0, 9, 9, 10},
+{13, 14, 14, 15},
 };
 
 
@@ -109,52 +112,554 @@ TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 
 	// place example building
 	srand(time(NULL));
-	int bldg_num = rand() % 5 + 1;		//randomly selects one of the building presets
-	int x_offset = rand() % 10 + 2;		//generates a random number to determine the x offset
-	int y_offset = rand() % 8 + 2;		//generates a random number to determine the y offset
+	int num_bldg = 15;//rand() % 3 + 1;
+	
+	for (int i = 1; i <= num_bldg; i++) {
+		int bldg_num = rand() % 6 + 1;		//randomly selects one of the building presets
+		int x_offset = rand() % 10 + 2;		//generates a random number to determine the x offset
+		int y_offset = rand() % 10 + 2;		//generates a random number to determine the y offset
+		bool empty;
 
-	sf::Vector2i offset = { x_offset, y_offset };
+		sf::Vector2i offset = {y_offset, x_offset};
 
-	switch (bldg_num) {
-	case 1:
-		for (unsigned y = 0; y < building1::h; y++) {
-			for (unsigned x = 0; x < building1::w; x++) {
-				setTile(x + offset.x, y + offset.y, building1::array[y][x]);
+		switch (bldg_num) {
+		case 1:
+			for (unsigned y = 0; y < building1::h; y++) {
+				for (unsigned x = 0; x < building1::w; x++) {
+					if (map[y + offset.y][x + offset.x].type == 0) {
+						empty = true;
+						if (y == 0 && x == 0) {
+							if (map[y + offset.y - 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building1::h - 1 && x == building1::w - 1) {
+							if (map[y + offset.y + 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0 && x == building1::w - 1) {
+							if (map[y + offset.y - 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building1::h - 1 && x == 0) {
+							if (map[y + offset.y + 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0) {
+							if (map[y + offset.y - 2][x + offset.x].type != 0 ||
+								map[y + offset.y - 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == 0) {
+							if (map[y + offset.y][x + offset.x - 2].type != 0 ||
+								map[y + offset.y][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building1::h - 1) {
+							if (map[y + offset.y + 2][x + offset.x].type != 0 ||
+								map[y + offset.y + 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == building1::w - 1) {
+							if (map[y + offset.y][x + offset.x + 2].type != 0 ||
+								map[y + offset.y][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+					}
+					else {
+						empty = false;
+						break;
+					}
+				}
+				if (empty == false) {
+					break;
+				}
 			}
+			if (empty == false) {
+				break;
+			}
+			else{
+				for (unsigned y = 0; y < building1::h; y++) {
+					for (unsigned x = 0; x < building1::w; x++) {
+						setTile(x + offset.x, y + offset.y, building1::array[y][x]);
+					}
+				}
+			}
+			break;
+		case 2:
+			for (unsigned y = 0; y < building2::h; y++) {
+				for (unsigned x = 0; x < building2::w; x++) {
+					if (map[y + offset.y][x + offset.x].type == 0) {
+						empty = true;
+						if (y == 0 && x == 0) {
+							if (map[y + offset.y - 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building2::h - 1 && x == building2::w - 1) {
+							if (map[y + offset.y + 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0 && x == building2::w - 1) {
+							if (map[y + offset.y - 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building2::h - 1 && x == 0) {
+							if (map[y + offset.y + 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0) {
+							if (map[y + offset.y - 2][x + offset.x].type != 0 ||
+								map[y + offset.y - 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == 0) {
+							if (map[y + offset.y][x + offset.x - 2].type != 0 ||
+								map[y + offset.y][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building2::h - 1) {
+							if (map[y + offset.y + 2][x + offset.x].type != 0 ||
+								map[y + offset.y + 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == building2::w - 1) {
+							if (map[y + offset.y][x + offset.x + 2].type != 0 ||
+								map[y + offset.y][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+					}
+					else {
+						empty = false;
+						break;
+					}
+				}
+				if (empty == false) {
+					break;
+				}
+			}
+			if (empty == false) {
+				break;
+			}
+			else{
+				for (unsigned y = 0; y < building2::h; y++) {
+					for (unsigned x = 0; x < building2::w; x++) {
+						setTile(x + offset.x, y + offset.y, building2::array[y][x]);
+					}
+				}
+			}
+			break;
+		case 3:
+			for (unsigned y = 0; y < building3::h; y++) {
+				for (unsigned x = 0; x < building3::w; x++) {
+					if (map[y + offset.y][x + offset.x].type == 0) {
+						empty = true;
+						if (y == 0 && x == 0) {
+							if (map[y + offset.y - 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building3::h - 1 && x == building3::w - 1) {
+							if (map[y + offset.y + 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0 && x == building3::w - 1) {
+							if (map[y + offset.y - 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building3::h - 1 && x == 0) {
+							if (map[y + offset.y + 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0) {
+							if (map[y + offset.y - 2][x + offset.x].type != 0 ||
+								map[y + offset.y - 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == 0) {
+							if (map[y + offset.y][x + offset.x - 2].type != 0 ||
+								map[y + offset.y][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building3::h - 1) {
+							if (map[y + offset.y + 2][x + offset.x].type != 0 ||
+								map[y + offset.y + 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == building3::w - 1) {
+							if (map[y + offset.y][x + offset.x + 2].type != 0 ||
+								map[y + offset.y][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+					}
+					else {
+						empty = false;
+						break;
+					}
+				}
+				if (empty == false) {
+					break;
+				}
+			}
+			if (empty == false) {
+				break;
+			}
+			else{
+				for (unsigned y = 0; y < building3::h; y++) {
+					for (unsigned x = 0; x < building3::w; x++) {
+						setTile(x + offset.x, y + offset.y, building3::array[y][x]);
+					}
+				}
+			}break;
+		case 4:
+			for (unsigned y = 0; y < building4::h; y++) {
+				for (unsigned x = 0; x < building4::w; x++) {
+					if (map[y + offset.y][x + offset.x].type == 0) {
+						empty = true;
+						if (y == 0 && x == 0) {
+							if (map[y + offset.y - 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building4::h - 1 && x == building4::w - 1) {
+							if (map[y + offset.y + 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0 && x == building4::w - 1) {
+							if (map[y + offset.y - 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building4::h - 1 && x == 0) {
+							if (map[y + offset.y + 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0) {
+							if (map[y + offset.y - 2][x + offset.x].type != 0 ||
+								map[y + offset.y - 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == 0) {
+							if (map[y + offset.y][x + offset.x - 2].type != 0 ||
+								map[y + offset.y][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building4::h - 1) {
+							if (map[y + offset.y + 2][x + offset.x].type != 0 ||
+								map[y + offset.y + 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == building4::w - 1) {
+							if (map[y + offset.y][x + offset.x + 2].type != 0 ||
+								map[y + offset.y][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+					}
+					else {
+						empty = false;
+						break;
+					}
+				}
+				if (empty == false) {
+					break;
+				}
+			}
+			if (empty == false) {
+				break;
+			}
+			else{
+				for (unsigned y = 0; y < building4::h; y++) {
+					for (unsigned x = 0; x < building4::w; x++) {
+						setTile(x + offset.x, y + offset.y, building4::array[y][x]);
+					}
+				}
+			}break;
+		case 5:
+			for (unsigned y = 0; y < building5::h; y++) {
+				for (unsigned x = 0; x < building5::w; x++) {
+					if (map[y + offset.y][x + offset.x].type == 0) {
+						empty = true;
+						if (y == 0 && x == 0) {
+							if (map[y + offset.y - 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building5::h - 1 && x == building5::w - 1) {
+							if (map[y + offset.y + 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0 && x == building5::w - 1) {
+							if (map[y + offset.y - 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == building5::h - 1 && x == 0) {
+							if (map[y + offset.y + 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0) {
+							if (map[y + offset.y - 2][x + offset.x].type != 0 ||
+								map[y + offset.y - 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == 0) {
+							if (map[y + offset.y][x + offset.x - 2].type != 0 ||
+								map[y + offset.y][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == buildingsmall::h - 1) {
+							if (map[y + offset.y + 2][x + offset.x].type != 0 ||
+								map[y + offset.y + 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == buildingsmall::w - 1) {
+							if (map[y + offset.y][x + offset.x + 2].type != 0 ||
+								map[y + offset.y][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+					}
+					else {
+						empty = false;
+						break;
+					}
+				}
+				if (empty == false) {
+					break;
+				}
+			}
+			if (empty == false) {
+				break;
+			}
+			else {
+				for (unsigned y = 0; y < building5::h; y++) {
+					for (unsigned x = 0; x < building5::w; x++) {
+						setTile(x + offset.x, y + offset.y, building5::array[y][x]);
+					}
+				}
+			}break;
+		case 6:
+			for (unsigned y = 0; y < buildingsmall::h; y++) {
+				for (unsigned x = 0; x < buildingsmall::w; x++) {
+					if (map[y + offset.y][x + offset.x].type == 0) {
+						empty = true;
+						if (y == 0 && x == 0) {
+							if (map[y + offset.y - 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x - 1].type != 0 ){
+								empty = false;
+								break;
+							}							
+						}
+						if (y == buildingsmall::h-1 && x == buildingsmall::w-1) {
+							if (map[y + offset.y + 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x + 1].type != 0){
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0 && x == buildingsmall::w-1) {
+							if (map[y + offset.y - 2][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 2][x + offset.x + 1].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 2].type != 0 ||
+								map[y + offset.y - 1][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == buildingsmall::h-1 && x == 0) {
+							if (map[y + offset.y + 2][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 2][x + offset.x - 1].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 2].type != 0 ||
+								map[y + offset.y + 1][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == 0) {
+							if (map[y + offset.y - 2][x + offset.x].type != 0 || 
+								map[y + offset.y - 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (x == 0) {
+							if (map[y + offset.y][x + offset.x - 2].type != 0 ||
+								map[y + offset.y][x + offset.x - 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+						if (y == buildingsmall::h-1) {
+							if (map[y + offset.y + 2][x + offset.x].type != 0 ||
+								map[y + offset.y + 1][x + offset.x].type != 0) {
+								empty = false;
+								break;
+							}
+						}						
+						if (x == buildingsmall::w-1) {
+							if (map[y + offset.y][x + offset.x + 2].type != 0 || 
+								map[y + offset.y][x + offset.x + 1].type != 0) {
+								empty = false;
+								break;
+							}
+						}
+					}
+					else {
+						empty = false;
+						break;
+					}
+				}
+				if (empty == false) {
+					break;
+				}
+			}
+			if (empty == false) {
+				break;
+			}
+			else {
+				for (unsigned y = 0; y < buildingsmall::h; y++) {
+					for (unsigned x = 0; x < buildingsmall::w; x++) {
+						setTile(x + offset.x, y + offset.y, buildingsmall::array[y][x]);
+					}
+				}
+			}break;
 		}
-		break;
-	case 2:
-		for (unsigned y = 0; y < building2::h; y++) {
-			for (unsigned x = 0; x < building2::w; x++) {
-				setTile(x + offset.x, y + offset.y, building2::array[y][x]);
-			}
-		}
-		break;
-	case 3:
-		for (unsigned y = 0; y < building3::h; y++) {
-			for (unsigned x = 0; x < building3::w; x++) {
-				setTile(x + offset.x, y + offset.y, building3::array[y][x]);
-			}
-		}break;
-	case 4:
-		for (unsigned y = 0; y < building4::h; y++) {
-			for (unsigned x = 0; x < building4::w; x++) {
-				setTile(x + offset.x, y + offset.y, building4::array[y][x]);
-			}
-		}break;
-	case 5:
-		for (unsigned y = 0; y < building5::h; y++) {
-			for (unsigned x = 0; x < building5::w; x++) {
-				setTile(x + offset.x, y + offset.y, building5::array[y][x]);
-			}
-		}break;
-	default:
-		for (unsigned y = 0; y < building1::h; y++) {
-			for (unsigned x = 0; x < building1::w; x++) {
-				setTile(x + offset.x, y + offset.y, building1::array[y][x]);
-			}
-		}
-
 	}
 };
 
@@ -170,6 +675,7 @@ void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 		map[y][x].opaque = true;
 	}
 }
+
 
 bool TileMap::isOpaque(unsigned x, unsigned y) {
 	// convert from world to map coordinates
@@ -244,3 +750,4 @@ bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) {
 
 	return true;
 }
+
