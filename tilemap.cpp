@@ -660,6 +660,7 @@ TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 				}
 			}break;
 		}
+
 	}
 };
 
