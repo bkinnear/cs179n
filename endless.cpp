@@ -104,7 +104,7 @@ void EndlessState::logic() {
 	}
 
 	// update player sprite
-	if (player.movingLeft || player.movingUp || player.movingRight || player.movingDown) {
+	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.alive) {
 		if (player.getAnimSpeed() == -1)
 			player.setAnimSpeed(12);
 		if (player.movingLeft)
@@ -150,17 +150,18 @@ void EndlessState::logic() {
 			sf::Vector2f pos = sf::Vector2f(difference.x / length, difference.y / length);
 			enemy.setAnimSpeed(12);
 			enemy.move(pos.x, pos.y);
-			enemy.attack = -1;
+			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
 		}
 		else
 		{
 			//enemy is in attacking range
-			enemy.cooldown();
+			enemy.cooldown(); //triggers attack timer/cooldown
 			if (player.alive && !enemy.attack) {
 				player.health -= 5;
 				std::cout << "player is taking damage, new health: " << player.health << std::endl;
 				if (player.health == 0) {
 					player.alive = false;
+					player.setColor(sf::Color(255, 0, 0, 255));
 					std::cout << "player has died" << std::endl;
 				}
 			}

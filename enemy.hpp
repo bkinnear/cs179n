@@ -16,8 +16,8 @@ public:
 
 	void cooldown() {
 		attack++;
-		if (attack == 60) {
-			attack = 0;
+		if (attack == 60) { // 60 frames/1 second, change the right-hand side to hitRate when hitRate is implemented
+			attack = 0; //reset attack cooldown
 		}
 	}
 
