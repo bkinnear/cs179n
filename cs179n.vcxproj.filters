@@ -53,6 +53,9 @@
     <ClInclude Include="tilemap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="enemy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

@@ -126,6 +126,7 @@
   <ItemGroup>
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="game.hpp" />
+    <ClInclude Include="enemy.hpp" />
     <ClInclude Include="menustate.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="state.hpp" />

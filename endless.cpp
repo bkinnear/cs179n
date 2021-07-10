@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <time.h>
 
 // the main game window
 #define gwindow game.window
@@ -11,7 +12,9 @@ EndlessState::EndlessState(Game& game) :
 	State(game),
 	tileMap(createTexture("res/big_32x32_tileset.png"), 20, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
-	texPlayerLeft(createTexture("res/player_l_strip.png"))
+	texPlayerLeft(createTexture("res/player_l_strip.png")),
+	texEnemyLeft(createTexture("res/player_l_strip.png")),
+	texEnemyRight(createTexture("res/player_r_strip.png"))
 {
 	// set view
 	view.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
@@ -25,6 +28,20 @@ EndlessState::EndlessState(Game& game) :
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
 	player.speed = 2;
+
+	int limit = currentLevel * 3;
+	srand(time(0));
+	for(int i = 0;i < limit;i++)
+	{
+		Enemy enemy;
+		int randHeight = rand() % 600;
+		int randWidth = rand() % 800;
+		enemy.hitRate = currentLevel * 0.5;
+		enemy.speed = currentLevel + 0.5;
+		enemy.create(texEnemyLeft, { 100, 100, 32,32 }, 4);//For now
+		enemy.setPosition(randWidth, randHeight);
+		enemies.push_back(enemy);
+	}
 }
 
 EndlessState::~EndlessState() {
@@ -103,19 +120,52 @@ void EndlessState::logic() {
 	// player movement
 	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
 	const sf::FloatRect& bounds = player.getGlobalBounds();
-	if (player.movingLeft)
-		if (tileMap.areaClear(player, -player.speed, 0))
-			player.move(-player.speed, 0);
-	if (player.movingUp)
-		if (tileMap.areaClear(player, 0, -player.speed))
-			player.move(0, -player.speed);
-	if (player.movingRight)
-		if (tileMap.areaClear(player, player.speed, 0))
-			player.move(player.speed, 0);
-	if (player.movingDown)
-		if (tileMap.areaClear(player, 0, player.speed))
-			player.move(0, player.speed);
+	if (player.alive) {
+		if (player.movingLeft)
+			if (tileMap.areaClear(player, -player.speed, 0))
+				player.move(-player.speed, 0);
+		if (player.movingUp)
+			if (tileMap.areaClear(player, 0, -player.speed))
+				player.move(0, -player.speed);
+		if (player.movingRight)
+			if (tileMap.areaClear(player, player.speed, 0))
+				player.move(player.speed, 0);
+		if (player.movingDown)
+			if (tileMap.areaClear(player, 0, player.speed))
+				player.move(0, player.speed);
+	}
 
+	//For Enemy Movement
+	std::list<Enemy>::iterator enemyItr;
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
+	{
+		Enemy& enemy = *enemyItr;
+		sf::Vector2f playerPosition = player.getPosition();
+		sf::Vector2f enemyPosition = enemy.getPosition();
+
+		sf::Vector2f difference = playerPosition - enemyPosition;
+		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
+		if (length >= 15)
+		{
+			sf::Vector2f pos = sf::Vector2f(difference.x / length, difference.y / length);
+			enemy.setAnimSpeed(12);
+			enemy.move(pos.x, pos.y);
+			enemy.attack = -1;
+		}
+		else
+		{
+			//enemy is in attacking range
+			enemy.cooldown();
+			if (player.alive && !enemy.attack) {
+				player.health -= 5;
+				std::cout << "player is taking damage, new health: " << player.health << std::endl;
+				if (player.health == 0) {
+					player.alive = false;
+					std::cout << "player has died" << std::endl;
+				}
+			}
+		}
+	}
 }
 
 void EndlessState::render() {
@@ -128,6 +178,15 @@ void EndlessState::render() {
 	// draw the player
 	player.animateFrame();
 	gwindow.draw(player);
+
+	//draw the enemies
+	std::list<Enemy>::iterator enemyItr;
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
+	{
+		Enemy& enemy = *enemyItr;
+		enemy.animateFrame();
+		gwindow.draw(enemy);
+	}
 
 	// update window
 	gwindow.display();
