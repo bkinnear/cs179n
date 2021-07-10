@@ -4,43 +4,6 @@
 #include <vector>
 #include <string>
 
-class Item;
-
-/* Inventory object
- * 
-*/
-class Inventory {
-public:
-	Inventory();
-	
-	/* adds item to next available slot in inventory
-	 * increases item count if item type already in inventory
-	*/
-	void addItem(Item::type item, unsigned num);
-
-	/* moves item from inventory grid at position (x, y) to (x2, y2)
-	 * swaps items if destination position is non-empty
-	*/
-	void moveItem(unsigned x, unsigned y, unsigned x2, unsigned y2);
-
-	/* removes item from inventory
-	 * decreases item count if not item type is present
-	*/
-	void removeItem(Item::type item, unsigned num);
-
-	// inventory grid width
-	const unsigned width = 5;
-
-	// inventory grid height
-	const unsigned height = 3;
-private:
-	// inventory grid
-	std::vector<std::vector<Item>> inventory;
-
-	// wielded item
-	Item wielded;
-};
-
 /* Item in inventory
 */
 struct Item {
@@ -48,10 +11,10 @@ struct Item {
 	enum type { null, MP5, ammo_9mm, M4, ammo_556 };
 
 	// type of item
-	type itemType;
+	type itemType = null;
 
 	// number of items in stack
-	unsigned num;
+	unsigned num = 0;
 
 	// returns name of item type
 	std::string getName() {
@@ -88,6 +51,39 @@ struct Item {
 			return "unknown item desc";
 		}
 	}
+};
+
+/* Inventory object
+ * 
+*/
+class Inventory {
+public:	
+	/* adds item to next available slot in inventory
+	 * increases item count if item type already in inventory
+	*/
+	void addItem(Item::type item, unsigned num);
+
+	/* moves item from inventory grid at position (x, y) to (x2, y2)
+	 * swaps items if destination position is non-empty
+	*/
+	void moveItem(unsigned x, unsigned y, unsigned x2, unsigned y2);
+
+	/* removes item from inventory
+	 * decreases item count if not item type is present
+	*/
+	void removeItem(Item::type item, unsigned num);
+
+	// inventory grid width
+	const unsigned width = 5;
+
+	// inventory grid height
+	const unsigned height = 3;
+private:
+	// inventory grid
+	std::vector<std::vector<Item>> inventory;
+
+	// wielded item
+	Item wielded;
 };
 
 #endif
