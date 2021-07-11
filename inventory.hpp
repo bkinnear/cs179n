@@ -1,6 +1,7 @@
 #ifndef INVENTORY_H_
 #define INVENTORY_H_
 
+#include "game.hpp"
 #include <vector>
 #include <string>
 
@@ -8,26 +9,26 @@
 */
 struct Item {
 	// different types of items
-	enum type { null, MP5, ammo_9mm, M4, ammo_556 };
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556 };
 
 	// type of item
-	type itemType = null;
+	type itemType = type::null;
 
 	// number of items in stack
 	unsigned num = 0;
 
 	// returns name of item type
-	std::string getName() {
+	std::string getName() const {
 		switch (itemType) {
-		case null:
-			return "null item";
-		case MP5:
+		case type::null:
+			return "nothing";
+		case type::MP5:
 			return "MP5 SMG";
-		case ammo_9mm:
+		case type::ammo_9mm:
 			return "9mm Rounds";
-		case M4:
+		case type::M4:
 			return "M4 Rifle";
-		case ammo_556:
+		case type::ammo_556:
 			return "5.56 Rounds";
 		default:
 			return "unknown item";
@@ -35,17 +36,17 @@ struct Item {
 	}
 
 	// returns description of item type
-	std::string getDescription() {
+	std::string getDescription() const {
 		switch (itemType) {
-		case null:
-			return "null item";
-		case MP5:
+		case type::null:
+			return "empty slot";
+		case type::MP5:
 			return "The MP5 submachinegun";
-		case ammo_9mm:
+		case type::ammo_9mm:
 			return "9mm rounds. Used for SMGs and pistols";
-		case M4:
+		case type::M4:
 			return "The military M4 automatic rifle.";
-		case ammo_556:
+		case type::ammo_556:
 			return "5.56 Rounds. Used for rifles.";
 		default:
 			return "unknown item desc";
@@ -56,8 +57,10 @@ struct Item {
 /* Inventory object
  * 
 */
-class Inventory {
+class Inventory: public sf::Drawable {
 public:	
+	Inventory(sf::Texture& inventoryTexture, sf::Texture& itemTileset);
+
 	/* adds item to next available slot in inventory
 	 * increases item count if item type already in inventory
 	*/
@@ -73,14 +76,30 @@ public:
 	*/
 	void removeItem(Item::type item, unsigned num);
 
+	/* returns pointer to item at position (x, y) in gui
+	 * returns nullptr if (x, y) is not in grid space
+	*/
+	const Item* getItemAt(float x, float y) const;
+
 	// inventory grid width
 	const unsigned width = 5;
 
 	// inventory grid height
 	const unsigned height = 3;
+
+protected:
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+
 private:
+	// inventory sprites
+	sf::Sprite sprInventory;
+
+	// item texture set
+	sf::Texture& texItemTileset;
+
 	// inventory grid
-	std::vector<std::vector<Item>> inventory;
+	std::vector<std::vector<Item>> inventoryGrid;
 
 	// wielded item
 	Item wielded;
