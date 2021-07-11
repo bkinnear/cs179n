@@ -6,6 +6,9 @@
 #include "player.hpp"
 #include "inventory.hpp"
 #include "tilemap.hpp"
+#include "enemy.hpp"
+
+#include<list>
 
 class EndlessState : public State {
 public:
@@ -24,7 +27,7 @@ private:
 
 	// player
 	Player player;
-
+  
 	// inventory & inventory GUI
 	Inventory inventory;
 	bool showInventory = false;
@@ -33,13 +36,20 @@ private:
 	sf::RectangleShape shpItemDetails;
 
 	// tile map
+	std::list<Enemy> enemies;
+	const int totalEnemyCount = 60;
+	int currentLevelEnemyCount = 3;//Default count
+	
+	int currentLevel = 1;//Starting Level
 	TileMap tileMap;
 
 	// textures
 	sf::Texture& texPlayerRight;
-	sf::Texture& texPlayerLeft;
-
-	// fonts
+	sf::Texture& texPlayerLeft;  
+	sf::Texture& texEnemyRight;
+	sf::Texture& texEnemyLeft;
+  
+  // fonts
 	sf::Font font;
 };
 
