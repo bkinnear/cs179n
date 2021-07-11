@@ -245,13 +245,14 @@ void EndlessState::render() {
 		gwindow.draw(shpItemDetails);
 		gwindow.draw(txtItemDetails);
 
-	//draw the enemies
-	std::list<Enemy>::iterator enemyItr;
-	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
-	{
-		Enemy& enemy = *enemyItr;
-		enemy.animateFrame();
-		gwindow.draw(enemy);
+		//draw the enemies
+		std::list<Enemy>::iterator enemyItr;
+		for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
+		{
+			Enemy& enemy = *enemyItr;
+			enemy.animateFrame();
+			gwindow.draw(enemy);
+		}
 	}
 
 	// update window
