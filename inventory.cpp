@@ -109,12 +109,47 @@ const Item* Inventory::getItemAt(float x, float y) const {
 	if (gridX < 0 || gridX >= width || gridY < 0 || gridY >= height)
 		return nullptr;
 
-	// see if item is actually in the slot at [gridX][gridY]
+	// see if item is actually in the slot at [gridY][gridX]
 	sf::FloatRect slotBounds(getSlotOffset(gridX, gridY), { 48.f, 48.f });
 	if (slotBounds.contains(x, y))
 		return &(inventoryGrid[gridY][gridX]);
 	else
 		return nullptr;
+}
+
+void Inventory::wieldItemAt(float x, float y) {
+	// return if not in inventory
+	if (!sprInventory.getGlobalBounds().contains(x, y))
+		return;
+
+	// get local (x, y)
+	x = x - sprInventory.getPosition().x;
+	y = y - sprInventory.getPosition().y;
+
+	// unwield if in wielded slot
+	if (sf::FloatRect(241.f, 12.f, 48.f, 48.f).contains(x, y)) {
+		addItem(wielded.itemType, wielded.num);
+		wielded = Item();
+	}
+
+	// get grid location using offsets
+	int gridX = (x - 29.f) / 53.f;
+	int gridY = (y - 74.f) / 53.f;
+
+	// return if not in grid space
+	if (gridX < 0 || gridX >= width || gridY < 0 || gridY >= height)
+		return;
+
+	// see if item is actually in the slot at [gridY][gridX]
+	sf::FloatRect slotBounds(getSlotOffset(gridX, gridY), { 48.f, 48.f });
+	if (slotBounds.contains(x, y)) {
+		// unwield old item
+		Item toWield = inventoryGrid[gridY][gridX];
+		inventoryGrid[gridY][gridX] = Item();
+		addItem(wielded.itemType, wielded.num);
+		// wield the item
+		wielded = toWield;
+	}
 }
 
 void Inventory::draw(sf::RenderTarget& target, sf::RenderStates states) const {

@@ -117,7 +117,15 @@ void EndlessState::logic() {
 			switch (e.mouseButton.button) {
 			case sf::Mouse::Button::Left:
 				// LMB pressed
-				std::cout << winMousePos.x << ", " << winMousePos.y << std::endl;
+
+				break;
+			case sf::Mouse::Button::Right:
+				// RMB pressed
+
+				// equip item
+				if (showInventory)
+					inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+
 				break;
 			}
 		}

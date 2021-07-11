@@ -81,6 +81,10 @@ public:
 	*/
 	const Item* getItemAt(float x, float y) const;
 
+	/* attempts to wield item at position (x, y) in gui
+	*/
+	void wieldItemAt(float x, float y);
+
 	// inventory grid width
 	const unsigned width = 5;
 

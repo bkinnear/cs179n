@@ -25,7 +25,7 @@ private:
 	// player
 	Player player;
 
-	// inventory
+	// inventory & inventory GUI
 	Inventory inventory;
 	bool showInventory = false;
 	bool showItemDetails = false;
