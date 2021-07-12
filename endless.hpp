@@ -5,6 +5,7 @@
 #include "state.hpp"
 #include "player.hpp"
 #include "tilemap.hpp"
+#include "projectile.hpp"
 
 class EndlessState : public State {
 public:
@@ -20,11 +21,17 @@ private:
 	/* ==v== place any vars we need in this state in here ==v== */
 
 	Player player;
+
+	Projectile projectile;
+
+	std::vector<Projectile>projectiles;
 	
 	TileMap tileMap;
 
 	sf::Texture& texPlayerRight;
 	sf::Texture& texPlayerLeft;
+
+	sf::Texture& texProjectile;
 };
 
 #endif

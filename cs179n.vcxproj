@@ -128,6 +128,7 @@
     <ClInclude Include="game.hpp" />
     <ClInclude Include="menustate.hpp" />
     <ClInclude Include="player.hpp" />
+    <ClInclude Include="projectile.hpp" />
     <ClInclude Include="state.hpp" />
     <ClInclude Include="tilemap.hpp" />
   </ItemGroup>

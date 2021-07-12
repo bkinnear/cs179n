@@ -116,11 +116,11 @@ TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 	
 	for (int i = 1; i <= num_bldg; i++) {
 		int bldg_num = rand() % 6 + 1;		//randomly selects one of the building presets
-		int x_offset = rand() % 10 + 2;		//generates a random number to determine the x offset
-		int y_offset = rand() % 10 + 2;		//generates a random number to determine the y offset
+		int x_offset = rand() % 9 + 2;		//generates a random number to determine the x offset
+		int y_offset = rand() % 9 + 2;		//generates a random number to determine the y offset
 		bool empty;
 
-		sf::Vector2i offset = {y_offset, x_offset};
+		sf::Vector2i offset = {y_offset,x_offset};
 
 		switch (bldg_num) {
 		case 1:
@@ -211,7 +211,7 @@ bool TileMap::isOpaque(unsigned x, unsigned y) {
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >=0 && y < mapHeight)
+	if (x >= 0 && x < mapHeight && y >=0 && y < mapWidth)
 		return map[y][x].opaque;
 
 	return true;
