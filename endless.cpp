@@ -28,7 +28,8 @@ EndlessState::EndlessState(Game& game) :
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
 	player.speed = 2;
 
-	projectile.create(texProjectile, { (int)player.getPosition().y, (int)player.getPosition().x, 32, 32 }, 1);
+	projectile.create(texProjectile, { (int)player.getPosition().y, (int)player.getPosition().x, 32, 32 }, 2);
+	projectile.setIndex(0);
 }
 
 EndlessState::~EndlessState() {
@@ -67,8 +68,9 @@ void EndlessState::logic() {
 				break;
 			case sf::Keyboard::Space:
 			case sf::Keyboard::Q:
+				projectile.setIndex(1);
 				projectile.shoot = true;
-				projectile.move(20, 0);
+				projectile.move(projectile.speed, 0);
 				break;
 			}
 			break;
@@ -92,7 +94,6 @@ void EndlessState::logic() {
 				break;
 			case sf::Keyboard::Space:
 			case sf::Keyboard::Q:
-				projectile.move(0, 0);
 				break;
 			}
 			break;
@@ -118,38 +119,42 @@ void EndlessState::logic() {
 	const sf::FloatRect& bounds = player.getGlobalBounds();
 	if (player.movingLeft)
 		if (tileMap.areaClear(player, -player.speed, 0)) {
-			projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			projectile.move(0, 0);
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(-player.speed, 0);
 		}
 	if (player.movingUp)
 		if (tileMap.areaClear(player, 0, -player.speed)) {
-			projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			projectile.move(0, 0);
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(0, -player.speed);
 		}
 	if (player.movingRight)
 		if (tileMap.areaClear(player, player.speed, 0)) {
-			projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			projectile.move(0, 0);
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(player.speed, 0);
 		}	
 	if (player.movingDown)
 		if (tileMap.areaClear(player, 0, player.speed)) {
-			projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			projectile.move(0, 0);
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(0, player.speed);
 		}
 		
 	if (projectile.shoot)
 	{
-		if (tileMap.areaClear(projectile, 0, 20)) {
-			projectile.move(20, 0);
+		if (tileMap.areaClear(projectile, 0, projectile.speed)) {
+			projectile.move(projectile.speed, 0);
 		}
 		else {
 			projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			projectile.move(0, 0);
 			projectile.shoot = false;
+			projectile.setIndex(0);
 		}
 	}
 

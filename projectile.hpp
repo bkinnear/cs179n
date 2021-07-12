@@ -10,7 +10,7 @@ public:
 
 	bool shoot = false;
 
-	int speed = 30;
+	int speed = 15;
 	int damage;
 };
 
