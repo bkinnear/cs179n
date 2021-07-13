@@ -1,4 +1,6 @@
 #include "tilemap.hpp"
+#include <time.h>
+#include <vector>
 
 /* Hard coded building presets */
 struct building1 {
@@ -6,9 +8,39 @@ struct building1 {
 	static const tileType array[w][h];
 };
 
+struct building2 {
+	static const int w = 5, h = 5;
+	static const tileType array[w][h];
+};
+
+struct building3 {
+	static const int w = 6, h = 6;
+	static const tileType array[w][h];
+};
+
+struct building4 {
+	static const int w = 6, h = 6;
+	static const tileType array[w][h];
+};
+
+struct building5 {
+	static const int w = 6, h = 6;
+	static const tileType array[w][h];
+};
+
+struct buildingsmall {
+	static const int w = 4, h = 4;
+	static const tileType array[w][h];
+};
+
 const tileType building1::array[w][h] =
 {
 {1, 2, 2, 2, 2, 2, 3},
+{8, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 9, 9, 9, 10},
+{0, 9, 9, 41, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 10},
 {16, 9, 9, 9, 9, 9, 10},
 {9, 9, 9, 9, 9, 9, 10},
 {9, 9, 9, 9, 9, 9, 10},
@@ -17,11 +49,61 @@ const tileType building1::array[w][h] =
 {13, 14, 14, 30, 14, 14, 15}
 };
 
+const tileType building2::array[w][h] =
+{
+{1, 2, 37, 2, 3},
+{8, 9, 9, 9, 10},
+{0, 9, 9, 9, 10},
+{0, 9, 9, 9, 10},
+{13, 14, 14, 14, 15}
+};
+
+const tileType building3::array[w][h] =
+{
+{1, 2, 2, 2, 26,  3},
+{8, 9, 61, 61, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{13, 14, 0, 0, 14, 15}
+};
+
+const tileType building4::array[w][h] =
+{
+{1, 26, 2, 2, 2, 3},
+{8, 61, 61, 61, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{13, 14, 0, 0, 14, 15}
+};
+
+const tileType building5::array[w][h] =
+{
+{1, 2, 2, 2, 2, 3},
+{8, 9, 9, 37, 38, 10},
+{8, 9, 9, 9, 9, 0},
+{8, 9, 9, 9, 9, 0},
+{8, 9, 9, 9, 9, 10},
+{13, 14, 14, 14, 14, 15}
+};
+
+const tileType buildingsmall::array[w][h] =
+{
+{1, 2, 2, 3},
+{0, 9, 9, 10},
+{0, 9, 9, 10},
+{13, 14, 14, 15},
+};
+
+
+
 TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 	texTileset(tileset),
 	mapWidth(mapWidth),
 	mapHeight(mapHeight)
 {
+
 	// initialize map
 	map.resize(mapHeight);
 	for (unsigned y = 0; y < mapHeight; y++) {
@@ -34,10 +116,84 @@ TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
 	}
 
 	// place example building
-	sf::Vector2i offset = { 4, 4 };
-	for (unsigned y = 0; y < building1::h; y++) {
-		for (unsigned x = 0; x < building1::w; x++) {
-			setTile(x+offset.x, y+offset.y, building1::array[y][x]);
+	srand(time(NULL));
+	int num_bldg = 50;
+	
+	for (int i = 1; i <= num_bldg; i++) {
+		int bldg_num = rand() % 6 + 1;		//randomly selects one of the building presets
+		int x_offset = rand() % 9 + 2;		//generates a random number to determine the x offset
+		int y_offset = rand() % 9 + 2;		//generates a random number to determine the y offset
+		bool empty;
+
+		sf::Vector2i offset = {y_offset,x_offset};
+
+		switch (bldg_num) {
+		case 1:
+			if (tileClear(building1::h, building1::w, offset.y, offset.x)) {
+				for (unsigned y = 0; y < building1::h; y++) {
+					for (unsigned x = 0; x < building1::w; x++) {
+						setTile(x + offset.x, y + offset.y, building1::array[y][x]);
+					}
+				}
+			}
+			else {
+				break;
+			}
+		case 2:
+			if (tileClear(building2::h, building2::w, offset.y, offset.x)) {
+				for (unsigned y = 0; y < building2::h; y++) {
+					for (unsigned x = 0; x < building2::w; x++) {
+						setTile(x + offset.x, y + offset.y, building2::array[y][x]);
+					}
+				}
+			}
+			else {
+				break;
+			}
+		case 3:
+			if (tileClear(building3::h, building3::w, offset.y, offset.x)) {
+				for (unsigned y = 0; y < building3::h; y++) {
+					for (unsigned x = 0; x < building3::w; x++) {
+						setTile(x + offset.x, y + offset.y, building3::array[y][x]);
+					}
+				}
+			}
+			else {
+				break;
+			}
+		case 4:
+			if (tileClear(building4::h, building4::w, offset.y, offset.x)) {
+				for (unsigned y = 0; y < building4::h; y++) {
+					for (unsigned x = 0; x < building4::w; x++) {
+						setTile(x + offset.x, y + offset.y, building4::array[y][x]);
+					}
+				}
+			}
+			else {
+				break;
+			}
+		case 5:
+			if (tileClear(building5::h, building5::w, offset.y, offset.x)) {
+				for (unsigned y = 0; y < building5::h; y++) {
+					for (unsigned x = 0; x < building5::w; x++) {
+						setTile(x + offset.x, y + offset.y, building5::array[y][x]);
+					}
+				}
+			}
+			else {
+				break;
+			}
+		case 6:
+			if (tileClear(buildingsmall::h, buildingsmall::w, offset.y, offset.x)) {
+				for (unsigned y = 0; y < buildingsmall::h; y++) {
+					for (unsigned x = 0; x < buildingsmall::w; x++) {
+						setTile(x + offset.x, y + offset.y, buildingsmall::array[y][x]);
+					}
+				}
+			}
+			else {
+				break;
+			}
 		}
 	}
 };
@@ -60,9 +216,79 @@ bool TileMap::isOpaque(unsigned x, unsigned y) {
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >=0 && y < mapHeight)
+	if (x >= 0 && x < mapHeight && y >=0 && y < mapWidth)
 		return map[y][x].opaque;
 
+	return true;
+}
+
+bool TileMap::tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off)
+{
+	for (unsigned y = 0; y < h; y++) {
+		for (unsigned x = 0; x < w; x++) {
+			if (map[y + y_off][x + x_off].type == 0) {
+				if (y == 0 && x == 0) {
+					if (map[y + y_off - 2][x + x_off - 2].type != 0 ||
+						map[y + y_off - 2][x + x_off - 1].type != 0 ||
+						map[y + y_off - 1][x + x_off - 2].type != 0 ||
+						map[y + y_off - 1][x + x_off - 1].type != 0) {
+						return false;
+					}
+				}
+				if (y == h - 1 && x == w - 1) {
+					if (map[y + y_off + 2][x + x_off + 2].type != 0 ||
+						map[y + y_off + 2][x + x_off + 1].type != 0 ||
+						map[y + y_off + 1][x + x_off + 2].type != 0 ||
+						map[y + y_off + 1][x + x_off + 1].type != 0) {
+						return false;
+					}
+				}
+				if (y == 0 && x == w - 1) {
+					if (map[y + y_off - 2][x + x_off + 2].type != 0 ||
+						map[y + y_off - 2][x + x_off + 1].type != 0 ||
+						map[y + y_off - 1][x + x_off + 2].type != 0 ||
+						map[y + y_off - 1][x + x_off + 1].type != 0) {
+						return false;
+					}
+				}
+				if (y == h - 1 && x == 0) {
+					if (map[y + y_off + 2][x + x_off - 2].type != 0 ||
+						map[y + y_off + 2][x + x_off - 1].type != 0 ||
+						map[y + y_off + 1][x + x_off - 2].type != 0 ||
+						map[y + y_off + 1][x + x_off - 1].type != 0) {
+						return false;
+					}
+				}
+				if (y == 0) {
+					if (map[y + y_off - 2][x + x_off].type != 0 ||
+						map[y + y_off - 1][x + x_off].type != 0) {
+						return false;
+					}
+				}
+				if (x == 0) {
+					if (map[y + y_off][x + x_off - 2].type != 0 ||
+						map[y + y_off][x + x_off - 1].type != 0) {
+						return false;
+					}
+				}
+				if (y == h - 1) {
+					if (map[y + y_off + 2][x + x_off].type != 0 ||
+						map[y + y_off + 1][x + x_off].type != 0) {
+						return false;
+					}
+				}
+				if (x == w - 1) {
+					if (map[y + y_off][x + x_off + 2].type != 0 ||
+						map[y + y_off][x + x_off + 1].type != 0) {
+						return false;
+					}
+				}
+			}
+			else {
+				return false;
+			}
+		}
+	}
 	return true;
 }
 
@@ -128,3 +354,4 @@ bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) {
 
 	return true;
 }
+

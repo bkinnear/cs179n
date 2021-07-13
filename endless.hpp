@@ -6,6 +6,7 @@
 #include "player.hpp"
 #include "inventory.hpp"
 #include "tilemap.hpp"
+#include "projectile.hpp"
 #include "enemy.hpp"
 
 #include<list>
@@ -27,6 +28,9 @@ private:
 
 	// player
 	Player player;
+	Projectile projectile;
+
+	std::vector<Projectile>projectiles;
   
 	// inventory & inventory GUI
 	Inventory inventory;
@@ -45,6 +49,9 @@ private:
 
 	// textures
 	sf::Texture& texPlayerRight;
+	sf::Texture& texPlayerLeft;
+
+	sf::Texture& texProjectile;
 	sf::Texture& texPlayerLeft;  
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;

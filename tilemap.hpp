@@ -28,6 +28,9 @@ public:
 	// returns whether tile at world coords (x, y) is opaque
 	bool isOpaque(unsigned x, unsigned y);
 
+	//returns true if the area needed to place an obstacle is clear
+	bool tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off);
+
 	// returns true if moving sprite's position by <dx, dy> is clear of opaque tiles
 	bool areaClear(const sf::Sprite& spr, float dx, float dy);
 

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <vector>
 #include <time.h>
 
 // the main game window
@@ -13,6 +14,7 @@ EndlessState::EndlessState(Game& game) :
 	tileMap(createTexture("res/big_32x32_tileset.png"), 20, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
+	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyLeft(createTexture("res/player_l_strip.png")),
 	texEnemyRight(createTexture("res/player_r_strip.png"))
@@ -44,6 +46,10 @@ EndlessState::EndlessState(Game& game) :
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
 	player.speed = 2;
+
+
+	projectile.create(texProjectile, { (int)player.getPosition().y, (int)player.getPosition().x, 32, 32 }, 2);
+	projectile.setIndex(0);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -104,6 +110,12 @@ void EndlessState::logic() {
 			case sf::Keyboard::Right:
 				player.movingRight = true;
 				break;
+			case sf::Keyboard::Space:
+			case sf::Keyboard::Q:
+				projectile.setIndex(1);
+				projectile.shoot = true;
+				projectile.move(projectile.speed, 0);
+        break;
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
@@ -127,6 +139,9 @@ void EndlessState::logic() {
 			case sf::Keyboard::D:
 			case sf::Keyboard::Right:
 				player.movingRight = false;
+				break;
+			case sf::Keyboard::Space:
+			case sf::Keyboard::Q:
 				break;
 			}
 			break;
@@ -183,17 +198,45 @@ void EndlessState::logic() {
 	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
 	const sf::FloatRect& bounds = player.getGlobalBounds();
 	if (player.movingLeft)
-		if (tileMap.areaClear(player, -player.speed, 0))
+		if (tileMap.areaClear(player, -player.speed, 0)) {
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(-player.speed, 0);
+		}
 	if (player.movingUp)
-		if (tileMap.areaClear(player, 0, -player.speed))
+		if (tileMap.areaClear(player, 0, -player.speed)) {
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(0, -player.speed);
+		}
 	if (player.movingRight)
-		if (tileMap.areaClear(player, player.speed, 0))
+		if (tileMap.areaClear(player, player.speed, 0)) {
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(player.speed, 0);
+		}	
 	if (player.movingDown)
-		if (tileMap.areaClear(player, 0, player.speed))
+		if (tileMap.areaClear(player, 0, player.speed)) {
+			if (projectile.shoot == false) {
+				projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			}
 			player.move(0, player.speed);
+		}
+		
+	if (projectile.shoot)
+	{
+		if (tileMap.areaClear(projectile, 0, projectile.speed)) {
+			projectile.move(projectile.speed, 0);
+		}
+		else {
+			projectile.setPosition(player.getPosition().x, player.getPosition().y);
+			projectile.shoot = false;
+			projectile.setIndex(0);
+		}
+	}
 
 	//For Enemy Movement
 	std::list<Enemy>::iterator enemyItr;
@@ -232,6 +275,10 @@ void EndlessState::render() {
 	// draw the player
 	player.animateFrame();
 	gwindow.draw(player);
+
+  // draw the projectile
+	projectile.animateFrame();
+	gwindow.draw(projectile);
 
 	// set view to draw guis
 	gwindow.setView(guiView);

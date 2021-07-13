@@ -56,6 +56,9 @@
     <ClInclude Include="tilemap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="projectile.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="inventory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
