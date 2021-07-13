@@ -114,11 +114,16 @@ void EndlessState::logic() {
 				projectile.setIndex(1);
 				projectile.shoot = true;
 				projectile.move(projectile.speed, 0);
-        break;
+				break;
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
 				break;
+			case sf::Keyboard::F2:
+				// restarts the map
+				game.setState(new EndlessState(game));
+				delete this;
+				return;
 			}
 			break;
 		case sf::Event::KeyReleased:
