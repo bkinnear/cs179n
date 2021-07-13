@@ -5,12 +5,13 @@
 #include "state.hpp"
 
 
-class Projectile : public AnimSprite {
+class Projectile : public sf::Sprite {
 public:
 
 	bool shoot = false;
 
 	int speed = 15;
+	float direction;
 	int damage;
 };
 
