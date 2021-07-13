@@ -4,6 +4,7 @@
 #include "game.hpp"
 #include "state.hpp"
 
+
 class Player: public AnimSprite {
 public:
 
@@ -11,6 +12,10 @@ public:
 	
 	// sprite movement speed in px per frame
 	int speed;
+
+	//player state
+	int health = 100;
+	bool alive = true;
 };
 
 #endif

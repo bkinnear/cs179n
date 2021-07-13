@@ -47,7 +47,6 @@ EndlessState::EndlessState(Game& game) :
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
 	player.speed = 2;
 
-
 	projectile.create(texProjectile, { (int)player.getPosition().y, (int)player.getPosition().x, 32, 32 }, 2);
 	projectile.setIndex(0);
 
@@ -181,7 +180,7 @@ void EndlessState::logic() {
 	}
 
 	// update player sprite
-	if (player.movingLeft || player.movingUp || player.movingRight || player.movingDown) {
+	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.alive) {
 		if (player.getAnimSpeed() == -1)
 			player.setAnimSpeed(12);
 		if (player.movingLeft)
@@ -197,46 +196,49 @@ void EndlessState::logic() {
 	// player movement
 	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
 	const sf::FloatRect& bounds = player.getGlobalBounds();
-	if (player.movingLeft)
-		if (tileMap.areaClear(player, -player.speed, 0)) {
-			if (projectile.shoot == false) {
-				projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			}
-			player.move(-player.speed, 0);
-		}
-	if (player.movingUp)
-		if (tileMap.areaClear(player, 0, -player.speed)) {
-			if (projectile.shoot == false) {
-				projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			}
-			player.move(0, -player.speed);
-		}
-	if (player.movingRight)
-		if (tileMap.areaClear(player, player.speed, 0)) {
-			if (projectile.shoot == false) {
-				projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			}
-			player.move(player.speed, 0);
-		}	
-	if (player.movingDown)
-		if (tileMap.areaClear(player, 0, player.speed)) {
-			if (projectile.shoot == false) {
-				projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			}
-			player.move(0, player.speed);
-		}
-		
-	if (projectile.shoot)
-	{
-		if (tileMap.areaClear(projectile, 0, projectile.speed)) {
-			projectile.move(projectile.speed, 0);
-		}
-		else {
-			projectile.setPosition(player.getPosition().x, player.getPosition().y);
-			projectile.shoot = false;
-			projectile.setIndex(0);
-		}
-	}
+
+  if (player.alive) {
+    if (player.movingLeft)
+      if (tileMap.areaClear(player, -player.speed, 0)) {
+        if (projectile.shoot == false) {
+          projectile.setPosition(player.getPosition().x, player.getPosition().y);
+        }
+        player.move(-player.speed, 0);
+      }
+    if (player.movingUp)
+      if (tileMap.areaClear(player, 0, -player.speed)) {
+        if (projectile.shoot == false) {
+          projectile.setPosition(player.getPosition().x, player.getPosition().y);
+        }
+        player.move(0, -player.speed);
+      }
+    if (player.movingRight)
+      if (tileMap.areaClear(player, player.speed, 0)) {
+        if (projectile.shoot == false) {
+          projectile.setPosition(player.getPosition().x, player.getPosition().y);
+        }
+        player.move(player.speed, 0);
+      }	
+    if (player.movingDown)
+      if (tileMap.areaClear(player, 0, player.speed)) {
+        if (projectile.shoot == false) {
+          projectile.setPosition(player.getPosition().x, player.getPosition().y);
+        }
+        player.move(0, player.speed);
+      }
+
+    if (projectile.shoot)
+    {
+      if (tileMap.areaClear(projectile, 0, projectile.speed)) {
+        projectile.move(projectile.speed, 0);
+      }
+      else {
+        projectile.setPosition(player.getPosition().x, player.getPosition().y);
+        projectile.shoot = false;
+        projectile.setIndex(0);
+      }
+	  }
+  }
 
 	//For Enemy Movement
 	std::list<Enemy>::iterator enemyItr;
@@ -248,15 +250,27 @@ void EndlessState::logic() {
 
 		sf::Vector2f difference = playerPosition - enemyPosition;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
-		if (length != 0)
+
+		if (length >= 15)
 		{
 			sf::Vector2f pos = sf::Vector2f(difference.x / length, difference.y / length);
 			enemy.setAnimSpeed(12);
 			enemy.move(pos.x, pos.y);
+			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
 		}
 		else
 		{
-			//They are in the same place
+			//enemy is in attacking range
+			enemy.cooldown(); //triggers attack timer/cooldown
+			if (player.alive && !enemy.attack) {
+				player.health -= 5;
+				std::cout << "player is taking damage, new health: " << player.health << std::endl;
+				if (player.health == 0) {
+					player.alive = false;
+					player.setColor(sf::Color(255, 0, 0, 255));
+					std::cout << "player has died" << std::endl;
+				}
+			}
 		}
 	}
 }

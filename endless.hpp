@@ -28,6 +28,7 @@ private:
 
 	// player
 	Player player;
+
 	Projectile projectile;
 
 	std::vector<Projectile>projectiles;
