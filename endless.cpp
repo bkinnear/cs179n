@@ -62,7 +62,6 @@ EndlessState::EndlessState(Game& game) :
 		enemy.hitRate = currentLevel * 0.5;
 		enemy.speed = currentLevel + 0.5;
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
-		bool placed = false;
 		for (;;) {
 			// TODO set range to world_width and world_height instead of magic numbers
 			int randWidth = rand() % 800;
@@ -310,10 +309,18 @@ void EndlessState::render() {
 	gwindow.draw(tileMap);
 
 	// draw the player
+	sf::RectangleShape bar1({ 26.f, 6.f });
+	bar1.setFillColor(sf::Color::Black);
+	bar1.setPosition(player.getPosition().x, player.getPosition().y - 10);
+	sf::RectangleShape bar2({ 24.f * (player.health / 100.f), 4.f });
+	bar2.setFillColor(sf::Color::Red);
+	bar2.setPosition(player.getPosition().x + 1, player.getPosition().y - 9);
+	gwindow.draw(bar1);
+	gwindow.draw(bar2);
 	player.animateFrame();
 	gwindow.draw(player);
 
-  // draw the projectile
+	// draw the projectile
 	projectile.animateFrame();
 	gwindow.draw(projectile);
 
