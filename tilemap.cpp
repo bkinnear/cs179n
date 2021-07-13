@@ -211,7 +211,7 @@ bool TileMap::isOpaque(unsigned x, unsigned y) const {
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapHeight && y >=0 && y < mapWidth)
+	if (x >= 0 && x < mapWidth && y >=0 && y < mapHeight)
 		return map[y][x].opaque;
 
 	return true;

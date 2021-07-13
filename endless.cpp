@@ -24,7 +24,7 @@ sf::Vector2f vectorInDirection(float length, float direction) {
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game) :
 	State(game),
-	tileMap(createTexture("res/big_32x32_tileset.png"), 20, 20),
+	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),
@@ -240,9 +240,9 @@ void EndlessState::logic() {
 	// update projectiles
 	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
 		// get movement of projectile for this frame
-		sf::Vector2f movementVector = vectorInDirection(projItr->speed, projItr->direction);
-		if (tileMap.areaClear(*projItr, movementVector)) {
-			projItr->move(movementVector);
+		sf::Vector2f moveVector = vectorInDirection(projItr->speed, projItr->direction);
+		if (tileMap.areaClear(*projItr, moveVector)) {
+			projItr->move(moveVector);
 		}
 		else {
 			// destroy projectile
