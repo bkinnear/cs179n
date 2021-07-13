@@ -33,6 +33,9 @@
     <ClCompile Include="tilemap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.hpp">
@@ -54,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="projectile.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inventory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -118,6 +118,7 @@
   <ItemGroup>
     <ClCompile Include="endless.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="inventory.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menustate.cpp" />
     <ClCompile Include="state.cpp" />
@@ -126,6 +127,7 @@
   <ItemGroup>
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="game.hpp" />
+    <ClInclude Include="inventory.hpp" />
     <ClInclude Include="menustate.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />

@@ -2,6 +2,7 @@
 #include "menustate.hpp"
 
 int main() {
+	//this is a test
 	// create new game object
 	// this object will hold the current gamestate and SFML objects
 	Game game;
