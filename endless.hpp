@@ -50,9 +50,7 @@ private:
 	// textures
 	sf::Texture& texPlayerRight;
 	sf::Texture& texPlayerLeft;
-
 	sf::Texture& texProjectile;
-	sf::Texture& texPlayerLeft;  
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
   
