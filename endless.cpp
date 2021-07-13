@@ -238,6 +238,7 @@ void EndlessState::logic() {
 	}
 
 	// update projectiles
+	bool end = false;
 	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
 		// get movement of projectile for this frame
 		sf::Vector2f moveVector = vectorInDirection(projItr->speed, projItr->direction);
@@ -249,7 +250,33 @@ void EndlessState::logic() {
 			projItr = projectiles.erase(projItr);
 			if (projItr == projectiles.end())
 				break;
+			continue;
 		}
+
+		// check for collision with enemies
+		// TODO - make enemies use a spatial hash so this algo's faster
+		// this algo is currently O(K*N) where K = bullets, N = enemies
+		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+			if (enemyItr->getGlobalBounds().intersects(projItr->getGlobalBounds())) {
+				// enemy hit
+				enemyItr->health -= 25; // TODO set this to the bullet's damage
+				if (enemyItr->health <= 0) {
+					enemyItr = enemies.erase(enemyItr);
+					if (enemyItr == enemies.end())
+						break;
+				}
+
+				// destroy bullet
+				projItr = projectiles.erase(projItr);
+				if (projItr == projectiles.end()) {
+					end = true;
+					break;
+				}
+			}
+		}
+
+		if (end)
+			break;
 	}
 
 	//For Enemy Movement
@@ -287,9 +314,9 @@ void EndlessState::logic() {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (player.alive && !enemy.attack) {
-				player.health -= 5;
+				player.health -= 15; // deal amount of damage to player
 				std::cout << "player is taking damage, new health: " << player.health << std::endl;
-				if (player.health == 0) {
+				if (player.health <= 0) {
 					player.alive = false;
 					player.setColor(sf::Color(255, 0, 0, 255));
 					std::cout << "player has died" << std::endl;
@@ -348,6 +375,16 @@ void EndlessState::render() {
 		Enemy& enemy = *enemyItr;
 		enemy.animateFrame();
 		gwindow.draw(enemy);
+
+		// draw the HP bar
+		sf::RectangleShape bar1({ 26.f, 6.f });
+		bar1.setFillColor(sf::Color::Black);
+		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
+		sf::RectangleShape bar2({ 24.f * (enemy.health / 100.f), 4.f });
+		bar2.setFillColor(sf::Color::Red);
+		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
+		gwindow.draw(bar1);
+		gwindow.draw(bar2);
 	}
 
 	// update window
