@@ -16,8 +16,8 @@ EndlessState::EndlessState(Game& game) :
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
-	texEnemyLeft(createTexture("res/player_l_strip.png")),
-	texEnemyRight(createTexture("res/player_r_strip.png"))
+	texEnemyRight(createTexture("res/enemy_r_strip.png")),
+	texEnemyLeft(createTexture("res/enemy_l_strip.png"))
 {
 
 	// set main view
@@ -59,12 +59,18 @@ EndlessState::EndlessState(Game& game) :
 	for(int i = 0;i < limit;i++)
 	{
 		Enemy enemy;
-		int randHeight = rand() % 600;
-		int randWidth = rand() % 800;
 		enemy.hitRate = currentLevel * 0.5;
 		enemy.speed = currentLevel + 0.5;
-		enemy.create(texEnemyLeft, { 100, 100, 32,32 }, 4);//For now
-		enemy.setPosition(randWidth, randHeight);
+		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
+		bool placed = false;
+		for (;;) {
+			// TODO set range to world_width and world_height instead of magic numbers
+			int randWidth = rand() % 800;
+			int randHeight = rand() % 600;
+			enemy.setPosition(randWidth, randHeight);
+			if (tileMap.areaClear(enemy, 0, 0))
+				break;
+		}
 		enemies.push_back(enemy);
 	}
 }
@@ -114,11 +120,16 @@ void EndlessState::logic() {
 				projectile.setIndex(1);
 				projectile.shoot = true;
 				projectile.move(projectile.speed, 0);
-        break;
+				break;
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
 				break;
+			case sf::Keyboard::F2:
+				// restarts the map
+				game.setState(new EndlessState(game));
+				delete this;
+				return;
 			}
 			break;
 		case sf::Event::KeyReleased:
@@ -253,10 +264,22 @@ void EndlessState::logic() {
 
 		if (length >= 15)
 		{
-			sf::Vector2f pos = sf::Vector2f(difference.x / length, difference.y / length);
+			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
 			enemy.setAnimSpeed(12);
-			enemy.move(pos.x, pos.y);
+
+			// move when free
+			if (tileMap.areaClear(enemy, moveVector.x, 0))
+				enemy.move(moveVector.x, 0);
+			if (tileMap.areaClear(enemy, 0, moveVector.y))
+				enemy.move(0, moveVector.y);
+
 			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
+
+			// change texture depending on enemy direction
+			if (moveVector.x < 0)
+				enemy.setTexture(texEnemyLeft);
+			else
+				enemy.setTexture(texEnemyRight);
 		}
 		else
 		{
