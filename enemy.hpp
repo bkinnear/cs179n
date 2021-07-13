@@ -20,7 +20,5 @@ public:
 			attack = 0; //reset attack cooldown
 		}
 	}
-
-
 };
 #endif
