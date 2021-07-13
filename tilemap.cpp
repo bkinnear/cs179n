@@ -35,6 +35,7 @@ struct buildingsmall {
 
 const tileType building1::array[w][h] =
 {
+{1, 14, 14, 26, 14, 14, 3},
 {16, 9, 9, 9, 9, 9, 10},
 {9, 9, 9, 9, 9, 9, 10},
 {9, 9, 9, 41, 9, 9, 10},

@@ -59,12 +59,18 @@ EndlessState::EndlessState(Game& game) :
 	for(int i = 0;i < limit;i++)
 	{
 		Enemy enemy;
-		int randHeight = rand() % 600;
-		int randWidth = rand() % 800;
 		enemy.hitRate = currentLevel * 0.5;
 		enemy.speed = currentLevel + 0.5;
-		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);//For now
-		enemy.setPosition(randWidth, randHeight);
+		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
+		bool placed = false;
+		for (;;) {
+			// TODO set range to world_width and world_height instead of magic numbers
+			int randWidth = rand() % 800;
+			int randHeight = rand() % 600;
+			enemy.setPosition(randWidth, randHeight);
+			if (tileMap.areaClear(enemy, 0, 0))
+				break;
+		}
 		enemies.push_back(enemy);
 	}
 }
