@@ -29,9 +29,8 @@ private:
 	// player
 	Player player;
 
-	Projectile projectile;
-
-	std::vector<Projectile>projectiles;
+	// projectiles
+	std::list<Projectile> projectiles;
   
 	// inventory & inventory GUI
 	Inventory inventory;
@@ -40,12 +39,13 @@ private:
 	sf::Text txtItemDetails;
 	sf::RectangleShape shpItemDetails;
 
-	// tile map
+	// enemies
 	std::list<Enemy> enemies;
 	const int totalEnemyCount = 60;
 	int currentLevelEnemyCount = 3;//Default count
-	
 	int currentLevel = 1;//Starting Level
+
+	// tile map
 	TileMap tileMap;
 
 	// textures

@@ -206,7 +206,7 @@ void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 	}
 }
 
-bool TileMap::isOpaque(unsigned x, unsigned y) {
+bool TileMap::isOpaque(unsigned x, unsigned y) const {
 	// convert from world to map coordinates
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
@@ -331,7 +331,7 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 }
 
-bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) {
+bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) const {
 	// get spr's world bounds
 	sf::FloatRect bounds = spr.getGlobalBounds();
 
@@ -350,3 +350,21 @@ bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) {
 	return true;
 }
 
+bool TileMap::areaClear(const sf::Sprite& spr, const sf::Vector2f& dpos) const {
+	// get spr's world bounds
+	sf::FloatRect bounds = spr.getGlobalBounds();
+
+	// shift bounds by deltas
+	bounds.left += dpos.x;
+	bounds.top += dpos.y;
+
+	bool lt = isOpaque(bounds.left, bounds.top);
+	bool rt = isOpaque(bounds.left + bounds.width, bounds.top);
+	bool ll = isOpaque(bounds.left, bounds.top + bounds.height);
+	bool lr = isOpaque(bounds.left + bounds.width, bounds.top + bounds.height);
+
+	if (lt || rt || ll || lr)
+		return false;
+
+	return true;
+}

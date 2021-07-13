@@ -1,12 +1,25 @@
 #include "endless.hpp"
 
 #include <iostream>
+#include <cmath>
 #include <cstdlib>
 #include <vector>
 #include <time.h>
 
+#define _PI 3.14159265f
+
 // the main game window
 #define gwindow game.window
+
+// returns direction (deg) from point A to point B
+float pointDirection(sf::Vector2f A, sf::Vector2f B) {
+	return std::atan2f(B.y - A.y, B.x - A.x) * 180.f / _PI;
+}
+
+// returns vector of given length in given direction (deg)
+sf::Vector2f vectorInDirection(float length, float direction) {
+	return { length * std::cosf(direction * _PI / 180.f), length * std::sinf(direction * _PI / 180.f) };
+}
 
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game) :
@@ -46,9 +59,6 @@ EndlessState::EndlessState(Game& game) :
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
 	player.speed = 2;
-
-	projectile.create(texProjectile, { (int)player.getPosition().y, (int)player.getPosition().x, 32, 32 }, 2);
-	projectile.setIndex(0);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -114,12 +124,6 @@ void EndlessState::logic() {
 			case sf::Keyboard::Right:
 				player.movingRight = true;
 				break;
-			case sf::Keyboard::Space:
-			case sf::Keyboard::Q:
-				projectile.setIndex(1);
-				projectile.shoot = true;
-				projectile.move(projectile.speed, 0);
-				break;
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
@@ -159,6 +163,16 @@ void EndlessState::logic() {
 			case sf::Mouse::Button::Left:
 				// LMB pressed
 
+				// create projectiles
+				projectiles.emplace_back();
+				{
+					Projectile& proj = projectiles.back();
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					proj.speed = 12;
+					proj.direction = pointDirection(player.getPosition(), mousePos);
+					proj.setRotation(proj.direction);
+				}
 				break;
 			case sf::Mouse::Button::Right:
 				// RMB pressed
@@ -207,48 +221,36 @@ void EndlessState::logic() {
 	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
 	const sf::FloatRect& bounds = player.getGlobalBounds();
 
-  if (player.alive) {
-    if (player.movingLeft)
-      if (tileMap.areaClear(player, -player.speed, 0)) {
-        if (projectile.shoot == false) {
-          projectile.setPosition(player.getPosition().x, player.getPosition().y);
-        }
-        player.move(-player.speed, 0);
-      }
-    if (player.movingUp)
-      if (tileMap.areaClear(player, 0, -player.speed)) {
-        if (projectile.shoot == false) {
-          projectile.setPosition(player.getPosition().x, player.getPosition().y);
-        }
-        player.move(0, -player.speed);
-      }
-    if (player.movingRight)
-      if (tileMap.areaClear(player, player.speed, 0)) {
-        if (projectile.shoot == false) {
-          projectile.setPosition(player.getPosition().x, player.getPosition().y);
-        }
-        player.move(player.speed, 0);
-      }	
-    if (player.movingDown)
-      if (tileMap.areaClear(player, 0, player.speed)) {
-        if (projectile.shoot == false) {
-          projectile.setPosition(player.getPosition().x, player.getPosition().y);
-        }
-        player.move(0, player.speed);
-      }
+	// player movement
+	if (player.alive) {
+		if (player.movingLeft)
+			if (tileMap.areaClear(player, -player.speed, 0))
+				player.move(-player.speed, 0);
+		if (player.movingUp)
+			if (tileMap.areaClear(player, 0, -player.speed))
+				player.move(0, -player.speed);
+		if (player.movingRight)
+			if (tileMap.areaClear(player, player.speed, 0))
+				player.move(player.speed, 0);
+		if (player.movingDown)
+			if (tileMap.areaClear(player, 0, player.speed))
+				player.move(0, player.speed);
+	}
 
-    if (projectile.shoot)
-    {
-      if (tileMap.areaClear(projectile, 0, projectile.speed)) {
-        projectile.move(projectile.speed, 0);
-      }
-      else {
-        projectile.setPosition(player.getPosition().x, player.getPosition().y);
-        projectile.shoot = false;
-        projectile.setIndex(0);
-      }
-	  }
-  }
+	// update projectiles
+	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
+		// get movement of projectile for this frame
+		sf::Vector2f movementVector = vectorInDirection(projItr->speed, projItr->direction);
+		if (tileMap.areaClear(*projItr, movementVector)) {
+			projItr->move(movementVector);
+		}
+		else {
+			// destroy projectile
+			projItr = projectiles.erase(projItr);
+			if (projItr == projectiles.end())
+				break;
+		}
+	}
 
 	//For Enemy Movement
 	std::list<Enemy>::iterator enemyItr;
@@ -308,7 +310,7 @@ void EndlessState::render() {
 	// draw the tilemap
 	gwindow.draw(tileMap);
 
-	// draw the player
+	// draw the HP bar
 	sf::RectangleShape bar1({ 26.f, 6.f });
 	bar1.setFillColor(sf::Color::Black);
 	bar1.setPosition(player.getPosition().x, player.getPosition().y - 10);
@@ -317,12 +319,15 @@ void EndlessState::render() {
 	bar2.setPosition(player.getPosition().x + 1, player.getPosition().y - 9);
 	gwindow.draw(bar1);
 	gwindow.draw(bar2);
+
+	// draw the player
 	player.animateFrame();
 	gwindow.draw(player);
 
-	// draw the projectile
-	projectile.animateFrame();
-	gwindow.draw(projectile);
+	// draw the projectiles
+	for (Projectile& proj : projectiles) {
+		gwindow.draw(proj);
+	}
 
 	// set view to draw guis
 	gwindow.setView(guiView);
