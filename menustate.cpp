@@ -25,10 +25,6 @@ MenuState::MenuState(Game& game):
 	// so we just just use the createTexture() return to set the sprite texture
 	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 96}, 2);
 	sprEndlessButton.setPosition(320.f, 128.f);
-
-	sprYoshi.create(createTexture("res/yoshi_strip.png"), { 0, 0, 79, 79 }, 54);
-	sprYoshi.setAnimSpeed(15);
-	sprYoshi.setPosition(0, 0);
 }
 
 MenuState::~MenuState() {
@@ -87,9 +83,6 @@ void MenuState::render() {
 
 	// draw the menu button
 	gwindow.draw(sprEndlessButton);
-
-	sprYoshi.animateFrame();
-	gwindow.draw(sprYoshi);
 
 	// update window
 	gwindow.display();
