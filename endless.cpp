@@ -16,8 +16,8 @@ EndlessState::EndlessState(Game& game) :
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
-	texEnemyLeft(createTexture("res/player_l_strip.png")),
-	texEnemyRight(createTexture("res/player_r_strip.png"))
+	texEnemyRight(createTexture("res/enemy_r_strip.png")),
+	texEnemyLeft(createTexture("res/enemy_l_strip.png"))
 {
 
 	// set main view
@@ -63,7 +63,7 @@ EndlessState::EndlessState(Game& game) :
 		int randWidth = rand() % 800;
 		enemy.hitRate = currentLevel * 0.5;
 		enemy.speed = currentLevel + 0.5;
-		enemy.create(texEnemyLeft, { 100, 100, 32,32 }, 4);//For now
+		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);//For now
 		enemy.setPosition(randWidth, randHeight);
 		enemies.push_back(enemy);
 	}
@@ -253,10 +253,22 @@ void EndlessState::logic() {
 
 		if (length >= 15)
 		{
-			sf::Vector2f pos = sf::Vector2f(difference.x / length, difference.y / length);
+			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
 			enemy.setAnimSpeed(12);
-			enemy.move(pos.x, pos.y);
+
+			// move when free
+			if (tileMap.areaClear(enemy, moveVector.x, 0))
+				enemy.move(moveVector.x, 0);
+			if (tileMap.areaClear(enemy, 0, moveVector.y))
+				enemy.move(0, moveVector.y);
+
 			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
+
+			// change texture depending on enemy direction
+			if (moveVector.x < 0)
+				enemy.setTexture(texEnemyLeft);
+			else
+				enemy.setTexture(texEnemyRight);
 		}
 		else
 		{
