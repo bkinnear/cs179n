@@ -122,7 +122,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menustate.cpp" />
     <ClCompile Include="state.cpp" />
+    <ClCompile Include="survival.cpp" />
     <ClCompile Include="tilemap.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="endless.hpp" />
@@ -133,7 +135,9 @@
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />
     <ClInclude Include="state.hpp" />
+    <ClInclude Include="survival.hpp" />
     <ClInclude Include="tilemap.hpp" />
+    <ClInclude Include="utils.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

@@ -24,11 +24,11 @@ MenuState::MenuState(Game& game):
 
 	// we're not going to store the texture anywhere (because we don't need to modify)
 	// so we just just use the createTexture() return to set the sprite texture
-	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 96}, 2);
+	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 64}, 2);
 	sprEndlessButton.setPosition(320.f, 128.f);
 
 	//Survival Mode Button Placement Start
-	sprSurvivalButton.create(createTexture("res/menu_survival_strip.png"), { 0, 0, 160, 96 }, 2);
+	sprSurvivalButton.create(createTexture("res/menu_survival_strip.png"), { 0, 0, 160, 64 }, 2);
 	sprSurvivalButton.setPosition(320.f, 205.f);
 	//Survival Mode Button Placement End
 }
