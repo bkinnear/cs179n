@@ -20,6 +20,7 @@ private:
 
 	// place any vars we need in this state in here
 	AnimSprite sprEndlessButton;
+	AnimSprite sprSurvivalButton;
 };
 
 #endif MENUSTATE_H_

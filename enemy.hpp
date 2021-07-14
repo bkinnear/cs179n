@@ -10,8 +10,8 @@ public:
 
 	// sprite movement speed in px per frame
 	int health = 100;
-	int speed;//Endless Mode - 3 || Survival Mode = Dynamically Increasing
-	int hitRate;//Endless Mode - 2 || Survival Mode = Dynamically increasing
+	int speed;//Endless Mode - 3 || Survival Mode = Dynamically Increasing from 3
+	int hitRate;//Endless Mode - 15 || Survival Mode = Dynamically increasing from 15
 
 	int attack = -1;
 

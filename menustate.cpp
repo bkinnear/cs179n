@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "endless.hpp"
+#include "survival.hpp"
 
 // the main game window
 #define gwindow game.window
@@ -25,6 +26,11 @@ MenuState::MenuState(Game& game):
 	// so we just just use the createTexture() return to set the sprite texture
 	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 96}, 2);
 	sprEndlessButton.setPosition(320.f, 128.f);
+
+	//Survival Mode Button Placement Start
+	sprSurvivalButton.create(createTexture("res/menu_survival_strip.png"), { 0, 0, 160, 96 }, 2);
+	sprSurvivalButton.setPosition(320.f, 205.f);
+	//Survival Mode Button Placement End
 }
 
 MenuState::~MenuState() {
@@ -54,6 +60,7 @@ void MenuState::logic() {
 		case sf::Event::MouseButtonPressed:
 			// user clicked endless button
 			if (sprEndlessButton.getGlobalBounds().contains(mousePos)) {
+				std::cout << "Starting Endless Mode\n";
 				// this is what changing state needs to look like
 				// set new state
 				game.setState(new EndlessState(game));
@@ -62,6 +69,12 @@ void MenuState::logic() {
 				delete this;
 
 				// break switch case
+				return;
+			}
+			if (sprSurvivalButton.getGlobalBounds().contains(mousePos)) {
+				std::cout << "Starting Survival Mode\n";
+				game.setState(new SurvivalState(game));
+				delete this;
 				return;
 			}
 
@@ -75,6 +88,12 @@ void MenuState::logic() {
 	} else {
 		sprEndlessButton.setIndex(0);
 	}
+	if (sprSurvivalButton.getGlobalBounds().contains(mousePos)) {
+		sprSurvivalButton.setIndex(1);
+	}
+	else {
+		sprSurvivalButton.setIndex(0);
+	}
 }
 
 void MenuState::render() {
@@ -83,6 +102,7 @@ void MenuState::render() {
 
 	// draw the menu button
 	gwindow.draw(sprEndlessButton);
+	gwindow.draw(sprSurvivalButton);
 
 	// update window
 	gwindow.display();

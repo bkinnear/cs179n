@@ -1,4 +1,4 @@
-#include "endless.hpp"
+#include "survival.hpp"
 #include "utils.hpp"
 
 #include <iostream>
@@ -7,11 +7,12 @@
 #include <vector>
 #include <time.h>
 
+
 // the main game window
 #define gwindow game.window
 
 // NOTE: we must call the original constructor and pass it the Game pointer
-EndlessState::EndlessState(Game& game) :
+SurvivalState::SurvivalState(Game& game) :
 	State(game),
 	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
@@ -26,11 +27,11 @@ EndlessState::EndlessState(Game& game) :
 	mainView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
 	guiView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
 
-	/*	============================= 
-		 allocate our resources here 
+	/*	=============================
+		 allocate our resources here
 		=============================  */
 
-	// load font
+		// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 
 	// load item details text
@@ -47,23 +48,23 @@ EndlessState::EndlessState(Game& game) :
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
-	player.speed = 2;
+	player.speed = 3;
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
-	spawnEnemies(defaultEnemySpawningCount);
-	
+	spawnEnemies(currentEnemySpawningCount);
+
 }
 
-void EndlessState::spawnEnemies(int noOfEnemies)
+void SurvivalState::spawnEnemies(int noOfEnemies)
 {
 	for (int i = 0;i < noOfEnemies;i++)
 	{
 		Enemy enemy;
-		enemy.hitRate = 15;
-		enemy.speed = 3;
+		enemy.hitRate = 14 + currentLevel;
+		enemy.speed = 3 + (currentLevel/maxLevelCount);
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
 		for (;;) {
 			// TODO set range to world_width and world_height instead of magic numbers
@@ -77,7 +78,7 @@ void EndlessState::spawnEnemies(int noOfEnemies)
 	}
 }
 
-void EndlessState::renderEnemies(int noOfEnemies)
+void SurvivalState::renderEnemies(int noOfEnemies)
 {
 	//draw the enemies
 	std::list<Enemy>::iterator enemyItr;
@@ -98,11 +99,11 @@ void EndlessState::renderEnemies(int noOfEnemies)
 	}
 }
 
-EndlessState::~EndlessState() {
+SurvivalState::~SurvivalState() {
 	// here we would deallocate any resources we use in this gamestate
 }
 
-void EndlessState::logic() {
+void SurvivalState::logic() {
 	// get mouse x and y in window coords - used for GUI
 	gwindow.setView(guiView);
 	sf::Vector2i winMousePos = sf::Mouse::getPosition(game.window);
@@ -144,7 +145,7 @@ void EndlessState::logic() {
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
-				game.setState(new EndlessState(game));
+				game.setState(new SurvivalState(game));
 				delete this;
 				return;
 			}
@@ -225,7 +226,7 @@ void EndlessState::logic() {
 			player.setTexture(texPlayerLeft);
 		if (player.movingRight)
 			player.setTexture(texPlayerRight);
-	} 
+	}
 	else {
 		player.setIndex(0);
 		player.setAnimSpeed(-1);
@@ -276,8 +277,26 @@ void EndlessState::logic() {
 				enemyItr->health -= 25; // TODO set this to the bullet's damage
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
-					spawnEnemies(1);
-					renderEnemies(1);
+					currentEnemyPresent = currentEnemyPresent - 1;
+					if (currentEnemyPresent == 0)
+					{
+						//Level completed - Move to next Level
+						std::cout << "Level " << currentLevel << " Completed " << "\n";
+						currentLevel = currentLevel + 1;
+						if (currentLevel == maxLevelCount)
+						{
+							//Survival Game End
+							std::cout << "Survival Game Completed " << "\n";
+						}
+						else
+						{
+							currentEnemySpawningCount = currentEnemySpawningCount + 2;
+							currentEnemyPresent = currentEnemySpawningCount;
+							spawnEnemies(currentEnemySpawningCount);
+							renderEnemies(currentEnemySpawningCount);
+							return;
+						}
+					}
 					if (enemyItr == enemies.end())
 						break;
 				}
@@ -290,7 +309,6 @@ void EndlessState::logic() {
 				}
 			}
 		}
-
 		if (end)
 			break;
 	}
@@ -342,7 +360,7 @@ void EndlessState::logic() {
 	}
 }
 
-void EndlessState::render() {
+void SurvivalState::render() {
 	// clear window
 	gwindow.clear(sf::Color(0x40AA20FF));
 
