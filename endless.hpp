@@ -19,6 +19,9 @@ public:
 	virtual void logic();
 	virtual void render();
 
+	void spawnEnemies(int);
+	void renderEnemies(int);
+
 private:
 	sf::View mainView;
 	sf::View guiView;
@@ -41,9 +44,8 @@ private:
 
 	// enemies
 	std::list<Enemy> enemies;
-	const int totalEnemyCount = 60;
-	int currentLevelEnemyCount = 3;//Default count
-	int currentLevel = 1;//Starting Level
+	int maximumEnemyCount = 99;
+	int defaultEnemySpawningCount = 3;//Default count
 
 	// tile map
 	TileMap tileMap;

@@ -64,13 +64,17 @@ EndlessState::EndlessState(Game& game) :
 	inventory.addItem(Item::type::MP5, 1);
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
-	int limit = currentLevel * 3;
-	srand(time(0));
-	for(int i = 0;i < limit;i++)
+	spawnEnemies(defaultEnemySpawningCount);
+	
+}
+
+void EndlessState::spawnEnemies(int noOfEnemies)
+{
+	for (int i = 0;i < noOfEnemies;i++)
 	{
 		Enemy enemy;
-		enemy.hitRate = currentLevel * 0.5;
-		enemy.speed = currentLevel + 0.5;
+		enemy.hitRate = 0.5;
+		enemy.speed = 0.5;
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
 		for (;;) {
 			// TODO set range to world_width and world_height instead of magic numbers
@@ -81,6 +85,27 @@ EndlessState::EndlessState(Game& game) :
 				break;
 		}
 		enemies.push_back(enemy);
+	}
+}
+
+void EndlessState::renderEnemies(int noOfEnemies)
+{
+	//draw the enemies
+	std::list<Enemy>::iterator enemyItr;
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
+		Enemy& enemy = *enemyItr;
+		enemy.animateFrame();
+		gwindow.draw(enemy);
+
+		// draw the HP bar
+		sf::RectangleShape bar1({ 26.f, 6.f });
+		bar1.setFillColor(sf::Color::Black);
+		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
+		sf::RectangleShape bar2({ 24.f * (enemy.health / 100.f), 4.f });
+		bar2.setFillColor(sf::Color::Red);
+		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
+		gwindow.draw(bar1);
+		gwindow.draw(bar2);
 	}
 }
 
@@ -176,7 +201,7 @@ void EndlessState::logic() {
 				break;
 			case sf::Mouse::Button::Right:
 				// RMB pressed
-
+				// 
 				// equip item
 				if (showInventory)
 					inventory.wieldItemAt(winMousePos.x, winMousePos.y);
@@ -262,6 +287,8 @@ void EndlessState::logic() {
 				enemyItr->health -= 25; // TODO set this to the bullet's damage
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
+					spawnEnemies(1);
+					renderEnemies(1);
 					if (enemyItr == enemies.end())
 						break;
 				}
@@ -369,23 +396,7 @@ void EndlessState::render() {
 		gwindow.draw(txtItemDetails);
 	}
 
-	//draw the enemies
-	std::list<Enemy>::iterator enemyItr;
-	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
-		Enemy& enemy = *enemyItr;
-		enemy.animateFrame();
-		gwindow.draw(enemy);
-
-		// draw the HP bar
-		sf::RectangleShape bar1({ 26.f, 6.f });
-		bar1.setFillColor(sf::Color::Black);
-		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (enemy.health / 100.f), 4.f });
-		bar2.setFillColor(sf::Color::Red);
-		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
-		gwindow.draw(bar1);
-		gwindow.draw(bar2);
-	}
+	renderEnemies(enemies.size());
 
 	// update window
 	gwindow.display();
