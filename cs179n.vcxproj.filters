@@ -65,6 +65,12 @@
     <ClInclude Include="enemy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mask.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="anim.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

@@ -32,10 +32,10 @@ public:
 	bool tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off);
 
 	// returns true if moving sprite's position by <dx, dy> is clear of opaque tiles
-	bool areaClear(const sf::Sprite& spr, float dx, float dy) const;
+	bool areaClear(const MSprite& spr, float dx, float dy) const;
 
 	// returns true if moving sprite's position by <dpos.x, dpos.y> is clear of opaque tiles
-	bool areaClear(const sf::Sprite& spr, const sf::Vector2f& dpos) const;
+	bool areaClear(const MSprite& spr, const sf::Vector2f& dpos) const;
 
 	const int mapWidth;
 	const int mapHeight;

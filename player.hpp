@@ -3,11 +3,10 @@
 
 #include "game.hpp"
 #include "state.hpp"
-
+#include "mask.hpp"
 
 class Player: public AnimSprite {
-public:
-
+public:	
 	bool movingLeft = false, movingUp = false, movingDown = false, movingRight = false;
 	
 	// sprite movement speed in px per frame

@@ -5,7 +5,7 @@
 #include "state.hpp"
 
 
-class Projectile : public sf::Sprite {
+class Projectile : public MSprite {
 public:
 
 	bool shoot = false;

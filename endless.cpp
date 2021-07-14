@@ -58,6 +58,7 @@ EndlessState::EndlessState(Game& game) :
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
+	player.setMaskBounds({ 6, 2, 18, 27 });
 	player.speed = 2;
 
 	// add some stuff to the inventory
@@ -72,6 +73,7 @@ EndlessState::EndlessState(Game& game) :
 		enemy.hitRate = currentLevel * 0.5;
 		enemy.speed = currentLevel + 0.5;
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
+		enemy.setMaskBounds({ 4, 2, 17, 27 });
 		for (;;) {
 			// TODO set range to world_width and world_height instead of magic numbers
 			int randWidth = rand() % 800;
@@ -169,6 +171,8 @@ void EndlessState::logic() {
 					Projectile& proj = projectiles.back();
 					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
 					proj.setTexture(texProjectile);
+					// set mask bounds to just the sprite bounds (default)
+					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 12;
 					proj.direction = pointDirection(player.getPosition(), mousePos);
 					proj.setRotation(proj.direction);
@@ -218,10 +222,6 @@ void EndlessState::logic() {
 	}
 
 	// player movement
-	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
-	const sf::FloatRect& bounds = player.getGlobalBounds();
-
-	// player movement
 	if (player.alive) {
 		if (player.movingLeft)
 			if (tileMap.areaClear(player, -player.speed, 0))
@@ -257,7 +257,7 @@ void EndlessState::logic() {
 		// TODO - make enemies use a spatial hash so this algo's faster
 		// this algo is currently O(K*N) where K = bullets, N = enemies
 		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-			if (enemyItr->getGlobalBounds().intersects(projItr->getGlobalBounds())) {
+			if (enemyItr->isColliding(*projItr)) {
 				// enemy hit
 				enemyItr->health -= 25; // TODO set this to the bullet's damage
 				if (enemyItr->health <= 0) {
