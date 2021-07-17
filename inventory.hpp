@@ -93,6 +93,8 @@ public:
 	// inventory grid height
 	const unsigned height = 3;
 
+	// item texture set
+	sf::Texture& texItemTileset;
 protected:
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -100,9 +102,6 @@ protected:
 private:
 	// inventory sprites
 	sf::Sprite sprInventory;
-
-	// item texture set
-	sf::Texture& texItemTileset;
 
 	// inventory grid
 	std::vector<std::vector<Item>> inventoryGrid;
