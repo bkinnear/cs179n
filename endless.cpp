@@ -30,7 +30,8 @@ EndlessState::EndlessState(Game& game) :
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
-	texEnemyLeft(createTexture("res/enemy_l_strip.png"))
+	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
+	texWeaponMP5(createTexture("res/mp5.png"))
 {
 
 	// set main view
@@ -84,6 +85,24 @@ EndlessState::EndlessState(Game& game) :
 		}
 		enemies.push_back(enemy);
 	}
+
+	//weapon spawning
+	int numWeapons = 10; //set to 10 for testing purposes, otherwise set to rand() % 3 
+	std::cout << "Amount of weapons will spawn: " << numWeapons << std::endl;
+	for (int i = 0; i < numWeapons; i++) {
+		std::cout << "weapon " << i << " created" << std::endl;
+		AnimSprite weapon;
+		weapon.create(texWeaponMP5, { 0,0,30,30 }, 0);
+		for (;;) {
+			weapon.setPosition(rand() % 800, rand() % 600);
+			if (tileMap.areaClear(weapon, 0, 0)) {
+				break;
+			}
+		}
+		weapons.push_back(weapon);
+		std::cout << "weapon pushed onto list" << std::endl;
+	}
+	
 }
 
 EndlessState::~EndlessState() {
@@ -303,7 +322,7 @@ void EndlessState::logic() {
 
 			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
 
-			// change texture depending on enemy direction
+			// change texture depending on enemy directionaa
 			if (moveVector.x < 0)
 				enemy.setTexture(texEnemyLeft);
 			else
@@ -336,6 +355,13 @@ void EndlessState::render() {
 
 	// draw the tilemap
 	gwindow.draw(tileMap);
+
+	//draw the weapons
+	std::list<AnimSprite>::iterator weaponItr;
+	for (weaponItr = weapons.begin(); weaponItr != weapons.end(); ++weaponItr) {
+		AnimSprite& weapon = *weaponItr;
+		gwindow.draw(weapon);
+	}
 
 	// draw the HP bar
 	sf::RectangleShape bar1({ 26.f, 6.f });
@@ -386,6 +412,7 @@ void EndlessState::render() {
 		gwindow.draw(bar1);
 		gwindow.draw(bar2);
 	}
+
 
 	// update window
 	gwindow.display();

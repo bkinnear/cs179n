@@ -45,6 +45,9 @@ private:
 	int currentLevelEnemyCount = 3;//Default count
 	int currentLevel = 1;//Starting Level
 
+	//spawned weapons
+	std::list<AnimSprite> weapons;
+
 	// tile map
 	TileMap tileMap;
 
@@ -54,6 +57,7 @@ private:
 	sf::Texture& texProjectile;
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
+	sf::Texture& texWeaponMP5;
   
   // fonts
 	sf::Font font;
