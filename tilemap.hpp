@@ -28,6 +28,15 @@ public:
 	// returns whether tile at world coords (x, y) is opaque
 	bool isOpaque(unsigned x, unsigned y) const;
 
+	// returns whether a tile at world coords (x,y) is a door
+	bool isDoor(unsigned x, unsigned y) const;
+
+	// returns whether a tile at world coords (x,y) is a door and whether its open
+	bool isDoorOpen(unsigned x, unsigned y) const;
+
+	// returns the type of tile at world coords (x,y)
+	tileType getTileType(unsigned x, unsigned y) const;
+
 	//returns true if the area needed to place an obstacle is clear
 	bool tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off);
 

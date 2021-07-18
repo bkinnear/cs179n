@@ -26,11 +26,11 @@ EndlessState::EndlessState(Game& game) :
 	mainView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
 	guiView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
 
-	/*	============================= 
-		 allocate our resources here 
+	/*	=============================
+		 allocate our resources here
 		=============================  */
 
-	// load font
+		// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 
 	// load item details text
@@ -54,7 +54,6 @@ EndlessState::EndlessState(Game& game) :
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
 	spawnEnemies(defaultEnemySpawningCount);
-	
 }
 
 void EndlessState::spawnEnemies(int noOfEnemies)
@@ -141,6 +140,57 @@ void EndlessState::logic() {
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
+				break;
+			case sf::Keyboard::Q:
+			{
+				sf::Vector2f position = player.getPosition();
+				int x, y;
+				bool isDoor = tileMap.isDoor(position.x, position.y - 32);
+				if (isDoor)
+				{
+					x = position.x;
+					y = position.y - 32;
+				}
+				else
+				{ 
+					isDoor = tileMap.isDoor(position.x, position.y + 32);
+					if (isDoor)
+					{
+						x = position.x;
+						y = position.y + 32;
+					}
+				}
+				if (isDoor)
+				{
+					x = x / TILE_SIZE;
+					y = y / TILE_SIZE;
+					switch (tileMap.getTileType(x, y))
+					{
+						case 30:
+							//Closed Door Type - 1
+							tileMap.setTile(x, y, 31);
+							break;
+						case 32:
+							//Closed Door Type - 2
+							tileMap.setTile(x, y, 33);
+							break;
+						case 31:
+							//Opened Door Type - 1
+							tileMap.setTile(x, y, 30);
+							break;
+						case 33:
+							//Opened Door Type - 2
+							tileMap.setTile(x, y, 32);
+							break;
+						default:
+							break;
+					}
+				}
+				else
+				{
+					std::cout << "Not a door!\n";
+				}
+			}
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
