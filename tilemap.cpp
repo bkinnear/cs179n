@@ -201,6 +201,8 @@ void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 	switch (type) {
 	case 0:
 	case 9:
+	case 31:
+	case 33:
 		map[y][x].opaque = false;
 		break;
 	default:
@@ -218,7 +220,56 @@ bool TileMap::isOpaque(unsigned x, unsigned y) const {
 
 	return true;
 }
+tileType TileMap::getTileType(unsigned x, unsigned y) const {
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
 
+	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	{
+		return map[y][x].type;
+	}
+	return -1;
+}
+bool TileMap::isDoor(unsigned x, unsigned y) const {
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
+
+	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	{
+		switch (map[y][x].type)
+		{
+			case 30:
+			case 31:
+			case 32:
+			case 33:
+				return true;
+				break;
+			default:
+				return false;
+				break;
+		}
+	}
+	return false;
+}
+bool TileMap::isDoorOpen(unsigned x, unsigned y) const {
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
+
+	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	{
+		switch (map[y][x].type)
+		{
+		case 31:
+		case 33:
+			return true;
+			break;
+		default:
+			return false;
+			break;
+		}
+	}
+	return false;
+}
 bool TileMap::tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off)
 {
 	for (unsigned y = 0; y < h; y++) {

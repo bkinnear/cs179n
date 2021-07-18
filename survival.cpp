@@ -1,4 +1,4 @@
-#include "endless.hpp"
+#include "survival.hpp"
 #include "utils.hpp"
 
 #include <iostream>
@@ -7,11 +7,12 @@
 #include <vector>
 #include <time.h>
 
+
 // the main game window
 #define gwindow game.window
 
 // NOTE: we must call the original constructor and pass it the Game pointer
-EndlessState::EndlessState(Game& game) :
+SurvivalState::SurvivalState(Game& game) :
 	State(game),
 	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
@@ -19,8 +20,7 @@ EndlessState::EndlessState(Game& game) :
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
-	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
-	texWeaponMP5(createTexture("res/mp5.png"))
+	texEnemyLeft(createTexture("res/enemy_l_strip.png"))
 {
 
 	// set main view
@@ -48,25 +48,24 @@ EndlessState::EndlessState(Game& game) :
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
-	player.setMaskBounds({ 6, 2, 18, 27 });
-	player.speed = 2;
+	player.speed = 3;
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
-	spawnEnemies(defaultEnemySpawningCount);
+	spawnEnemies(currentEnemySpawningCount);
+
 }
 
-void EndlessState::spawnEnemies(int noOfEnemies)
+void SurvivalState::spawnEnemies(int noOfEnemies)
 {
 	for (int i = 0;i < noOfEnemies;i++)
 	{
 		Enemy enemy;
-		enemy.hitRate = 15;
-		enemy.speed = 3;
+		enemy.hitRate = 14 + currentLevel;
+		enemy.speed = 3 + (currentLevel/maxLevelCount);
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
-		enemy.setMaskBounds({ 4, 2, 17, 27 });
 		for (;;) {
 			// TODO set range to world_width and world_height instead of magic numbers
 			int randWidth = rand() % 800;
@@ -77,27 +76,9 @@ void EndlessState::spawnEnemies(int noOfEnemies)
 		}
 		enemies.push_back(enemy);
 	}
-
-	//weapon spawning
-	int numWeapons = 10; //set to 10 for testing purposes, otherwise set to rand() % 3 
-	std::cout << "Amount of weapons will spawn: " << numWeapons << std::endl;
-	for (int i = 0; i < numWeapons; i++) {
-		std::cout << "weapon " << i << " created" << std::endl;
-		AnimSprite weapon;
-		weapon.create(texWeaponMP5, { 0,0,30,30 }, 0);
-		for (;;) {
-			weapon.setPosition(rand() % 800, rand() % 600);
-			if (tileMap.areaClear(weapon, 0, 0)) {
-				break;
-			}
-		}
-		weapons.push_back(weapon);
-		std::cout << "weapon pushed onto list" << std::endl;
-	}
-	
 }
 
-void EndlessState::renderEnemies(int noOfEnemies)
+void SurvivalState::renderEnemies(int noOfEnemies)
 {
 	//draw the enemies
 	std::list<Enemy>::iterator enemyItr;
@@ -118,11 +99,11 @@ void EndlessState::renderEnemies(int noOfEnemies)
 	}
 }
 
-EndlessState::~EndlessState() {
+SurvivalState::~SurvivalState() {
 	// here we would deallocate any resources we use in this gamestate
 }
 
-void EndlessState::logic() {
+void SurvivalState::logic() {
 	// get mouse x and y in window coords - used for GUI
 	gwindow.setView(guiView);
 	sf::Vector2i winMousePos = sf::Mouse::getPosition(game.window);
@@ -173,7 +154,7 @@ void EndlessState::logic() {
 					y = position.y - 32;
 				}
 				else
-				{ 
+				{
 					isDoor = tileMap.isDoor(position.x, position.y + 48);
 					if (isDoor)
 					{
@@ -187,28 +168,28 @@ void EndlessState::logic() {
 					int tileY = y / TILE_SIZE;
 					switch (tileMap.getTileType(x, y))
 					{
-						case 30:
-							//Closed Door Type - 1
-							tileMap.setTile(tileX, tileY, 31);
-							std::cout << "changed door to 31" << std::endl;
-							break;
-						case 32:
-							//Closed Door Type - 2
-							tileMap.setTile(tileX, tileY, 33);
-							std::cout << "changed door to 33" << std::endl;
-							break;
-						case 31:
-							//Opened Door Type - 1
-							tileMap.setTile(tileX, tileY, 30);
-							std::cout << "changed door to 30" << std::endl;
-							break;
-						case 33:
-							//Opened Door Type - 2
-							tileMap.setTile(tileX, tileY, 32);
-							std::cout << "changed door to 32" << std::endl;
-							break;
-						default:
-							break;
+					case 30:
+						//Closed Door Type - 1
+						tileMap.setTile(tileX, tileY, 31);
+						std::cout << "changed door to 31" << std::endl;
+						break;
+					case 32:
+						//Closed Door Type - 2
+						tileMap.setTile(tileX, tileY, 33);
+						std::cout << "changed door to 33" << std::endl;
+						break;
+					case 31:
+						//Opened Door Type - 1
+						tileMap.setTile(tileX, tileY, 30);
+						std::cout << "changed door to 30" << std::endl;
+						break;
+					case 33:
+						//Opened Door Type - 2
+						tileMap.setTile(tileX, tileY, 32);
+						std::cout << "changed door to 32" << std::endl;
+						break;
+					default:
+						break;
 					}
 				}
 				else
@@ -216,10 +197,10 @@ void EndlessState::logic() {
 					std::cout << "Not a door!\n";
 				}
 			}
-				break;
+			break;
 			case sf::Keyboard::F2:
 				// restarts the map
-				game.setState(new EndlessState(game));
+				game.setState(new SurvivalState(game));
 				delete this;
 				return;
 			}
@@ -258,8 +239,6 @@ void EndlessState::logic() {
 					Projectile& proj = projectiles.back();
 					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
 					proj.setTexture(texProjectile);
-					// set mask bounds to just the sprite bounds (default)
-					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 12;
 					proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
 					proj.setRotation(proj.direction);
@@ -302,11 +281,15 @@ void EndlessState::logic() {
 			player.setTexture(texPlayerLeft);
 		if (player.movingRight)
 			player.setTexture(texPlayerRight);
-	} 
+	}
 	else {
 		player.setIndex(0);
 		player.setAnimSpeed(-1);
 	}
+
+	// player movement
+	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
+	const sf::FloatRect& bounds = player.getGlobalBounds();
 
 	// player movement
 	if (player.alive) {
@@ -344,13 +327,31 @@ void EndlessState::logic() {
 		// TODO - make enemies use a spatial hash so this algo's faster
 		// this algo is currently O(K*N) where K = bullets, N = enemies
 		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-			if (enemyItr->isColliding(*projItr)) {
+			if (enemyItr->getGlobalBounds().intersects(projItr->getGlobalBounds())) {
 				// enemy hit
 				enemyItr->health -= 25; // TODO set this to the bullet's damage
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
-					spawnEnemies(1);
-					renderEnemies(1);
+					currentEnemyPresent = currentEnemyPresent - 1;
+					if (currentEnemyPresent == 0)
+					{
+						//Level completed - Move to next Level
+						std::cout << "Level " << currentLevel << " Completed " << "\n";
+						currentLevel = currentLevel + 1;
+						if (currentLevel == maxLevelCount)
+						{
+							//Survival Game End
+							std::cout << "Survival Game Completed " << "\n";
+						}
+						else
+						{
+							currentEnemySpawningCount = currentEnemySpawningCount + 2;
+							currentEnemyPresent = currentEnemySpawningCount;
+							spawnEnemies(currentEnemySpawningCount);
+							renderEnemies(currentEnemySpawningCount);
+							return;
+						}
+					}
 					if (enemyItr == enemies.end())
 						break;
 				}
@@ -363,7 +364,6 @@ void EndlessState::logic() {
 				}
 			}
 		}
-
 		if (end)
 			break;
 	}
@@ -392,7 +392,7 @@ void EndlessState::logic() {
 
 			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
 
-			// change texture depending on enemy directionaa
+			// change texture depending on enemy direction
 			if (moveVector.x < 0)
 				enemy.setTexture(texEnemyLeft);
 			else
@@ -415,7 +415,7 @@ void EndlessState::logic() {
 	}
 }
 
-void EndlessState::render() {
+void SurvivalState::render() {
 	// clear window
 	gwindow.clear(sf::Color(0x40AA20FF));
 
@@ -425,13 +425,6 @@ void EndlessState::render() {
 
 	// draw the tilemap
 	gwindow.draw(tileMap);
-
-	//draw the weapons
-	std::list<AnimSprite>::iterator weaponItr;
-	for (weaponItr = weapons.begin(); weaponItr != weapons.end(); ++weaponItr) {
-		AnimSprite& weapon = *weaponItr;
-		gwindow.draw(weapon);
-	}
 
 	// draw the HP bar
 	sf::RectangleShape bar1({ 26.f, 6.f });
@@ -466,7 +459,6 @@ void EndlessState::render() {
 	}
 
 	renderEnemies(enemies.size());
-
 
 	// update window
 	gwindow.display();

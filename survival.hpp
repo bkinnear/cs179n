@@ -1,5 +1,5 @@
-#ifndef ENDLESS_H_
-#define ENDLESS_H_
+#ifndef SURVIVAL_H
+#define SURVIVAL_H
 
 #include "game.hpp"
 #include "state.hpp"
@@ -11,10 +11,10 @@
 
 #include<list>
 
-class EndlessState : public State {
+class SurvivalState : public State {
 public:
-	EndlessState(Game&);
-	~EndlessState();
+	SurvivalState(Game&);
+	~SurvivalState();
 
 	virtual void logic();
 	virtual void render();
@@ -34,7 +34,7 @@ private:
 
 	// projectiles
 	std::list<Projectile> projectiles;
-  
+
 	// inventory & inventory GUI
 	Inventory inventory;
 	bool showInventory = false;
@@ -44,11 +44,10 @@ private:
 
 	// enemies
 	std::list<Enemy> enemies;
-	int maximumEnemyCount = 99;
-	int defaultEnemySpawningCount = 3;//Default count
-
-	//spawned weapons
-	std::list<AnimSprite> weapons;
+	int maxLevelCount = 20;
+	int currentLevel = 1;//Starting Level
+	int currentEnemySpawningCount = 3;//Default count for Level One
+	int currentEnemyPresent = 3;//To keep track of enemies present in the game - Level Movement
 
 	// tile map
 	TileMap tileMap;
@@ -59,9 +58,8 @@ private:
 	sf::Texture& texProjectile;
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
-	sf::Texture& texWeaponMP5;
-  
-  // fonts
+
+	// fonts
 	sf::Font font;
 };
 
