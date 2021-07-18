@@ -127,10 +127,12 @@
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="anim.hpp" />
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="enemy.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="inventory.hpp" />
+    <ClInclude Include="mask.hpp" />
     <ClInclude Include="menustate.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />

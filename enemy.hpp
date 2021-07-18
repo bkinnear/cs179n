@@ -3,6 +3,7 @@
 
 #include "game.hpp"
 #include "state.hpp"
+#include "mask.hpp"
 #include <Windows.h>
 
 class Enemy : public AnimSprite {

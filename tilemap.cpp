@@ -2,6 +2,8 @@
 #include <time.h>
 #include <vector>
 
+#include <iostream>
+
 /* Hard coded building presets */
 struct building1 {
 	static const int w = 7, h = 7;
@@ -382,9 +384,9 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 }
 
-bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) const {
-	// get spr's world bounds
-	sf::FloatRect bounds = spr.getGlobalBounds();
+bool TileMap::areaClear(const MSprite& spr, float dx=0.f, float dy=0.f) const {
+	// get mspr's global bounds
+	sf::FloatRect bounds = spr.getBounds();
 
 	// shift bounds by deltas
 	bounds.left += dx;
@@ -401,21 +403,6 @@ bool TileMap::areaClear(const sf::Sprite& spr, float dx, float dy) const {
 	return true;
 }
 
-bool TileMap::areaClear(const sf::Sprite& spr, const sf::Vector2f& dpos) const {
-	// get spr's world bounds
-	sf::FloatRect bounds = spr.getGlobalBounds();
-
-	// shift bounds by deltas
-	bounds.left += dpos.x;
-	bounds.top += dpos.y;
-
-	bool lt = isOpaque(bounds.left, bounds.top);
-	bool rt = isOpaque(bounds.left + bounds.width, bounds.top);
-	bool ll = isOpaque(bounds.left, bounds.top + bounds.height);
-	bool lr = isOpaque(bounds.left + bounds.width, bounds.top + bounds.height);
-
-	if (lt || rt || ll || lr)
-		return false;
-
-	return true;
+bool TileMap::areaClear(const MSprite& spr, const sf::Vector2f& dpos) const {
+	return areaClear(spr, dpos.x, dpos.y);
 }

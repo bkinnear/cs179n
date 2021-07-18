@@ -47,6 +47,9 @@ private:
 	int maximumEnemyCount = 99;
 	int defaultEnemySpawningCount = 3;//Default count
 
+	//spawned weapons
+	std::list<AnimSprite> weapons;
+
 	// tile map
 	TileMap tileMap;
 
@@ -56,6 +59,7 @@ private:
 	sf::Texture& texProjectile;
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
+	sf::Texture& texWeaponMP5;
   
   // fonts
 	sf::Font font;
