@@ -8,8 +8,10 @@
 #include "tilemap.hpp"
 #include "projectile.hpp"
 #include "enemy.hpp"
+#include "npc.hpp"
+#include "mask.hpp"
 
-#include<list>
+#include <list>
 
 class EndlessState : public State {
 public:
@@ -19,15 +21,28 @@ public:
 	virtual void logic();
 	virtual void render();
 
+	// returns false if state exits
+	bool handleEvents();
+
 	void spawnEnemies(int);
-	void renderEnemies(int);
+	void updateEnemies();
+	void renderEnemies();
+
+	void updateAllies();
+	void renderAllies();
+
+	void updateProjectiles();
 
 private:
 	sf::View mainView;
 	sf::View guiView;
 
-	/* ==v== place any vars we need in this state in here ==v== */
+	// mouse position in window (updated every logic tick)
+	sf::Vector2i winMousePos;
+	// mouse position in world (updated every logic tick)
+	sf::Vector2f mousePos;
 
+	/* ==v== place any vars we need in this state in here ==v== */
 
 	// player
 	Player player;
@@ -35,12 +50,15 @@ private:
 	// projectiles
 	std::list<Projectile> projectiles;
   
-	// inventory & inventory GUI
+	// inventory
 	Inventory inventory;
 	bool showInventory = false;
 	bool showItemDetails = false;
 	sf::Text txtItemDetails;
 	sf::RectangleShape shpItemDetails;
+
+	// allies
+	std::list<NPC> allies;
 
 	// enemies
 	std::list<Enemy> enemies;

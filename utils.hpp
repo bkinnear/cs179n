@@ -8,6 +8,7 @@ class Utils
 	public:
 		static float pointDirection(sf::Vector2f, sf::Vector2f);
 		static sf::Vector2f vectorInDirection(float, float);
+		static float pointDistance(sf::Vector2f, sf::Vector2f);
 };
 #endif
 

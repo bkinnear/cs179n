@@ -11,3 +11,7 @@ float Utils::pointDirection(sf::Vector2f A, sf::Vector2f B) {
 sf::Vector2f Utils::vectorInDirection(float length, float direction) {
 	return { length * std::cosf(direction * _PI / 180.f), length * std::sinf(direction * _PI / 180.f) };
 }
+
+float Utils::pointDistance(sf::Vector2f A, sf::Vector2f B) {
+	return std::sqrt(std::pow((B.x - A.x), 2) + std::pow((B.y - A.y), 2));
+}
