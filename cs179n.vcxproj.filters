@@ -83,6 +83,9 @@
     <ClInclude Include="anim.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="npc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
