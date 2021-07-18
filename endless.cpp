@@ -153,11 +153,11 @@ void EndlessState::logic() {
 				}
 				else
 				{ 
-					isDoor = tileMap.isDoor(position.x, position.y + 32);
+					isDoor = tileMap.isDoor(position.x, position.y + 48);
 					if (isDoor)
 					{
 						x = position.x;
-						y = position.y + 32;
+						y = position.y + 48;
 					}
 				}
 				if (isDoor)

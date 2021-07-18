@@ -143,6 +143,61 @@ void SurvivalState::logic() {
 				showInventory = !showInventory;
 				showItemDetails = false;
 				break;
+			case sf::Keyboard::Q:
+			{
+				sf::Vector2f position = player.getPosition();
+				int x, y;
+				bool isDoor = tileMap.isDoor(position.x, position.y - 32);
+				if (isDoor)
+				{
+					x = position.x;
+					y = position.y - 32;
+				}
+				else
+				{
+					isDoor = tileMap.isDoor(position.x, position.y + 48);
+					if (isDoor)
+					{
+						x = position.x;
+						y = position.y + 48;
+					}
+				}
+				if (isDoor)
+				{
+					int tileX = x / TILE_SIZE;
+					int tileY = y / TILE_SIZE;
+					switch (tileMap.getTileType(x, y))
+					{
+					case 30:
+						//Closed Door Type - 1
+						tileMap.setTile(tileX, tileY, 31);
+						std::cout << "changed door to 31" << std::endl;
+						break;
+					case 32:
+						//Closed Door Type - 2
+						tileMap.setTile(tileX, tileY, 33);
+						std::cout << "changed door to 33" << std::endl;
+						break;
+					case 31:
+						//Opened Door Type - 1
+						tileMap.setTile(tileX, tileY, 30);
+						std::cout << "changed door to 30" << std::endl;
+						break;
+					case 33:
+						//Opened Door Type - 2
+						tileMap.setTile(tileX, tileY, 32);
+						std::cout << "changed door to 32" << std::endl;
+						break;
+					default:
+						break;
+					}
+				}
+				else
+				{
+					std::cout << "Not a door!\n";
+				}
+			}
+			break;
 			case sf::Keyboard::F2:
 				// restarts the map
 				game.setState(new SurvivalState(game));
