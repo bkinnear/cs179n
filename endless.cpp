@@ -162,25 +162,29 @@ void EndlessState::logic() {
 				}
 				if (isDoor)
 				{
-					x = x / TILE_SIZE;
-					y = y / TILE_SIZE;
+					int tileX = x / TILE_SIZE;
+					int tileY = y / TILE_SIZE;
 					switch (tileMap.getTileType(x, y))
 					{
 						case 30:
 							//Closed Door Type - 1
-							tileMap.setTile(x, y, 31);
+							tileMap.setTile(tileX, tileY, 31);
+							std::cout << "changed door to 31" << std::endl;
 							break;
 						case 32:
 							//Closed Door Type - 2
-							tileMap.setTile(x, y, 33);
+							tileMap.setTile(tileX, tileY, 33);
+							std::cout << "changed door to 33" << std::endl;
 							break;
 						case 31:
 							//Opened Door Type - 1
-							tileMap.setTile(x, y, 30);
+							tileMap.setTile(tileX, tileY, 30);
+							std::cout << "changed door to 30" << std::endl;
 							break;
 						case 33:
 							//Opened Door Type - 2
-							tileMap.setTile(x, y, 32);
+							tileMap.setTile(tileX, tileY, 32);
+							std::cout << "changed door to 32" << std::endl;
 							break;
 						default:
 							break;
