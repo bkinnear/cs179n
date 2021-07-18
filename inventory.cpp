@@ -11,7 +11,7 @@ inline sf::Vector2f getSlotOffset(unsigned x, unsigned y) {
 }
 
 // returns item texture offset
-inline sf::Vector2i getItemTexOffset(Item::type type) {
+sf::Vector2i getItemTexOffset(Item::type type) {
 	int dx;
 
 	dx = ((int)type - 1) * 48;

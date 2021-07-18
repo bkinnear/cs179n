@@ -5,11 +5,12 @@
 #include <vector>
 #include <string>
 
+
 /* Item in inventory
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit };
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556 };
 
 	// type of item
 	type itemType = type::null;
@@ -30,8 +31,6 @@ struct Item {
 			return "M4 Rifle";
 		case type::ammo_556:
 			return "5.56 Rounds";
-		case type::medkit:
-			return "medkit";
 		default:
 			return "unknown item";
 		}
@@ -55,6 +54,8 @@ struct Item {
 		}
 	}
 };
+
+sf::Vector2i getItemTexOffset(Item::type type); //declared here because inventory.cpp has an inline call, but endless.cpp needs to use it
 
 /* Inventory object
  * 

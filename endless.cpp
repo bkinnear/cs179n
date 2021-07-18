@@ -30,8 +30,7 @@ EndlessState::EndlessState(Game& game) :
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
-	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
-	texWeaponMP5(createTexture("res/mp5.png"))
+	texEnemyLeft(createTexture("res/enemy_l_strip.png"))
 {
 
 	// set main view
@@ -86,23 +85,45 @@ EndlessState::EndlessState(Game& game) :
 		enemies.push_back(enemy);
 	}
 
-	//weapon spawning
-	int numWeapons = 10; //set to 10 for testing purposes, otherwise set to rand() % 3 
-	std::cout << "Amount of weapons will spawn: " << numWeapons << std::endl;
-	for (int i = 0; i < numWeapons; i++) {
-		std::cout << "weapon " << i << " created" << std::endl;
-		AnimSprite weapon;
-		weapon.create(texWeaponMP5, { 0,0,30,30 }, 0);
-		for (;;) {
-			weapon.setPosition(rand() % 800, rand() % 600);
-			if (tileMap.areaClear(weapon, 0, 0)) {
+	//initialize weapon list
+	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
+	//sf::Sprite& spr;
+	for (int i = 0; i < numWeapons; ++i) {
+		int randomItem = rand() % 5;//randomly generate what item to spawn
+		switch (randomItem) {//selects item type to spawn
+			case 0:
+				continue;
 				break;
-			}
+			case 1:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::MP5;
+				break;
+			case 2:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::ammo_9mm;
+				break;
+			case 3:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::M4;
+				break;
+			case 4:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::ammo_556;
+				break;
 		}
-		weapons.push_back(weapon);
-		std::cout << "weapon pushed onto list" << std::endl;
+		sf::Sprite& spr = itemsOnMap.back().second;
+		spr.setTexture(inventory.texItemTileset);
+		spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+		spr.setScale(.5, .5);
+		for (;;) {
+			spr.setPosition(rand() % 800, rand() % 600);
+			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
+				break;
+		}
+		
 	}
-	
+	std::cout << itemsOnMap.size() << std::endl;
+
 }
 
 EndlessState::~EndlessState() {
@@ -357,10 +378,8 @@ void EndlessState::render() {
 	gwindow.draw(tileMap);
 
 	//draw the weapons
-	std::list<AnimSprite>::iterator weaponItr;
-	for (weaponItr = weapons.begin(); weaponItr != weapons.end(); ++weaponItr) {
-		AnimSprite& weapon = *weaponItr;
-		gwindow.draw(weapon);
+	for (auto item : itemsOnMap) {
+		gwindow.draw(item.second);
 	}
 
 	// draw the HP bar

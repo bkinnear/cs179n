@@ -46,7 +46,7 @@ private:
 	int currentLevel = 1;//Starting Level
 
 	//spawned weapons
-	std::list<AnimSprite> weapons;
+	std::list<std::pair<Item::type, sf::Sprite>> itemsOnMap;
 
 	// tile map
 	TileMap tileMap;
@@ -57,7 +57,6 @@ private:
 	sf::Texture& texProjectile;
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
-	sf::Texture& texWeaponMP5;
   
   // fonts
 	sf::Font font;
