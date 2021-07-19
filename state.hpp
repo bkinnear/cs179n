@@ -4,7 +4,10 @@
 #include "game.hpp"
 
 #include <vector>
+#include <unordered_map>
 #include <list>
+
+typedef AnimSprite Effect;
 
 /* Abstract game state object
  * 
@@ -25,6 +28,12 @@ public:
 	/* defines the game logic of the gamestate */
 	virtual void logic() = 0;
 
+	/* updates effects and deletes expired effects */
+	void updateEffects();
+
+	/* draws effects to screen */
+	void drawEffects();
+
 	/* defines how to render the gamestate */
 	virtual void render() = 0;
 
@@ -42,12 +51,25 @@ public:
 	*/
 	sf::Texture& createTexture(const std::string& fname, sf::IntRect src);
 
+	/* creates effect sprite from texture
+	 * can now be placed in the world with createEffect()
+	*/
+	Effect* loadEffect(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites, unsigned animationSpeed);
+
+	/* creates effect in world using given effect pointer
+	*/
+	void createEffect(Effect* effect, const sf::Vector2f& pos);
+
 protected:
 	Game& game;
 
 private:
 	// holds raw textures - only interact through createTexture()
 	std::list<sf::Texture> textures;
+
+	// holds effects - only interact through loadEffect() and createEffect()
+	std::list<AnimSprite> effectSprites;
+	std::unordered_map<AnimSprite*, std::pair<unsigned, sf::Vector2f>> effects;
 };
 
 #endif

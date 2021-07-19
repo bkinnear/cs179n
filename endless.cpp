@@ -20,7 +20,8 @@ EndlessState::EndlessState(Game& game) :
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
 	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
-	texWeaponMP5(createTexture("res/mp5.png"))
+	texWeaponMP5(createTexture("res/mp5.png")),
+	texExplosionSmall(createTexture("res/explosion_small_strip.png"))
 {
 
 	// set main view
@@ -50,6 +51,9 @@ EndlessState::EndlessState(Game& game) :
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
 	player.setMaskBounds({ 6, 2, 18, 27 });
 	player.speed = 2;
+
+	// load effects
+	explosionSmall = loadEffect(texExplosionSmall, {0, 0, 8, 8}, 6, 20);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -228,8 +232,7 @@ bool EndlessState::handleEvents() {
 	return true;
 }
 
-void EndlessState::spawnEnemies(int noOfEnemies)
-{
+void EndlessState::spawnEnemies(int noOfEnemies) {
 	for (int i = 0;i < noOfEnemies;i++)
 	{
 		Enemy enemy;
@@ -438,14 +441,21 @@ void EndlessState::renderAllies() {
 }
 
 void EndlessState::updateProjectiles() {
-	bool end = false;
+	bool breaking = false;
 	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
 		// get movement of projectile for this frame
 		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
 		if (tileMap.areaClear(*projItr, moveVector)) {
 			projItr->move(moveVector);
 		}
-		else {
+		else {			
+			createEffect(
+				explosionSmall, 
+				Utils::pointEdge(
+					projItr->getPosition(),
+					tileMap.getTileBounds(projItr->getPosition().x + 3*moveVector.x, projItr->getPosition().y + 3*moveVector.y)
+				)
+			);
 			// destroy projectile
 			projItr = projectiles.erase(projItr);
 			if (projItr == projectiles.end())
@@ -457,26 +467,27 @@ void EndlessState::updateProjectiles() {
 		// TODO - make enemies use a spatial hash so this algo's faster
 		// this algo is currently O(K*N) where K = bullets, N = enemies
 		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-			if (enemyItr->isColliding(*projItr)) {
-				// enemy hit
-				enemyItr->health -= 25; // TODO set this to the bullet's damage
-				if (enemyItr->health <= 0) {
-					enemyItr = enemies.erase(enemyItr);
-					spawnEnemies(1);
-					if (enemyItr == enemies.end())
-						break;
-				}
+			// ignore if enemy is not colliding with projectile
+			if (!enemyItr->isColliding(*projItr))
+				continue;
 
-				// destroy bullet
-				projItr = projectiles.erase(projItr);
-				if (projItr == projectiles.end()) {
-					end = true;
+			// destroy bullet
+			projItr = projectiles.erase(projItr);
+			if (projItr == projectiles.end())
+				breaking = true;
+
+			// deal damage to enemy
+			enemyItr->health -= 25; // TODO set this to the bullet's damage
+			if (enemyItr->health <= 0) {
+				enemyItr = enemies.erase(enemyItr);
+				spawnEnemies(1);
+				if (enemyItr == enemies.end())
 					break;
-				}
 			}
+			if (breaking)
+				break;
 		}
-
-		if (end)
+		if (breaking)
 			break;
 	}
 }
@@ -493,6 +504,9 @@ void EndlessState::logic() {
 	// get mouse x and y in world coords
 	gwindow.setView(mainView);
 	mousePos = game.window.mapPixelToCoords(sf::Mouse::getPosition(gwindow));
+
+	// update effects
+	updateEffects();
 
 	// handle all events
 	// return if state exits
@@ -602,6 +616,9 @@ void EndlessState::render() {
 
 	// draw the allies
 	renderAllies();
+
+	// draw effects
+	drawEffects();
 
 	// ========================= //
 	// =  v   GUI drawing   v  = //

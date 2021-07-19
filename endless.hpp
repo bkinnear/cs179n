@@ -78,9 +78,13 @@ private:
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
 	sf::Texture& texWeaponMP5;
+	sf::Texture& texExplosionSmall;
   
-  // fonts
+	// fonts
 	sf::Font font;
+
+	// effects
+	Effect* explosionSmall;
 };
 
 #endif
