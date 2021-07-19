@@ -3,30 +3,45 @@
 #define gwindow game.window
 
 void State::updateEffects() {
-	for (auto eItr = effects.begin(); eItr != effects.end(); eItr++) {
-		Effect& e = *(eItr->first);
-		unsigned& ticks = eItr->second.first;
-		sf::Vector2f& pos = eItr->second.second;
+	for (auto mapItr = effects.begin(); mapItr != effects.end(); mapItr++) {
+		// effect sprite
+		Effect& effectSprite = *(mapItr->first);
+		// list of all effects of type "effectSprite"
+		auto& effectList = mapItr->second;
+		for (auto eItr = effectList.begin(); eItr != effectList.end(); eItr++) {
+			// ticks this effect instance has ticked
+			unsigned& ticks = eItr->first;
+			// position of this effect instance
+			sf::Vector2f& pos = eItr->second;
 
-		// check if effect has reached end of animation
-		if (ticks++ >= e.getNumSubsprites() * e.getTicksPerFrame() - 1) {
-			eItr = effects.erase(eItr);
-			if (eItr == effects.end())
-				break;
+			// check if effect instance has reached end of animation
+			if (ticks++ >= effectSprite.getNumSubsprites() * effectSprite.getTicksPerFrame() - 1) {
+				eItr = effectList.erase(eItr);
+				if (eItr == effectList.end())
+					break;
+			}
 		}
 	}
 }
 
 void State::drawEffects() {
-	for (auto eItr = effects.begin(); eItr != effects.end(); eItr++) {
-		Effect& e = *(eItr->first);
-		unsigned& ticks = eItr->second.first;
-		sf::Vector2f& pos = eItr->second.second;
+	for (auto mapItr = effects.begin(); mapItr != effects.end(); mapItr++) {
+		// effect sprite
+		Effect& effectSprite = *(mapItr->first);
+		// list of all effects of type "effectSprite"
+		auto& effectList = mapItr->second;
+		for (auto eItr = effectList.begin(); eItr != effectList.end(); eItr++) {
+			// ticks this effect instance has ticked
+			unsigned& ticks = eItr->first;
+			// position of this effect instance
+			sf::Vector2f& pos = eItr->second;
 
-		e.setIndex(ticks / e.getTicksPerFrame());
-		e.setPosition(pos);
+			// draw effect using effectSprite
+			effectSprite.setIndex(ticks / effectSprite.getTicksPerFrame());
+			effectSprite.setPosition(pos);
 
-		gwindow.draw(e);
+			gwindow.draw(effectSprite);
+		}
 	}
 }
 
@@ -53,12 +68,14 @@ sf::Texture& State::createTexture(const std::string& fname, sf::IntRect src) {
 Effect* State::loadEffect(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites, unsigned animationSpeed) {
 	effectSprites.emplace_back(texture, subRect, nSubsprites);
 	Effect& effect = effectSprites.back();
-
 	effect.setAnimSpeed(animationSpeed);
+
+	// add bucket to effect map
+	effects[&effect] = std::list<std::pair<unsigned, sf::Vector2f>>();
 	
 	return &effect;
 }
 
 void State::createEffect(Effect* effect, const sf::Vector2f& pos) {
-	effects[effect] = { 0, pos };
+	effects.at(effect).push_back({ 0, pos });
 }

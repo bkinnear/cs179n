@@ -69,7 +69,7 @@ private:
 
 	// holds effects - only interact through loadEffect() and createEffect()
 	std::list<AnimSprite> effectSprites;
-	std::unordered_map<AnimSprite*, std::pair<unsigned, sf::Vector2f>> effects;
+	std::unordered_map<AnimSprite*, std::list<std::pair<unsigned, sf::Vector2f>>> effects;
 };
 
 #endif

@@ -453,7 +453,7 @@ void EndlessState::updateProjectiles() {
 				explosionSmall, 
 				Utils::pointEdge(
 					projItr->getPosition(),
-					tileMap.getTileBounds(projItr->getPosition().x + 3*moveVector.x, projItr->getPosition().y + 3*moveVector.y)
+					tileMap.getTileBounds(projItr->getPosition().x + 2.5f*moveVector.x, projItr->getPosition().y + 2.5f*moveVector.y)
 				)
 			);
 			// destroy projectile
