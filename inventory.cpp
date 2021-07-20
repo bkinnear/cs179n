@@ -1,5 +1,5 @@
 #include "inventory.hpp"
-
+#include <iostream>
 // returns inventory slot offset
 inline sf::Vector2f getSlotOffset(unsigned x, unsigned y) {
 	float dx, dy;
@@ -62,9 +62,20 @@ void Inventory::addItem(Item::type type, unsigned num) {
 
 void Inventory::moveItem(unsigned x, unsigned y, unsigned x2, unsigned y2) {
 	// swaps item at <x, y> with item at <x2, y2>
-	Item temp = inventoryGrid[x2][y2];
-	inventoryGrid[x2][y2] = inventoryGrid[x][y];
-	inventoryGrid[x][y] = temp;
+	Item temp = inventoryGrid[y2][x2];
+	inventoryGrid[y2][x2] = inventoryGrid[y][x];
+	inventoryGrid[y][y] = temp;
+}
+
+unsigned Inventory::getNumItem(Item::type type) {
+	// search for item and return number
+	for (unsigned y = 0; y < height; y++)
+		for (unsigned x = 0; x < width; x++)
+			if (inventoryGrid[y][x].itemType == type)
+				return inventoryGrid[y][x].num;
+
+	// if item not found, code will reach here
+	return 0;
 }
 
 void Inventory::removeItem(Item::type type, unsigned num) {
@@ -72,7 +83,7 @@ void Inventory::removeItem(Item::type type, unsigned num) {
 	for (unsigned y = 0; y < height; y++) {
 		for (unsigned x = 0; x < width; x++) {
 			if (inventoryGrid[y][x].itemType == type) {
-				Item& item = inventoryGrid[x][y];
+				Item& item = inventoryGrid[y][x];
 				if (item.num <= num) {
 					// no items left - set item type to null
 					item.itemType = Item::type::null;
