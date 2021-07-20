@@ -10,6 +10,9 @@
 // the main game window
 #define gwindow game.window
 
+int magCount = 30;//temporarily set string until magazine ammo counter is made
+int totalCount = 300;//temporarily set string until total ammo counter is made
+
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game) :
 	State(game),
@@ -21,7 +24,11 @@ EndlessState::EndlessState(Game& game) :
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
 	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
 	texWeaponMP5(createTexture("res/mp5.png")),
-	texExplosionSmall(createTexture("res/explosion_small_strip.png"))
+	texExplosionSmall(createTexture("res/explosion_small_strip.png")),
+	playerIcon(createTexture("res/Player1_display.png")),
+	playerDeath(createTexture("res/player_death.png")),
+	ammoIcon(createTexture("res/ammo_icon.png")),
+	grenadeIcon(createTexture("res/grenade_icon.png"))
 {
 
 	// set main view
@@ -48,7 +55,7 @@ EndlessState::EndlessState(Game& game) :
 	shpItemDetails.setOutlineColor(sf::Color::Black);
 
 	// create animated sprite for player
-	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
+	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
 	player.setMaskBounds({ 6, 2, 18, 27 });
 	player.speed = 2;
 
@@ -60,6 +67,27 @@ EndlessState::EndlessState(Game& game) :
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
 	spawnEnemies(defaultEnemySpawningCount);
+}
+
+void EndlessState::spawnEnemies(int noOfEnemies)
+{
+	for (int i = 0;i < noOfEnemies;i++)
+	{
+		Enemy enemy;
+		enemy.hitRate = 15;
+		enemy.speed = 3;
+		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
+		enemy.setMaskBounds({ 4, 2, 17, 27 });
+		for (;;) {
+			// TODO set range to world_width and world_height instead of magic numbers
+			int randWidth = rand() % 800;
+			int randHeight = rand() % 600;
+			enemy.setPosition(randWidth, randHeight);
+			if (tileMap.areaClear(enemy, 0, 0))
+				break;
+		}
+		enemies.push_back(enemy);
+	}
 
 	//weapon spawning
 	int numWeapons = 10; //set to 10 for testing purposes, otherwise set to rand() % 3 
@@ -206,6 +234,13 @@ bool EndlessState::handleEvents() {
 
 				// create projectiles
 				projectiles.emplace_back();
+				if (magCount > 0) {
+					magCount--;
+				}
+				else {
+					magCount = 30;
+					totalCount -= 30;
+				}
 				{
 					Projectile& proj = projectiles.back();
 					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
@@ -568,6 +603,43 @@ void EndlessState::logic() {
 
 	// update all allies
 	updateAllies();
+
+	// Player HUD
+	//  
+	//HP bar
+	playerHPBack.setSize({ 200.f, 14.f });
+	playerHPBack.setFillColor(sf::Color::Transparent);
+	playerHPBack.setPosition(75, 550);
+	playerHPBack.setOutlineColor(sf::Color::Black);
+	playerHPBack.setOutlineThickness(2.f);
+	playerHPBar.setSize({ playerHPBack.getSize().x * (player.health / 100.f), playerHPBack.getSize().y });
+	if (player.health > 75) {
+		playerHPBar.setFillColor(sf::Color::Green);
+	}
+	else if (player.health > 25) {
+		playerHPBar.setFillColor(sf::Color::Yellow);
+	}
+	else {
+		playerHPBar.setFillColor(sf::Color::Red);
+	}
+	playerHPBar.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y);
+	playerIcon.setPosition(playerHPBack.getPosition().x - 62, playerHPBack.getPosition().y - 25);
+	//mag and total ammo counter;
+	ammoIcon.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y - 25);
+	ammoCount.setFont(font);
+	ammoCount.setCharacterSize(12);
+	ammoCount.setColor(sf::Color::Black);
+	ammoCount.setString(std::to_string(magCount) + "/" + std::to_string(totalCount));
+	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
+	//grenade counter
+	int gCount = 3;
+	grenadeIcon.setPosition(playerHPBack.getPosition().x + 75, playerHPBack.getPosition().y - 26);
+	grenadeIcon.setColor(sf::Color::Green);
+	grenadesNum.setFont(font);
+	grenadesNum.setCharacterSize(12);
+	grenadesNum.setColor(sf::Color::Black);
+	grenadesNum.setString("x" + std::to_string(gCount));
+	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
 }
 
 void EndlessState::render() {
@@ -585,22 +657,21 @@ void EndlessState::render() {
 	// draw the tilemap
 	gwindow.draw(tileMap);
 
+	//draw player HUD
+	gwindow.draw(playerHPBack);
+	gwindow.draw(playerHPBar);
+	gwindow.draw(playerIcon);
+	gwindow.draw(ammoIcon);
+	gwindow.draw(ammoCount);
+	gwindow.draw(grenadeIcon);
+	gwindow.draw(grenadesNum);
+
 	//draw the weapons
 	std::list<AnimSprite>::iterator weaponItr;
 	for (weaponItr = weapons.begin(); weaponItr != weapons.end(); ++weaponItr) {
 		AnimSprite& weapon = *weaponItr;
 		gwindow.draw(weapon);
 	}
-
-	// draw the HP bar
-	sf::RectangleShape bar1({ 26.f, 6.f });
-	bar1.setFillColor(sf::Color::Black);
-	bar1.setPosition(player.getPosition().x, player.getPosition().y - 10);
-	sf::RectangleShape bar2({ 24.f * (player.health / 100.f), 4.f });
-	bar2.setFillColor(sf::Color::Red);
-	bar2.setPosition(player.getPosition().x + 1, player.getPosition().y - 9);
-	gwindow.draw(bar1);
-	gwindow.draw(bar2);
 
 	// draw the player
 	player.animateFrame();
