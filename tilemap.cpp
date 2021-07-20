@@ -210,13 +210,13 @@ void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 	}
 }
 
-bool TileMap::isOpaque(unsigned x, unsigned y) const {
+bool TileMap::isOpaque(float x, float y) const {
 	// convert from world to map coordinates
-	x = int(x / TILE_SIZE);
-	y = int(y / TILE_SIZE);
+	unsigned tileX = int(x / TILE_SIZE);
+	unsigned tileY = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >=0 && y < mapHeight)
-		return map[y][x].opaque;
+	if (tileX >= 0 && tileX < mapWidth && tileY >=0 && tileY < mapHeight)
+		return map[tileY][tileX].opaque;
 
 	return true;
 }
@@ -384,7 +384,7 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 }
 
-bool TileMap::areaClear(const MSprite& spr, float dx=0.f, float dy=0.f) const {
+bool TileMap::areaClear(const MSprite& spr, float dx, float dy) const {
 	// get mspr's global bounds
 	sf::FloatRect bounds = spr.getBounds();
 
@@ -405,4 +405,12 @@ bool TileMap::areaClear(const MSprite& spr, float dx=0.f, float dy=0.f) const {
 
 bool TileMap::areaClear(const MSprite& spr, const sf::Vector2f& dpos) const {
 	return areaClear(spr, dpos.x, dpos.y);
+}
+
+sf::FloatRect TileMap::getTileBounds(float x, float y) const {
+	// convert world coords to map coords
+	int tileX = int(x / TILE_SIZE);
+	int tileY = int(y / TILE_SIZE);
+
+	return { tileX * (float)TILE_SIZE, tileY * (float)TILE_SIZE, (float)TILE_SIZE, (float)TILE_SIZE};
 }
