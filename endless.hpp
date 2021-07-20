@@ -75,7 +75,7 @@ private:
 	int defaultEnemySpawningCount = 3;//Default count
 
 	//spawned weapons
-	std::list<AnimSprite> weapons;
+	std::list<std::pair<Item::type, sf::Sprite>> itemsOnMap;
 
 	// tile map
 	TileMap tileMap;
