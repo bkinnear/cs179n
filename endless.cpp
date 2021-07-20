@@ -103,9 +103,7 @@ EndlessState::EndlessState(Game& game) :
 			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
 				break;
 		}
-		
 	}
-}
 
 	// add ally
 	allies.emplace_back(texPlayerLeft);
