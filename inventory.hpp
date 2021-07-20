@@ -74,6 +74,10 @@ public:
 	*/
 	void moveItem(unsigned x, unsigned y, unsigned x2, unsigned y2);
 
+	/* returns number of item type in inventory
+	*/
+	unsigned getNumItem(Item::type type);
+
 	/* removes item from inventory
 	 * decreases item count if not item type is present
 	*/
