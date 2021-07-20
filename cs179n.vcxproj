@@ -122,20 +122,26 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menustate.cpp" />
     <ClCompile Include="state.cpp" />
+    <ClCompile Include="survival.cpp" />
     <ClCompile Include="tilemap.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="anim.hpp" />
+    <ClInclude Include="character.hpp" />
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="enemy.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="inventory.hpp" />
     <ClInclude Include="mask.hpp" />
     <ClInclude Include="menustate.hpp" />
+    <ClInclude Include="npc.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />
     <ClInclude Include="state.hpp" />
+    <ClInclude Include="survival.hpp" />
     <ClInclude Include="tilemap.hpp" />
+    <ClInclude Include="utils.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
