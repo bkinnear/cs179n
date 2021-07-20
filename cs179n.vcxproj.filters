@@ -36,6 +36,12 @@
     <ClCompile Include="inventory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="survival.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.hpp">
@@ -65,10 +71,22 @@
     <ClInclude Include="enemy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="survival.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="mask.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="anim.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="npc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="character.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

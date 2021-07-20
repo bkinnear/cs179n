@@ -58,8 +58,14 @@ public:
 	/* gets speed in terms of FPS
 	 * -1 implies no animation
 	 */
-	int getAnimSpeed() {
+	int getAnimSpeed() const {
 		return 60 / ticksPerFrame;
+	}
+
+	/* gets ticks per frame
+	 */
+	int getTicksPerFrame() const {
+		return ticksPerFrame;
 	}
 
 	/* increments subsprite index per frame (depending on speed)
@@ -74,8 +80,13 @@ public:
 	}
 
 	/* returns subsprite index */
-	unsigned getIndex() {
+	unsigned getIndex() const {
 		return index;
+	}
+
+	/*  */
+	unsigned getNumSubsprites() const {
+		return nSubsprites;
 	}
 
 private:

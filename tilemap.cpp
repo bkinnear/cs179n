@@ -37,60 +37,60 @@ struct buildingsmall {
 
 const tileType building1::array[w][h] =
 {
-{1, 14, 14, 26, 14, 14, 3},
-{16, 9, 9, 9, 9, 9, 10},
-{9, 9, 9, 9, 9, 9, 10},
-{9, 9, 9, 41, 9, 9, 10},
-{9, 9, 9, 9, 9, 9, 10},
-{4, 9, 9, 9, 9, 9, 10},
+{1, 14, 14, 30, 14, 26, 3},
+{8, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 41, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 9, 10},
 {13, 14, 14, 30, 14, 14, 15}
 };
 
 const tileType building2::array[w][h] =
 {
-{1, 2, 37, 2, 3},
+{1, 2, 37, 37, 3},
 {8, 9, 9, 9, 10},
-{0, 9, 9, 9, 10},
-{0, 9, 9, 9, 10},
-{13, 14, 14, 14, 15}
+{8, 9, 9, 9, 10},
+{8, 9, 9, 9, 10},
+{13, 30, 14, 14, 15}
 };
 
 const tileType building3::array[w][h] =
 {
-{1, 2, 2, 2, 26,  3},
+{1, 30, 2, 2, 26,  3},
 {8, 9, 61, 61, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
-{13, 14, 0, 0, 14, 15}
+{13, 14, 30, 14, 14, 15}
 };
 
 const tileType building4::array[w][h] =
 {
-{1, 26, 2, 2, 2, 3},
+{1, 26, 2, 2, 30, 3},
 {8, 61, 61, 61, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
-{13, 14, 0, 0, 14, 15}
+{13, 14, 30, 14, 14, 15}
 };
 
 const tileType building5::array[w][h] =
 {
-{1, 2, 2, 2, 2, 3},
+{1, 30, 2, 2, 2, 3},
 {8, 9, 9, 37, 38, 10},
-{8, 9, 9, 9, 9, 0},
-{8, 9, 9, 9, 9, 0},
 {8, 9, 9, 9, 9, 10},
-{13, 14, 14, 14, 14, 15}
+{8, 9, 9, 9, 9, 10},
+{8, 9, 9, 9, 9, 10},
+{13, 14, 14, 30, 14, 15}
 };
 
 const tileType buildingsmall::array[w][h] =
 {
 {1, 2, 2, 3},
-{0, 9, 9, 10},
-{0, 9, 9, 10},
-{13, 14, 14, 15},
+{8, 9, 9, 10},
+{8, 9, 9, 10},
+{13, 30, 14, 15},
 };
 
 
@@ -201,6 +201,8 @@ void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 	switch (type) {
 	case 0:
 	case 9:
+	case 31:
+	case 33:
 		map[y][x].opaque = false;
 		break;
 	default:
@@ -208,17 +210,66 @@ void TileMap::setTile(unsigned x, unsigned y, tileType type) {
 	}
 }
 
-bool TileMap::isOpaque(unsigned x, unsigned y) const {
+bool TileMap::isOpaque(float x, float y) const {
 	// convert from world to map coordinates
-	x = int(x / TILE_SIZE);
-	y = int(y / TILE_SIZE);
+	unsigned tileX = int(x / TILE_SIZE);
+	unsigned tileY = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >=0 && y < mapHeight)
-		return map[y][x].opaque;
+	if (tileX >= 0 && tileX < mapWidth && tileY >=0 && tileY < mapHeight)
+		return map[tileY][tileX].opaque;
 
 	return true;
 }
+tileType TileMap::getTileType(unsigned x, unsigned y) const {
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
 
+	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	{
+		return map[y][x].type;
+	}
+	return -1;
+}
+bool TileMap::isDoor(unsigned x, unsigned y) const {
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
+
+	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	{
+		switch (map[y][x].type)
+		{
+			case 30:
+			case 31:
+			case 32:
+			case 33:
+				return true;
+				break;
+			default:
+				return false;
+				break;
+		}
+	}
+	return false;
+}
+bool TileMap::isDoorOpen(unsigned x, unsigned y) const {
+	x = int(x / TILE_SIZE);
+	y = int(y / TILE_SIZE);
+
+	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	{
+		switch (map[y][x].type)
+		{
+		case 31:
+		case 33:
+			return true;
+			break;
+		default:
+			return false;
+			break;
+		}
+	}
+	return false;
+}
 bool TileMap::tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off)
 {
 	for (unsigned y = 0; y < h; y++) {
@@ -333,7 +384,7 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 }
 
-bool TileMap::areaClear(const MSprite& spr, float dx=0.f, float dy=0.f) const {
+bool TileMap::areaClear(const MSprite& spr, float dx, float dy) const {
 	// get mspr's global bounds
 	sf::FloatRect bounds = spr.getBounds();
 
@@ -354,4 +405,12 @@ bool TileMap::areaClear(const MSprite& spr, float dx=0.f, float dy=0.f) const {
 
 bool TileMap::areaClear(const MSprite& spr, const sf::Vector2f& dpos) const {
 	return areaClear(spr, dpos.x, dpos.y);
+}
+
+sf::FloatRect TileMap::getTileBounds(float x, float y) const {
+	// convert world coords to map coords
+	int tileX = int(x / TILE_SIZE);
+	int tileY = int(y / TILE_SIZE);
+
+	return { tileX * (float)TILE_SIZE, tileY * (float)TILE_SIZE, (float)TILE_SIZE, (float)TILE_SIZE};
 }
