@@ -32,6 +32,15 @@ private:
 	// player
 	Player player;
 
+	//PlayerGUI
+	sf::RectangleShape playerHPBar;
+	sf::RectangleShape playerHPBack;
+	sf::Sprite playerIcon;
+	sf::Sprite ammoIcon;
+	sf::Text ammoCount;
+	sf::Sprite grenadeIcon;
+	sf::Text grenadesNum;
+
 	// projectiles
 	std::list<Projectile> projectiles;
   
@@ -52,6 +61,7 @@ private:
 
 	// tile map
 	TileMap tileMap;
+	sf::Text pressToOpen;
 
 	// textures
 	sf::Texture& texPlayerRight;
@@ -60,6 +70,7 @@ private:
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
 	sf::Texture& texWeaponMP5;
+	sf::Texture& playerDeath;
   
   // fonts
 	sf::Font font;
