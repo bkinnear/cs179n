@@ -262,6 +262,13 @@ void EndlessState::logic() {
 
 				// create projectiles
 				projectiles.emplace_back();
+				if (magCount > 0) {
+					magCount--;
+				}
+				else {
+					magCount = 30;
+					totalCount -= 30;
+				}
 				{
 					Projectile& proj = projectiles.back();
 					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
