@@ -109,6 +109,9 @@ EndlessState::EndlessState(Game& game) :
 			case 4:
 				itemsOnMap.emplace_back();
 				itemsOnMap.back().first = Item::type::ammo_556;
+			case 5:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::medkit;
 				break;
 		}
 		sf::Sprite& spr = itemsOnMap.back().second;

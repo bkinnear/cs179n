@@ -10,7 +10,7 @@
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556 };
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit};
 
 	// type of item
 	type itemType = type::null;
@@ -31,6 +31,8 @@ struct Item {
 			return "M4 Rifle";
 		case type::ammo_556:
 			return "5.56 Rounds";
+		case type::medkit:
+			return "Medkit";
 		default:
 			return "unknown item";
 		}
@@ -49,6 +51,8 @@ struct Item {
 			return "The military M4 automatic rifle.";
 		case type::ammo_556:
 			return "5.56 Rounds. Used for rifles.";
+		case type::medkit:
+			return "Medkit. Used for healing.";
 		default:
 			return "unknown item desc";
 		}
