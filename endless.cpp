@@ -67,27 +67,6 @@ EndlessState::EndlessState(Game& game) :
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
 	spawnEnemies(defaultEnemySpawningCount);
-}
-
-void EndlessState::spawnEnemies(int noOfEnemies)
-{
-	for (int i = 0;i < noOfEnemies;i++)
-	{
-		Enemy enemy;
-		enemy.hitRate = 15;
-		enemy.speed = 3;
-		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
-		enemy.setMaskBounds({ 4, 2, 17, 27 });
-		for (;;) {
-			// TODO set range to world_width and world_height instead of magic numbers
-			int randWidth = rand() % 800;
-			int randHeight = rand() % 600;
-			enemy.setPosition(randWidth, randHeight);
-			if (tileMap.areaClear(enemy, 0, 0))
-				break;
-		}
-		enemies.push_back(enemy);
-	}
 
 	//weapon spawning
 	int numWeapons = 10; //set to 10 for testing purposes, otherwise set to rand() % 3 
@@ -108,7 +87,27 @@ void EndlessState::spawnEnemies(int noOfEnemies)
 
 	// add ally
 	allies.emplace_back(texPlayerLeft);
-	allies.back().setPosition(player.getPosition() + sf::Vector2f({32.f, 0.f}));
+	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+}
+
+void EndlessState::spawnEnemies(int noOfEnemies) {
+	for (int i = 0;i < noOfEnemies;i++)
+	{
+		Enemy enemy;
+		enemy.hitRate = 15;
+		enemy.speed = 3;
+		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
+		enemy.setMaskBounds({ 4, 2, 17, 27 });
+		for (;;) {
+			// TODO set range to world_width and world_height instead of magic numbers
+			int randWidth = rand() % 800;
+			int randHeight = rand() % 600;
+			enemy.setPosition(randWidth, randHeight);
+			if (tileMap.areaClear(enemy, 0, 0))
+				break;
+		}
+		enemies.push_back(enemy);
+	}
 }
 
 bool EndlessState::handleEvents() {
@@ -146,18 +145,18 @@ bool EndlessState::handleEvents() {
 			{
 				sf::Vector2f position = player.getPosition();
 				int x, y;
-				bool isDoor = tileMap.isDoor(position.x, position.y - 32);
+				bool isDoor = tileMap.isDoor(position.x+16, position.y - 16);
 				if (isDoor)
 				{
-					x = position.x;
-					y = position.y - 32;
+					x = position.x + 16;
+					y = position.y - 16;
 				}
 				else
 				{
-					isDoor = tileMap.isDoor(position.x, position.y + 48);
+					isDoor = tileMap.isDoor(position.x+16, position.y + 48);
 					if (isDoor)
 					{
-						x = position.x;
+						x = position.x + 16;
 						y = position.y + 48;
 					}
 				}
@@ -265,26 +264,6 @@ bool EndlessState::handleEvents() {
 	}
 
 	return true;
-}
-
-void EndlessState::spawnEnemies(int noOfEnemies) {
-	for (int i = 0;i < noOfEnemies;i++)
-	{
-		Enemy enemy;
-		enemy.hitRate = 15;
-		enemy.speed = 3;
-		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
-		enemy.setMaskBounds({ 4, 2, 17, 27 });
-		for (;;) {
-			// TODO set range to world_width and world_height instead of magic numbers
-			int randWidth = rand() % 800;
-			int randHeight = rand() % 600;
-			enemy.setPosition(randWidth, randHeight);
-			if (tileMap.areaClear(enemy, 0, 0))
-				break;
-		}
-		enemies.push_back(enemy);
-	}
 }
 
 void EndlessState::updateEnemies() {
