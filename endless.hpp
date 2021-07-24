@@ -10,12 +10,13 @@
 #include "enemy.hpp"
 #include "npc.hpp"
 #include "mask.hpp"
+#include "classes.hpp"
 
 #include <list>
 
 class EndlessState : public State {
 public:
-	EndlessState(Game&);
+	EndlessState(Game&, PlayerClass);
 	~EndlessState();
 
 	virtual void logic();
@@ -23,6 +24,10 @@ public:
 
 	// returns false if state exits
 	bool handleEvents();
+
+	void chooseClass(PlayerClass);
+
+	void spawnWeapons();
 
 	void spawnEnemies(int);
 	void updateEnemies();
