@@ -14,7 +14,7 @@ int magCount = 30;//temporarily set string until magazine ammo counter is made
 int totalCount = 300;//temporarily set string until total ammo counter is made
 
 // NOTE: we must call the original constructor and pass it the Game pointer
-EndlessState::EndlessState(Game& game) :
+EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
 	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
@@ -39,7 +39,7 @@ EndlessState::EndlessState(Game& game) :
 		 allocate our resources here
 		=============================  */
 
-		// load font
+	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 
 	// load item details text
@@ -58,6 +58,8 @@ EndlessState::EndlessState(Game& game) :
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
 	player.setMaskBounds({ 6, 2, 18, 27 });
 	player.speed = 2;
+	// set player class vars
+	chooseClass(playerClass);
 
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, {0, 0, 8, 8}, 6, 20);
@@ -68,31 +70,53 @@ EndlessState::EndlessState(Game& game) :
 
 	spawnEnemies(defaultEnemySpawningCount);
 
+	spawnWeapons();
+
+	// add ally
+	allies.emplace_back(texPlayerLeft);
+	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+}
+
+void EndlessState::chooseClass(PlayerClass playerClass) {
+	switch (playerClass) {
+		case PlayerClass::MEDIC:
+			// do medic stuff
+			break;
+		case PlayerClass::ASSAULT:
+			// do assault stuff
+			break;
+		default:
+			std::cout << "no class chosen" << std::endl;
+			break;
+	}
+}
+
+void EndlessState::spawnWeapons() {
 	//initialize weapon list
 	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
 	//sf::Sprite& spr;
 	for (int i = 0; i < numWeapons; ++i) {
 		int randomItem = rand() % 5;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
-			case 0:
-				continue;
-				break;
-			case 1:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::MP5;
-				break;
-			case 2:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::ammo_9mm;
-				break;
-			case 3:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::M4;
-				break;
-			case 4:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::ammo_556;
-				break;
+		case 0:
+			continue;
+			break;
+		case 1:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::MP5;
+			break;
+		case 2:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::ammo_9mm;
+			break;
+		case 3:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::M4;
+			break;
+		case 4:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::ammo_556;
+			break;
 		}
 		sf::Sprite& spr = itemsOnMap.back().second;
 		spr.setTexture(inventory.texItemTileset);
@@ -104,10 +128,6 @@ EndlessState::EndlessState(Game& game) :
 				break;
 		}
 	}
-
-	// add ally
-	allies.emplace_back(texPlayerLeft);
-	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 }
 
 void EndlessState::spawnEnemies(int noOfEnemies) {
@@ -218,7 +238,7 @@ bool EndlessState::handleEvents() {
 			break;
 			case sf::Keyboard::F2:
 				// restarts the map
-				game.setState(new EndlessState(game));
+				game.setState(new EndlessState(game, player.playerClass));
 				delete this;
 				return false;
 			}

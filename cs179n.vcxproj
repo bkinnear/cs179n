@@ -116,6 +116,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="classmenu.cpp" />
     <ClCompile Include="endless.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="inventory.cpp" />
@@ -129,6 +130,8 @@
   <ItemGroup>
     <ClInclude Include="anim.hpp" />
     <ClInclude Include="character.hpp" />
+    <ClInclude Include="classes.hpp" />
+    <ClInclude Include="classmenu.hpp" />
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="enemy.hpp" />
     <ClInclude Include="game.hpp" />

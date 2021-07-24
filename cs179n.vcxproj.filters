@@ -42,6 +42,9 @@
     <ClCompile Include="survival.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="classmenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.hpp">
@@ -87,6 +90,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="character.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="classmenu.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="classes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
