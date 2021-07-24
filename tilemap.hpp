@@ -4,6 +4,7 @@
 #include "game.hpp"
 #include <vector>
 #include <string>
+#include <vector>
 
 #define TILE_SIZE 32
 
@@ -20,7 +21,7 @@ struct Tile {
 */
 class TileMap: public sf::Drawable {
 public:
-	TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight);
+	TileMap(State& state, unsigned mapWidth, unsigned mapHeight);
 
 	// sets tile at (x, y) to type specified
 	void setTile(unsigned x, unsigned y, tileType type);
@@ -56,7 +57,7 @@ protected:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
 private:
-	sf::Texture& texTileset;
+	std::vector<sf::Texture*> textures;
 
 	std::vector<std::vector<Tile>> map;
 
