@@ -14,7 +14,7 @@ int magCount = 30;//temporarily set string until magazine ammo counter is made
 int totalCount = 300;//temporarily set string until total ammo counter is made
 
 // NOTE: we must call the original constructor and pass it the Game pointer
-EndlessState::EndlessState(Game& game) :
+EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
 	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
@@ -39,7 +39,7 @@ EndlessState::EndlessState(Game& game) :
 		 allocate our resources here
 		=============================  */
 
-		// load font
+	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 
 	// load item details text
@@ -58,6 +58,8 @@ EndlessState::EndlessState(Game& game) :
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
 	player.setMaskBounds({ 6, 2, 18, 27 });
 	player.speed = 2;
+	// set player class vars
+	chooseClass(playerClass);
 
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, {0, 0, 8, 8}, 6, 20);
@@ -68,6 +70,28 @@ EndlessState::EndlessState(Game& game) :
 
 	spawnEnemies(defaultEnemySpawningCount);
 
+	spawnWeapons();
+
+	// add ally
+	allies.emplace_back(texPlayerLeft);
+	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+}
+
+void EndlessState::chooseClass(PlayerClass playerClass) {
+	switch (playerClass) {
+		case PlayerClass::MEDIC:
+			// do medic stuff
+			break;
+		case PlayerClass::ASSAULT:
+			// do assault stuff
+			break;
+		default:
+			std::cout << "no class chosen" << std::endl;
+			break;
+	}
+}
+
+void EndlessState::spawnWeapons() {
 	//initialize weapon list
 	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
 	//sf::Sprite& spr;
@@ -106,13 +130,7 @@ EndlessState::EndlessState(Game& game) :
 			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
 				break;
 		}
-		
 	}
-}
-
-	// add ally
-	allies.emplace_back(texPlayerLeft);
-	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 }
 
 void EndlessState::spawnEnemies(int noOfEnemies) {
@@ -223,7 +241,7 @@ bool EndlessState::handleEvents() {
 			break;
 			case sf::Keyboard::F2:
 				// restarts the map
-				game.setState(new EndlessState(game));
+				game.setState(new EndlessState(game, player.playerClass));
 				delete this;
 				return false;
 			}
@@ -258,22 +276,22 @@ bool EndlessState::handleEvents() {
 
 				// create projectiles
 				projectiles.emplace_back();
-				if (magCount > 0) {
-					magCount--;
-				}
-				else {
-					magCount = 30;
-					totalCount -= 30;
-				}
+
+				// TODO - implement mags
 				{
-					Projectile& proj = projectiles.back();
-					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-					proj.setTexture(texProjectile);
-					// set mask bounds to just the sprite bounds (default)
-					proj.setMaskBounds(proj.getLocalBounds());
-					proj.speed = 12;
-					proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
-					proj.setRotation(proj.direction);
+					unsigned nRounds = inventory.getNumItem(Item::type::ammo_9mm);
+					if (nRounds > 0) {
+						inventory.removeItem(Item::type::ammo_9mm, 1);
+
+						Projectile& proj = projectiles.back();
+						proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+						proj.setTexture(texProjectile);
+						// set mask bounds to just the sprite bounds (default)
+						proj.setMaskBounds(proj.getLocalBounds());
+						proj.speed = 12;
+						proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
+						proj.setRotation(proj.direction);
+					}
 				}
 				break;
 			case sf::Mouse::Button::Right:
@@ -633,7 +651,7 @@ void EndlessState::logic() {
 	ammoCount.setFont(font);
 	ammoCount.setCharacterSize(12);
 	ammoCount.setColor(sf::Color::Black);
-	ammoCount.setString(std::to_string(magCount) + "/" + std::to_string(totalCount));
+	ammoCount.setString(std::to_string(1) + "/" + std::to_string(inventory.getNumItem(Item::type::ammo_9mm))); // TODO implement mags and more ammo types
 	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
 	//grenade counter
 	int gCount = 3;

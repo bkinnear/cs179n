@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include "endless.hpp"
 #include "survival.hpp"
+#include "classmenu.hpp"
 
 // the main game window
 #define gwindow game.window
@@ -63,7 +64,7 @@ void MenuState::logic() {
 				std::cout << "Starting Endless Mode\n";
 				// this is what changing state needs to look like
 				// set new state
-				game.setState(new EndlessState(game));
+				game.setState(new ClassMenu(game));
 
 				// delete old state (or not if you want to keep it loaded in RAM to go back)
 				delete this;
