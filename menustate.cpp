@@ -5,6 +5,7 @@
 #include "endless.hpp"
 #include "survival.hpp"
 #include "classmenu.hpp"
+#include "optionsmenu.hpp"
 
 // the main game window
 #define gwindow game.window
@@ -14,7 +15,7 @@ MenuState::MenuState(Game& game):
 	State(game)
 {
 	// set view
-	view.reset({0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y)});
+	view.reset({0.f, 0.f, 1366.f, 768.f});
 	// we must update view any time we change something in it
 	gwindow.setView(view);
 
@@ -32,6 +33,9 @@ MenuState::MenuState(Game& game):
 	sprSurvivalButton.create(createTexture("res/menu_survival_strip.png"), { 0, 0, 160, 64 }, 2);
 	sprSurvivalButton.setPosition(320.f, 205.f);
 	//Survival Mode Button Placement End
+
+	sprOptionsButton.create(createTexture("res/menu_options.png"), { 0, 0, 160, 64 }, 2);
+	sprOptionsButton.setPosition(320.f, 320.f);
 }
 
 MenuState::~MenuState() {
@@ -72,9 +76,16 @@ void MenuState::logic() {
 				// break switch case
 				return;
 			}
+
 			if (sprSurvivalButton.getGlobalBounds().contains(mousePos)) {
 				std::cout << "Starting Survival Mode\n";
 				game.setState(new SurvivalState(game));
+				delete this;
+				return;
+			}
+
+			if (sprOptionsButton.getGlobalBounds().contains(mousePos)) {
+				game.setState(new OptionsMenu(game));
 				delete this;
 				return;
 			}
@@ -83,18 +94,20 @@ void MenuState::logic() {
 		}
 	}
 	
-	// change play button subsprite if being hovered over
-	if (sprEndlessButton.getGlobalBounds().contains(mousePos)) {
+	if (sprEndlessButton.getGlobalBounds().contains(mousePos))
 		sprEndlessButton.setIndex(1);
-	} else {
+	else
 		sprEndlessButton.setIndex(0);
-	}
-	if (sprSurvivalButton.getGlobalBounds().contains(mousePos)) {
+
+	if (sprSurvivalButton.getGlobalBounds().contains(mousePos))
 		sprSurvivalButton.setIndex(1);
-	}
-	else {
+	else
 		sprSurvivalButton.setIndex(0);
-	}
+
+	if (sprOptionsButton.getGlobalBounds().contains(mousePos))
+		sprOptionsButton.setIndex(1);
+	else
+		sprOptionsButton.setIndex(0);
 }
 
 void MenuState::render() {
@@ -104,6 +117,7 @@ void MenuState::render() {
 	// draw the menu button
 	gwindow.draw(sprEndlessButton);
 	gwindow.draw(sprSurvivalButton);
+	gwindow.draw(sprOptionsButton);
 
 	// update window
 	gwindow.display();

@@ -14,7 +14,7 @@
 // NOTE: we must call the original constructor and pass it the Game pointer
 SurvivalState::SurvivalState(Game& game) :
 	State(game),
-	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
+	tileMap(*this, 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),

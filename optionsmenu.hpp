@@ -1,12 +1,12 @@
-#ifndef MENUSTATE_H_
-#define MENUSTATE_H_
+#ifndef OPTIONSMENU_H_
+#define OPTIONSMENU_H_
 
 #include "state.hpp"
 
-class MenuState : public State {
+class OptionsMenu : public State {
 public:
-	MenuState(Game&);
-	~MenuState();
+	OptionsMenu(Game&);
+	~OptionsMenu();
 
 	virtual void logic();
 	virtual void render();
@@ -19,9 +19,9 @@ private:
 	sf::View view;
 
 	// place any vars we need in this state in here
-	AnimSprite sprEndlessButton;
-	AnimSprite sprSurvivalButton;
-	AnimSprite sprOptionsButton;
+	sf::Sprite sprOptions;
+	AnimSprite sprFullscreen;
+	AnimSprite sprReturnButton;
 };
 
-#endif MENUSTATE_H_
+#endif

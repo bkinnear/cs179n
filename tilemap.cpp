@@ -1,4 +1,5 @@
 #include "tilemap.hpp"
+#include "state.hpp"
 #include <time.h>
 #include <vector>
 
@@ -95,11 +96,20 @@ const tileType buildingsmall::array[w][h] =
 
 
 
-TileMap::TileMap(sf::Texture& tileset, unsigned mapWidth, unsigned mapHeight) :
-	texTileset(tileset),
+TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :	
 	mapWidth(mapWidth),
 	mapHeight(mapHeight)
 {
+	// load tile textures
+	int nTextures = 74; // TODO make this not a magic number
+	textures.resize(nTextures);
+	for (int i = 1; i < nTextures; i++) {
+		// create new texture for tile of type i
+		textures[i] = &state.createTexture(
+			"res/big_32x32_tileset.png", // TODO make this not a magic string (maybe doesnt matter)
+			sf::IntRect(getTileTexOffset(i), { TILE_SIZE,TILE_SIZE }
+		));
+	}
 
 	// initialize map
 	map.resize(mapHeight);
@@ -360,24 +370,36 @@ sf::Vector2i TileMap::getTileTexOffset(tileType type) {
 		return { (i - 42) * 32, 768 };
 	if (i <= 67)
 		return { (i - 60) * 32, 800 };
-	if (i <= 72)
+	if (i <= 73)
 		return { (i - 68) * 32, 832 };
 
 	// default set to red rug
 	return { 224, 832 };
 }
 
-// TODO optimize tile drawing so we only need to draw tiles inside screen bounds
 void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	sf::Sprite sprTile;
-	sprTile.setTexture(texTileset);
 
-	for (unsigned x = 0; x < mapWidth; x++) {
-		for (unsigned y = 0; y < mapHeight; y++) {
+	const sf::Vector2f& viewSize = target.getView().getSize();
+	const sf::Vector2f& viewCenter = target.getView().getCenter();
+	sf::IntRect viewBounds(sf::FloatRect({ viewCenter.x - viewSize.x/2, viewCenter.y - viewSize.y/2, viewSize.x, viewSize.y }));
+
+	int left = std::max(viewBounds.left / TILE_SIZE, 0);
+	int top = std::max(viewBounds.top / TILE_SIZE, 0);
+	int right = std::min((viewBounds.left + viewBounds.width) / TILE_SIZE + 1, mapWidth);
+	int bottom = std::min((viewBounds.top + viewBounds.height) / TILE_SIZE + 1, mapHeight);
+
+	for (unsigned x = left; x < right; x++) {
+		for (unsigned y = top; y < bottom; y++) {
 			const Tile& tile = map[y][x];
-			if (tile.type == 0)
+			// no tile - draw grass (73)
+			if (tile.type == 0) {
+				sprTile.setTexture(*textures[73]);
+				sprTile.setPosition(x * TILE_SIZE, y * TILE_SIZE);
+				target.draw(sprTile, states);
 				continue;
-			sprTile.setTextureRect(sf::IntRect(getTileTexOffset(tile.type), { TILE_SIZE, TILE_SIZE }));
+			}
+			sprTile.setTexture(*textures[tile.type]);
 			sprTile.setPosition(x*TILE_SIZE, y*TILE_SIZE);
 			target.draw(sprTile, states);
 		}
