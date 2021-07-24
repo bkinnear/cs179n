@@ -101,6 +101,29 @@ private:
 
 	// effects
 	Effect* explosionSmall;
+
+	// ability variables
+	sf::Time elapsed1;
+	sf::Clock abilityTimer1;
+	bool onCoolDown1 = false;
+	int cooldown1;
+
+	sf::Time elapsed2;
+	sf::Clock abilityTimer2;
+	bool onCoolDown2 = false;
+	int cooldown2;
+
+	sf::Time elapsed3;
+	sf::Clock abilityTimer3;
+	bool onCoolDown3 = false;
+	int cooldown3;
+
+	void updateCooldowns();
+
+	// medic abilities
+	void medic_bandage();
+	void medic_dash();
+	void medic_heal();
 };
 
 #endif
