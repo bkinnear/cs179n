@@ -16,6 +16,7 @@ int totalCount = 300;//temporarily set string until total ammo counter is made
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
+	player(playerClass),
 	tileMap(*this, 100, 100),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
@@ -77,10 +78,99 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 }
 
+void EndlessState::updateCooldowns() {
+	switch (player.playerClass) {
+		case PlayerClass::DEFAULT:
+			break;
+		case PlayerClass::MEDIC:
+			if (onCoolDown1) {
+				if (elapsed1.asSeconds() < cooldown1) {
+					elapsed1 = abilityTimer1.getElapsedTime();
+					//if ((ceil(elapsed1.asSeconds()) - elapsed1.asSeconds()) < 0.015) {
+						//std::cout << "Ability 1 will be ready in " << 5 - ceil(elapsed1.asSeconds()) << " second(s)." << std::endl;
+					//}
+				}
+				else {
+					onCoolDown1 = false;
+					elapsed1 = sf::seconds(0);
+				}
+			}
+			if (onCoolDown2) {
+				if (elapsed2.asSeconds() < cooldown2) {
+					elapsed2 = abilityTimer2.getElapsedTime();
+					if (elapsed2.asMilliseconds() > 25) { //dash for 25 milliseconds
+						player.speed = 3; //set back to default
+					}
+				}
+				else {
+					onCoolDown2 = false;
+					elapsed2 = sf::seconds(0);
+				}
+			}
+			if (onCoolDown3) {
+				if (elapsed3.asSeconds() < cooldown3) {
+					elapsed3 = abilityTimer3.getElapsedTime();
+				}
+				else {
+					onCoolDown3 = false;
+					elapsed3 = sf::seconds(0);
+				}
+			}
+			break;
+		case PlayerClass::ASSAULT:
+			break;
+	}
+}
+
+void EndlessState::medic_bandage() {
+	onCoolDown1 = true;
+	
+	//ability functionality
+	itemsOnMap.emplace_back();
+	itemsOnMap.back().first = Item::type::bandages;
+	sf::Sprite& spr = itemsOnMap.back().second;
+	spr.setTexture(inventory.texItemTileset);
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setScale(.5, .5);
+	spr.setPosition(player.getPosition().x, player.getPosition().y);
+
+	//cooldown timer starts
+	abilityTimer1.restart();
+}
+
+void EndlessState::medic_dash() {
+	onCoolDown2 = true;
+
+	player.speed = 20;
+
+	abilityTimer2.restart();
+}
+
+void EndlessState::medic_heal() {
+	onCoolDown3 = true;
+
+	for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
+		NPC& ally = *allyItr;
+		if (ally.alive) {
+			if (ally.health >= 50) {
+				ally.health = 100;
+			}
+			else {
+				ally.health += 50;
+			}
+		}
+	}
+
+	abilityTimer3.restart();
+}
+
 void EndlessState::chooseClass(PlayerClass playerClass) {
 	switch (playerClass) {
 		case PlayerClass::MEDIC:
-			// do medic stuff
+			cooldown1 = 1; //in seconds
+			cooldown2 = 3;
+			cooldown3 = 5;
+			player.speed = 3;
 			break;
 		case PlayerClass::ASSAULT:
 			// do assault stuff
@@ -238,6 +328,59 @@ bool EndlessState::handleEvents() {
 				}
 			}
 			break;
+			case sf::Keyboard::Num1: //FIRST ABILITY
+				switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT FIRST ABILITY GOES HERE
+						break;
+					case PlayerClass::MEDIC:
+						//MEDIC FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							medic_bandage();
+							std::cout << "Medic Ability - Dropped Bandages" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
+						}
+						break;
+					}
+				break;
+			case sf::Keyboard::Num2: //SECOND ABILITY
+				switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT SECOND ABILITY GOES HERE
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown2) {
+							medic_dash();
+							std::cout << "Medic Ability - Dash" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+						}
+					}
+				break;
+			case sf::Keyboard::Num3: //THIRD ABILITY
+				switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown3) {
+							medic_heal();
+							std::cout << "Medic Ability - Guardian Angel" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+						}
+						break;
+					}
+				break;
 			case sf::Keyboard::F2:
 				// restarts the map
 				game.setState(new EndlessState(game, player.playerClass));
@@ -637,6 +780,9 @@ void EndlessState::logic() {
 
 	// update all allies
 	updateAllies();
+
+	// update ability cooldowns
+	updateCooldowns();
 
 	// Player HUD
 	//  

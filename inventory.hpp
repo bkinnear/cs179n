@@ -10,7 +10,7 @@
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit};
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, bandages };
 
 	// type of item
 	type itemType = type::null;
@@ -33,6 +33,8 @@ struct Item {
 			return "5.56 Rounds";
 		case type::medkit:
 			return "Medkit";
+		case type::bandages:
+			return "Bandages";
 		default:
 			return "unknown item";
 		}
@@ -53,6 +55,8 @@ struct Item {
 			return "5.56 Rounds. Used for rifles.";
 		case type::medkit:
 			return "Medkit. Used for healing.";
+		case type::bandages:
+			return "Bandages. Used for minor healing";
 		default:
 			return "unknown item desc";
 		}
@@ -62,10 +66,10 @@ struct Item {
 sf::Vector2i getItemTexOffset(Item::type type); //declared here because inventory.cpp has an inline call, but endless.cpp needs to use it
 
 /* Inventory object
- * 
+ *
 */
-class Inventory: public sf::Drawable {
-public:	
+class Inventory : public sf::Drawable {
+public:
 	Inventory(sf::Texture& inventoryTexture, sf::Texture& itemTileset);
 
 	/* adds item to next available slot in inventory
