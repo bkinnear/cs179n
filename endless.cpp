@@ -16,6 +16,7 @@ int totalCount = 300;//temporarily set string until total ammo counter is made
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
+	player(playerClass),
 	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
@@ -81,6 +82,7 @@ void EndlessState::chooseClass(PlayerClass playerClass) {
 	switch (playerClass) {
 		case PlayerClass::MEDIC:
 			// do medic stuff
+			player.speed = 3;
 			break;
 		case PlayerClass::ASSAULT:
 			// do assault stuff
@@ -236,6 +238,54 @@ bool EndlessState::handleEvents() {
 				}
 			}
 			break;
+			case sf::Keyboard::Num1: //FIRST ABILITY
+				std::cout << "ability 1" << std::endl;
+				switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT FIRST ABILITY GOES HERE
+						break;
+					case PlayerClass::MEDIC:
+						//MEDIC FIRST ABILITY GOES HERE
+						std::cout << "Dropped MP5, will replace with healing item later" << std::endl;
+						itemsOnMap.emplace_back();
+						itemsOnMap.back().first = Item::type::MP5;
+						sf::Sprite& spr = itemsOnMap.back().second;
+						spr.setTexture(inventory.texItemTileset);
+						spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+						spr.setScale(.5, .5);
+						spr.setPosition(player.getPosition().x, player.getPosition().y);
+						break;
+					}
+				break;
+			case sf::Keyboard::Num2: //SECOND ABILITY
+				std::cout << "ability 2" << std::endl;
+				switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT SECOND ABILITY GOES HERE
+						break;
+					case PlayerClass::MEDIC:
+						std::cout << "Used Dash" << std::endl;
+						//ASSAULT SECOND ABILITY GOES HERE
+						player.speed = 4;
+						break;
+					}
+				break;
+			case sf::Keyboard::Num3: //THIRD ABILITY
+				std::cout << "ability 3" << std::endl;
+				switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						break;
+					case PlayerClass::MEDIC:
+						std::cout << "THIRD ABILITY" << std::endl;
+						break;
+					}
+				break;
 			case sf::Keyboard::F2:
 				// restarts the map
 				game.setState(new EndlessState(game, player.playerClass));
