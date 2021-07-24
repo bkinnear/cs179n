@@ -184,7 +184,7 @@ bool EndlessState::handleEvents() {
 			{
 				sf::Vector2f position = player.getPosition();
 				int x, y;
-				bool isDoor = tileMap.isDoor(position.x+16, position.y - 16);
+				bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
 				if (isDoor)
 				{
 					x = position.x + 16;
@@ -192,7 +192,7 @@ bool EndlessState::handleEvents() {
 				}
 				else
 				{
-					isDoor = tileMap.isDoor(position.x+16, position.y + 48);
+					isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
 					if (isDoor)
 					{
 						x = position.x + 16;
@@ -299,6 +299,19 @@ bool EndlessState::handleEvents() {
 
 				break;
 			}
+			break;
+		case sf::Event::MouseWheelScrolled:
+			if (e.mouseWheelScroll.delta > 0) {
+				std::cout << "up" << std::endl;
+				// mouse scrolling up
+				mainView.zoom(.9f);
+			}
+			else {
+				std::cout << "down" << std::endl;
+				// mouse scrolling down
+				mainView.zoom(1.1f);
+			}
+			break;
 		}
 	}
 
@@ -552,7 +565,7 @@ EndlessState::~EndlessState() {
 void EndlessState::logic() {
 	// get mouse x and y in window coords - used for GUI
 	gwindow.setView(guiView);
-	winMousePos = sf::Mouse::getPosition(game.window);
+	winMousePos = sf::Vector2i(game.window.mapPixelToCoords(sf::Mouse::getPosition(game.window)));
 
 	// get mouse x and y in world coords
 	gwindow.setView(mainView);
