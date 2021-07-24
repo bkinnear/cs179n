@@ -32,8 +32,8 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 {
 
 	// set main view
-	mainView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
-	guiView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
+	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
+	guiView.reset({ 0.f, 0.f, 1366.f, 768.f });
 
 	/*	=============================
 		 allocate our resources here

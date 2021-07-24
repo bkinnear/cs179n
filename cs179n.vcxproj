@@ -122,6 +122,7 @@
     <ClCompile Include="inventory.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menustate.cpp" />
+    <ClCompile Include="optionsmenu.cpp" />
     <ClCompile Include="state.cpp" />
     <ClCompile Include="survival.cpp" />
     <ClCompile Include="tilemap.cpp" />
@@ -139,6 +140,7 @@
     <ClInclude Include="mask.hpp" />
     <ClInclude Include="menustate.hpp" />
     <ClInclude Include="npc.hpp" />
+    <ClInclude Include="optionsmenu.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />
     <ClInclude Include="state.hpp" />
