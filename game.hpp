@@ -49,9 +49,25 @@ public:
 
 	/* SFML window and render target */
 	sf::RenderWindow window;
+
+	// set fullscreen mode
+	void setFullscreen(bool fullscreen);
+
+	// returns whether window is in fullscreen mode
+	bool isFullscreen() const;
+
+	// the default view port width
+	float portWidth = 1366.f;
+	// the default view port height
+	float portHeight = 768.f;
+
+	const std::string title;
+
 private:
 	/* current state being ran in run() */
 	State* curState;
+
+	bool fullscreen = true;
 };
 
 #endif

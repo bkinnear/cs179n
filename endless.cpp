@@ -17,7 +17,7 @@ int totalCount = 300;//temporarily set string until total ammo counter is made
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
 	player(playerClass),
-	tileMap(createTexture("res/big_32x32_tileset.png"), 30, 20),
+	tileMap(*this, 100, 100),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),
@@ -33,8 +33,8 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 {
 
 	// set main view
-	mainView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
-	guiView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
+	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
+	guiView.reset({ 0.f, 0.f, 1366.f, 768.f });
 
 	/*	=============================
 		 allocate our resources here
@@ -216,7 +216,7 @@ void EndlessState::spawnWeapons() {
 		spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
 		spr.setScale(.5, .5);
 		for (;;) {
-			spr.setPosition(rand() % 800, rand() % 600);
+			spr.setPosition(rand() % tileMap.mapWidth * TILE_SIZE, rand() % tileMap.mapHeight * TILE_SIZE);
 			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
 				break;
 		}
@@ -232,9 +232,8 @@ void EndlessState::spawnEnemies(int noOfEnemies) {
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
 		enemy.setMaskBounds({ 4, 2, 17, 27 });
 		for (;;) {
-			// TODO set range to world_width and world_height instead of magic numbers
-			int randWidth = rand() % 800;
-			int randHeight = rand() % 600;
+			int randWidth = rand() % tileMap.mapWidth * TILE_SIZE;
+			int randHeight = rand() % tileMap.mapHeight * TILE_SIZE;
 			enemy.setPosition(randWidth, randHeight);
 			if (tileMap.areaClear(enemy, 0, 0))
 				break;
@@ -278,7 +277,7 @@ bool EndlessState::handleEvents() {
 			{
 				sf::Vector2f position = player.getPosition();
 				int x, y;
-				bool isDoor = tileMap.isDoor(position.x+16, position.y - 16);
+				bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
 				if (isDoor)
 				{
 					x = position.x + 16;
@@ -286,7 +285,7 @@ bool EndlessState::handleEvents() {
 				}
 				else
 				{
-					isDoor = tileMap.isDoor(position.x+16, position.y + 48);
+					isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
 					if (isDoor)
 					{
 						x = position.x + 16;
@@ -446,6 +445,19 @@ bool EndlessState::handleEvents() {
 
 				break;
 			}
+			break;
+		case sf::Event::MouseWheelScrolled:
+			if (e.mouseWheelScroll.delta > 0) {
+				std::cout << "up" << std::endl;
+				// mouse scrolling up
+				mainView.zoom(.9f);
+			}
+			else {
+				std::cout << "down" << std::endl;
+				// mouse scrolling down
+				mainView.zoom(1.1f);
+			}
+			break;
 		}
 	}
 
@@ -699,7 +711,7 @@ EndlessState::~EndlessState() {
 void EndlessState::logic() {
 	// get mouse x and y in window coords - used for GUI
 	gwindow.setView(guiView);
-	winMousePos = sf::Mouse::getPosition(game.window);
+	winMousePos = sf::Vector2i(game.window.mapPixelToCoords(sf::Mouse::getPosition(game.window)));
 
 	// get mouse x and y in world coords
 	gwindow.setView(mainView);
@@ -811,28 +823,21 @@ void EndlessState::logic() {
 }
 
 void EndlessState::render() {
-	// clear window
-	gwindow.clear(sf::Color(0x40AA20FF));
+	// clear window - default color black
+	gwindow.clear();
 
 	// ========================== //
 	// = v   world drawing   v  = //
 	// ========================== //
 
+	// move view to center on player
+	mainView.setCenter(floor(player.getPosition().x), floor(player.getPosition().y));
 	// we must update view any time we change something in it
 	// set the main view to draw the main map
 	gwindow.setView(mainView);
 
 	// draw the tilemap
 	gwindow.draw(tileMap);
-
-	//draw player HUD
-	gwindow.draw(playerHPBack);
-	gwindow.draw(playerHPBar);
-	gwindow.draw(playerIcon);
-	gwindow.draw(ammoIcon);
-	gwindow.draw(ammoCount);
-	gwindow.draw(grenadeIcon);
-	gwindow.draw(grenadesNum);
 
 	//draw the weapons
 	for (auto item : itemsOnMap) {
@@ -873,6 +878,15 @@ void EndlessState::render() {
 		gwindow.draw(shpItemDetails);
 		gwindow.draw(txtItemDetails);
 	}
+
+	//draw player HUD
+	gwindow.draw(playerHPBack);
+	gwindow.draw(playerHPBar);
+	gwindow.draw(playerIcon);
+	gwindow.draw(ammoIcon);
+	gwindow.draw(ammoCount);
+	gwindow.draw(grenadeIcon);
+	gwindow.draw(grenadesNum);
 
 	// update window
 	gwindow.display();
