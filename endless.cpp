@@ -98,25 +98,28 @@ void EndlessState::spawnWeapons() {
 	for (int i = 0; i < numWeapons; ++i) {
 		int randomItem = rand() % 5;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
-		case 0:
-			continue;
-			break;
-		case 1:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::MP5;
-			break;
-		case 2:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::ammo_9mm;
-			break;
-		case 3:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::M4;
-			break;
-		case 4:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::ammo_556;
-			break;
+			case 0:
+				continue;
+				break;
+			case 1:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::MP5;
+				break;
+			case 2:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::ammo_9mm;
+				break;
+			case 3:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::M4;
+				break;
+			case 4:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::ammo_556;
+			case 5:
+				itemsOnMap.emplace_back();
+				itemsOnMap.back().first = Item::type::medkit;
+				break;
 		}
 		sf::Sprite& spr = itemsOnMap.back().second;
 		spr.setTexture(inventory.texItemTileset);
