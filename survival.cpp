@@ -11,21 +11,29 @@
 // the main game window
 #define gwindow game.window
 
+
 // NOTE: we must call the original constructor and pass it the Game pointer
-SurvivalState::SurvivalState(Game& game) :
+SurvivalState::SurvivalState(Game& game, PlayerClass playerClass) :
 	State(game),
-	tileMap(*this, 30, 20),
+	player(playerClass),
+	tileMap(*this, 100, 100),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
-	texEnemyLeft(createTexture("res/enemy_l_strip.png"))
+	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
+	texWeaponMP5(createTexture("res/mp5.png")),
+	texExplosionSmall(createTexture("res/explosion_small_strip.png")),
+	playerIcon(createTexture("res/Player1_display.png")),
+	playerDeath(createTexture("res/player_death.png")),
+	ammoIcon(createTexture("res/ammo_icon.png")),
+	grenadeIcon(createTexture("res/grenade_icon.png"))
 {
 
 	// set main view
-	mainView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
-	guiView.reset({ 0.f, 0.f, float(gwindow.getSize().x), float(gwindow.getSize().y) });
+	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
+	guiView.reset({ 0.f, 0.f, 1366.f, 768.f });
 
 	/*	=============================
 		 allocate our resources here
@@ -47,15 +55,62 @@ SurvivalState::SurvivalState(Game& game) :
 	shpItemDetails.setOutlineColor(sf::Color::Black);
 
 	// create animated sprite for player
-	player.create(texPlayerRight, { 0, 0, 32, 32 }, 4);
-	player.speed = 3;
+	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
+	player.setMaskBounds({ 6, 2, 18, 27 });
+	player.speed = 2;
+
+	// load effects
+	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
 	spawnEnemies(currentEnemySpawningCount);
+	spawnWeapons();
 
+}
+
+void SurvivalState::spawnWeapons() {
+	//initialize weapon list
+	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
+	//sf::Sprite& spr;
+	for (int i = 0; i < numWeapons; ++i) {
+		int randomItem = rand() % 5;//randomly generate what item to spawn
+		switch (randomItem) {//selects item type to spawn
+		case 0:
+			continue;
+			break;
+		case 1:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::MP5;
+			break;
+		case 2:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::ammo_9mm;
+			break;
+		case 3:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::M4;
+			break;
+		case 4:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::ammo_556;
+		case 5:
+			itemsOnMap.emplace_back();
+			itemsOnMap.back().first = Item::type::medkit;
+			break;
+		}
+		sf::Sprite& spr = itemsOnMap.back().second;
+		spr.setTexture(inventory.texItemTileset);
+		spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+		spr.setScale(.5, .5);
+		for (;;) {
+			spr.setPosition(rand() % tileMap.mapWidth * TILE_SIZE, rand() % tileMap.mapHeight * TILE_SIZE);
+			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
+				break;
+		}
+	}
 }
 
 void SurvivalState::spawnEnemies(int noOfEnemies)
@@ -63,13 +118,13 @@ void SurvivalState::spawnEnemies(int noOfEnemies)
 	for (int i = 0;i < noOfEnemies;i++)
 	{
 		Enemy enemy;
-		enemy.hitRate = 14 + currentLevel;
-		enemy.speed = 3 + (currentLevel/maxLevelCount);
-		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 4);
+		enemy.hitRate = 15;
+		enemy.speed = 3;
+		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
+		enemy.setMaskBounds({ 4, 2, 17, 27 });
 		for (;;) {
-			// TODO set range to world_width and world_height instead of magic numbers
-			int randWidth = rand() % 800;
-			int randHeight = rand() % 600;
+			int randWidth = rand() % tileMap.mapWidth * TILE_SIZE;
+			int randHeight = rand() % tileMap.mapHeight * TILE_SIZE;
 			enemy.setPosition(randWidth, randHeight);
 			if (tileMap.areaClear(enemy, 0, 0))
 				break;
@@ -78,41 +133,7 @@ void SurvivalState::spawnEnemies(int noOfEnemies)
 	}
 }
 
-void SurvivalState::renderEnemies(int noOfEnemies)
-{
-	//draw the enemies
-	std::list<Enemy>::iterator enemyItr;
-	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
-		Enemy& enemy = *enemyItr;
-		enemy.animateFrame();
-		gwindow.draw(enemy);
-
-		// draw the HP bar
-		sf::RectangleShape bar1({ 26.f, 6.f });
-		bar1.setFillColor(sf::Color::Black);
-		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (enemy.health / 100.f), 4.f });
-		bar2.setFillColor(sf::Color::Red);
-		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
-		gwindow.draw(bar1);
-		gwindow.draw(bar2);
-	}
-}
-
-SurvivalState::~SurvivalState() {
-	// here we would deallocate any resources we use in this gamestate
-}
-
-void SurvivalState::logic() {
-	// get mouse x and y in window coords - used for GUI
-	gwindow.setView(guiView);
-	sf::Vector2i winMousePos = sf::Mouse::getPosition(game.window);
-
-	// get mouse x and y in world coords
-	gwindow.setView(mainView);
-	sf::Vector2f mousePos = game.window.mapPixelToCoords(sf::Mouse::getPosition(gwindow));
-
-
+bool SurvivalState::handleEvents() {
 	// handle events
 	sf::Event e;
 	while (game.window.pollEvent(e)) {
@@ -120,7 +141,7 @@ void SurvivalState::logic() {
 		case sf::Event::Closed:
 			// delete this gamestate
 			game.close();
-			return;
+			return false;
 		case sf::Event::KeyPressed:
 			switch (e.key.code) {
 			case sf::Keyboard::W:
@@ -147,18 +168,18 @@ void SurvivalState::logic() {
 			{
 				sf::Vector2f position = player.getPosition();
 				int x, y;
-				bool isDoor = tileMap.isDoor(position.x, position.y - 32);
+				bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
 				if (isDoor)
 				{
-					x = position.x;
-					y = position.y - 32;
+					x = position.x + 16;
+					y = position.y - 16;
 				}
 				else
 				{
-					isDoor = tileMap.isDoor(position.x, position.y + 48);
+					isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
 					if (isDoor)
 					{
-						x = position.x;
+						x = position.x + 16;
 						y = position.y + 48;
 					}
 				}
@@ -198,11 +219,28 @@ void SurvivalState::logic() {
 				}
 			}
 			break;
+			case sf::Keyboard::Num1: //FIRST ABILITY
+				switch (player.playerClass) {
+				case PlayerClass::DEFAULT:
+					break;
+				}
+				break;
+			case sf::Keyboard::Num2: //SECOND ABILITY
+				switch (player.playerClass) {
+				case PlayerClass::DEFAULT:
+					break;
+				}
+				break;
+			case sf::Keyboard::Num3: //THIRD ABILITY
+				switch (player.playerClass)
+			case PlayerClass::DEFAULT:
+				break;
+				break;
 			case sf::Keyboard::F2:
 				// restarts the map
-				game.setState(new SurvivalState(game));
+				game.setState(new SurvivalState(game, player.playerClass));
 				delete this;
-				return;
+				return false;
 			}
 			break;
 		case sf::Event::KeyReleased:
@@ -223,9 +261,6 @@ void SurvivalState::logic() {
 			case sf::Keyboard::Right:
 				player.movingRight = false;
 				break;
-			case sf::Keyboard::Space:
-			case sf::Keyboard::Q:
-				break;
 			}
 			break;
 		case sf::Event::MouseButtonPressed:
@@ -235,13 +270,22 @@ void SurvivalState::logic() {
 
 				// create projectiles
 				projectiles.emplace_back();
+
+				// TODO - implement mags
 				{
-					Projectile& proj = projectiles.back();
-					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-					proj.setTexture(texProjectile);
-					proj.speed = 12;
-					proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
-					proj.setRotation(proj.direction);
+					unsigned nRounds = inventory.getNumItem(Item::type::ammo_9mm);
+					if (nRounds > 0) {
+						inventory.removeItem(Item::type::ammo_9mm, 1);
+
+						Projectile& proj = projectiles.back();
+						proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+						proj.setTexture(texProjectile);
+						// set mask bounds to just the sprite bounds (default)
+						proj.setMaskBounds(proj.getLocalBounds());
+						proj.speed = 12;
+						proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
+						proj.setRotation(proj.direction);
+					}
 				}
 				break;
 			case sf::Mouse::Button::Right:
@@ -253,8 +297,202 @@ void SurvivalState::logic() {
 
 				break;
 			}
+			break;
+		case sf::Event::MouseWheelScrolled:
+			if (e.mouseWheelScroll.delta > 0) {
+				std::cout << "up" << std::endl;
+				// mouse scrolling up
+				mainView.zoom(.9f);
+			}
+			else {
+				std::cout << "down" << std::endl;
+				// mouse scrolling down
+				mainView.zoom(1.1f);
+			}
+			break;
 		}
 	}
+	return true;
+}
+		
+void SurvivalState::updateEnemies() {
+	// For Enemy Movement
+	std::list<Enemy>::iterator enemyItr;
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
+	{
+		Enemy& enemy = *enemyItr;
+
+		// nearest target to enemy
+		Character* nearestTarget = nullptr;
+		// this is set to the max range of enemy attacks
+		float minDist = 512.f; // TODO set this constant somewhere (or make it based on enemy idk)
+		// check player
+		{
+			float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
+			if (dist < minDist) {
+				minDist = dist;
+				nearestTarget = &player;
+			}
+		}
+
+		// if no target for enemy to attack, do nothing
+		if (!nearestTarget)
+			continue;
+
+		sf::Vector2f targetPosition = nearestTarget->getPosition();
+		sf::Vector2f enemyPosition = enemy.getPosition();
+
+		sf::Vector2f difference = targetPosition - enemyPosition;
+		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
+
+		if (length >= 15)
+		{
+			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
+			enemy.setAnimSpeed(12);
+
+			// move when free
+			if (tileMap.areaClear(enemy, moveVector.x, 0))
+				enemy.move(moveVector.x, 0);
+			if (tileMap.areaClear(enemy, 0, moveVector.y))
+				enemy.move(0, moveVector.y);
+
+			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
+
+			// change texture depending on enemy directionaa
+			if (moveVector.x < 0)
+				enemy.setTexture(texEnemyLeft);
+			else
+				enemy.setTexture(texEnemyRight);
+		}
+		else
+		{
+			//enemy is in attacking range
+			enemy.cooldown(); //triggers attack timer/cooldown
+			if (!enemy.attack) {
+				nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
+				if (nearestTarget->health <= 0) {
+					nearestTarget->alive = false;
+					nearestTarget->setColor(sf::Color(255, 0, 0, 255));
+					std::cout << "target has died" << std::endl;
+				}
+			}
+		}
+	}
+}
+
+
+void SurvivalState::renderEnemies(int noOfEnemies)
+{
+	//draw the enemies
+	std::list<Enemy>::iterator enemyItr;
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
+		Enemy& enemy = *enemyItr;
+		enemy.animateFrame();
+		gwindow.draw(enemy);
+
+		// draw the HP bar
+		sf::RectangleShape bar1({ 26.f, 6.f });
+		bar1.setFillColor(sf::Color::Black);
+		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
+		sf::RectangleShape bar2({ 24.f * (enemy.health / 100.f), 4.f });
+		bar2.setFillColor(sf::Color::Red);
+		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
+		gwindow.draw(bar1);
+		gwindow.draw(bar2);
+	}
+}
+
+void SurvivalState::updateProjectiles() {
+	bool breaking = false;
+	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
+		// get movement of projectile for this frame
+		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
+		if (tileMap.areaClear(*projItr, moveVector)) {
+			projItr->move(moveVector);
+		}
+		else {
+			createEffect(
+				explosionSmall,
+				Utils::pointEdge(
+					projItr->getPosition(),
+					tileMap.getTileBounds(projItr->getPosition().x + 2.5f * moveVector.x, projItr->getPosition().y + 2.5f * moveVector.y)
+				)
+			);
+			// destroy projectile
+			projItr = projectiles.erase(projItr);
+			if (projItr == projectiles.end())
+				break;
+			continue;
+		}
+
+		// check for collision with enemies
+		// TODO - make enemies use a spatial hash so this algo's faster
+		// this algo is currently O(K*N) where K = bullets, N = enemies
+		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+			// ignore if enemy is not colliding with projectile
+			if (!enemyItr->isColliding(*projItr))
+				continue;
+
+			// destroy bullet
+			projItr = projectiles.erase(projItr);
+			if (projItr == projectiles.end())
+				breaking = true;
+
+			// deal damage to enemy
+			enemyItr->health -= 25; // TODO set this to the bullet's damage
+			if (enemyItr->health <= 0) {
+				enemyItr = enemies.erase(enemyItr);
+				currentEnemyPresent = currentEnemyPresent - 1;
+				if (currentEnemyPresent == 0)
+				{
+					//Level completed - Move to next Level
+					std::cout << "Level " << currentLevel << " Completed " << "\n";
+					currentLevel = currentLevel + 1;
+					if (currentLevel == maxLevelCount)
+					{
+						//Survival Game End
+						std::cout << "Survival Game Completed " << "\n";
+					}
+					else
+					{
+						currentEnemySpawningCount = currentEnemySpawningCount + 2;
+						currentEnemyPresent = currentEnemySpawningCount;
+						spawnEnemies(currentEnemySpawningCount);
+						renderEnemies(currentEnemySpawningCount);
+						return;
+					}
+				}
+				if (enemyItr == enemies.end())
+					break;
+			}
+			if (breaking)
+				break;
+		}
+		if (breaking)
+			break;
+	}
+}
+
+SurvivalState::~SurvivalState() {
+	// here we would deallocate any resources we use in this gamestate
+}
+
+void SurvivalState::logic() {
+	// get mouse x and y in window coords - used for GUI
+	gwindow.setView(guiView);
+	winMousePos = sf::Mouse::getPosition(game.window);
+
+	// get mouse x and y in world coords
+	gwindow.setView(mainView);
+	mousePos = game.window.mapPixelToCoords(sf::Mouse::getPosition(gwindow));
+
+	updateEffects();
+	
+	// handle all events
+	// return if state exits
+	if (!handleEvents())
+		return;
 
 	// check for hovering over item in inventory
 	if (showInventory) {
@@ -288,10 +526,6 @@ void SurvivalState::logic() {
 	}
 
 	// player movement
-	// TODO fix movement to make opaque tiles non passable (check every corner of sprite for collision, not just top & left)
-	const sf::FloatRect& bounds = player.getGlobalBounds();
-
-	// player movement
 	if (player.alive) {
 		if (player.movingLeft)
 			if (tileMap.areaClear(player, -player.speed, 0))
@@ -308,117 +542,59 @@ void SurvivalState::logic() {
 	}
 
 	// update projectiles
-	bool end = false;
-	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
-		// get movement of projectile for this frame
-		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
-		if (tileMap.areaClear(*projItr, moveVector)) {
-			projItr->move(moveVector);
-		}
-		else {
-			// destroy projectile
-			projItr = projectiles.erase(projItr);
-			if (projItr == projectiles.end())
-				break;
-			continue;
-		}
+	updateProjectiles();
 
-		// check for collision with enemies
-		// TODO - make enemies use a spatial hash so this algo's faster
-		// this algo is currently O(K*N) where K = bullets, N = enemies
-		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-			if (enemyItr->getGlobalBounds().intersects(projItr->getGlobalBounds())) {
-				// enemy hit
-				enemyItr->health -= 25; // TODO set this to the bullet's damage
-				if (enemyItr->health <= 0) {
-					enemyItr = enemies.erase(enemyItr);
-					currentEnemyPresent = currentEnemyPresent - 1;
-					if (currentEnemyPresent == 0)
-					{
-						//Level completed - Move to next Level
-						std::cout << "Level " << currentLevel << " Completed " << "\n";
-						currentLevel = currentLevel + 1;
-						if (currentLevel == maxLevelCount)
-						{
-							//Survival Game End
-							std::cout << "Survival Game Completed " << "\n";
-						}
-						else
-						{
-							currentEnemySpawningCount = currentEnemySpawningCount + 2;
-							currentEnemyPresent = currentEnemySpawningCount;
-							spawnEnemies(currentEnemySpawningCount);
-							renderEnemies(currentEnemySpawningCount);
-							return;
-						}
-					}
-					if (enemyItr == enemies.end())
-						break;
-				}
+	// update enemies
+	updateEnemies();
 
-				// destroy bullet
-				projItr = projectiles.erase(projItr);
-				if (projItr == projectiles.end()) {
-					end = true;
-					break;
-				}
-			}
-		}
-		if (end)
-			break;
+	// Player HUD
+	//  
+	//HP bar
+	playerHPBack.setSize({ 200.f, 14.f });
+	playerHPBack.setFillColor(sf::Color::Transparent);
+	playerHPBack.setPosition(75, 550);
+	playerHPBack.setOutlineColor(sf::Color::Black);
+	playerHPBack.setOutlineThickness(2.f);
+	playerHPBar.setSize({ playerHPBack.getSize().x * (player.health / 100.f), playerHPBack.getSize().y });
+	if (player.health > 75) {
+		playerHPBar.setFillColor(sf::Color::Green);
 	}
-
-	//For Enemy Movement
-	std::list<Enemy>::iterator enemyItr;
-	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
-	{
-		Enemy& enemy = *enemyItr;
-		sf::Vector2f playerPosition = player.getPosition();
-		sf::Vector2f enemyPosition = enemy.getPosition();
-
-		sf::Vector2f difference = playerPosition - enemyPosition;
-		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
-
-		if (length >= 15)
-		{
-			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
-			enemy.setAnimSpeed(12);
-
-			// move when free
-			if (tileMap.areaClear(enemy, moveVector.x, 0))
-				enemy.move(moveVector.x, 0);
-			if (tileMap.areaClear(enemy, 0, moveVector.y))
-				enemy.move(0, moveVector.y);
-
-			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
-
-			// change texture depending on enemy direction
-			if (moveVector.x < 0)
-				enemy.setTexture(texEnemyLeft);
-			else
-				enemy.setTexture(texEnemyRight);
-		}
-		else
-		{
-			//enemy is in attacking range
-			enemy.cooldown(); //triggers attack timer/cooldown
-			if (player.alive && !enemy.attack) {
-				player.health -= enemy.hitRate; // deal amount of damage to player
-				std::cout << "player is taking damage, new health: " << player.health << std::endl;
-				if (player.health <= 0) {
-					player.alive = false;
-					player.setColor(sf::Color(255, 0, 0, 255));
-					std::cout << "player has died" << std::endl;
-				}
-			}
-		}
+	else if (player.health > 25) {
+		playerHPBar.setFillColor(sf::Color::Yellow);
 	}
+	else {
+		playerHPBar.setFillColor(sf::Color::Red);
+	}
+	playerHPBar.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y);
+	playerIcon.setPosition(playerHPBack.getPosition().x - 62, playerHPBack.getPosition().y - 25);
+	//mag and total ammo counter;
+	ammoIcon.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y - 25);
+	ammoCount.setFont(font);
+	ammoCount.setCharacterSize(12);
+	ammoCount.setColor(sf::Color::Black);
+	ammoCount.setString(std::to_string(1) + "/" + std::to_string(inventory.getNumItem(Item::type::ammo_9mm))); // TODO implement mags and more ammo types
+	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
+	//grenade counter
+	int gCount = 3;
+	grenadeIcon.setPosition(playerHPBack.getPosition().x + 75, playerHPBack.getPosition().y - 26);
+	grenadeIcon.setColor(sf::Color::Green);
+	grenadesNum.setFont(font);
+	grenadesNum.setCharacterSize(12);
+	grenadesNum.setColor(sf::Color::Black);
+	grenadesNum.setString("x" + std::to_string(gCount));
+	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
 }
 
 void SurvivalState::render() {
-	// clear window
-	gwindow.clear(sf::Color(0x40AA20FF));
+	// clear window - default color black
+	gwindow.clear();
 
+	// ========================== //
+	// = v   world drawing   v  = //
+	// ========================== //
+
+	// move view to center on player
+	mainView.setCenter(floor(player.getPosition().x), floor(player.getPosition().y));
 	// we must update view any time we change something in it
 	// set the main view to draw the main map
 	gwindow.setView(mainView);
@@ -426,15 +602,10 @@ void SurvivalState::render() {
 	// draw the tilemap
 	gwindow.draw(tileMap);
 
-	// draw the HP bar
-	sf::RectangleShape bar1({ 26.f, 6.f });
-	bar1.setFillColor(sf::Color::Black);
-	bar1.setPosition(player.getPosition().x, player.getPosition().y - 10);
-	sf::RectangleShape bar2({ 24.f * (player.health / 100.f), 4.f });
-	bar2.setFillColor(sf::Color::Red);
-	bar2.setPosition(player.getPosition().x + 1, player.getPosition().y - 9);
-	gwindow.draw(bar1);
-	gwindow.draw(bar2);
+	//draw the weapons
+	for (auto item : itemsOnMap) {
+		gwindow.draw(item.second);
+	}
 
 	// draw the player
 	player.animateFrame();
@@ -444,6 +615,16 @@ void SurvivalState::render() {
 	for (Projectile& proj : projectiles) {
 		gwindow.draw(proj);
 	}
+
+	// draw the enemies
+	renderEnemies(enemies.size());
+
+	// draw effects
+	drawEffects();
+
+	// ========================= //
+	// =  v   GUI drawing   v  = //
+	// ========================= //
 
 	// set view to draw guis
 	gwindow.setView(guiView);
@@ -458,7 +639,14 @@ void SurvivalState::render() {
 		gwindow.draw(txtItemDetails);
 	}
 
-	renderEnemies(enemies.size());
+	//draw player HUD
+	gwindow.draw(playerHPBack);
+	gwindow.draw(playerHPBar);
+	gwindow.draw(playerIcon);
+	gwindow.draw(ammoIcon);
+	gwindow.draw(ammoCount);
+	gwindow.draw(grenadeIcon);
+	gwindow.draw(grenadesNum);
 
 	// update window
 	gwindow.display();
