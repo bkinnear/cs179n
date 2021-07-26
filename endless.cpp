@@ -10,9 +10,6 @@
 // the main game window
 #define gwindow game.window
 
-int magCount = 30;//temporarily set string until magazine ammo counter is made
-int totalCount = 300;//temporarily set string until total ammo counter is made
-
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
@@ -328,58 +325,61 @@ bool EndlessState::handleEvents() {
 				}
 			}
 			break;
+			case sf::Keyboard::R: // reload weapon
+				inventory.reloadWielded();
+				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
 				switch (player.playerClass) {
-					case PlayerClass::DEFAULT:
-						break;
-					case PlayerClass::ASSAULT:
-						//ASSAULT FIRST ABILITY GOES HERE
-						break;
-					case PlayerClass::MEDIC:
-						//MEDIC FIRST ABILITY GOES HERE
-						if (!onCoolDown1) {
-							medic_bandage();
-							std::cout << "Medic Ability - Dropped Bandages" << std::endl;
-						}
-						else {
-							std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
-						}
-						break;
+				case PlayerClass::DEFAULT:
+					break;
+				case PlayerClass::ASSAULT:
+					//ASSAULT FIRST ABILITY GOES HERE
+					break;
+				case PlayerClass::MEDIC:
+					//MEDIC FIRST ABILITY GOES HERE
+					if (!onCoolDown1) {
+						medic_bandage();
+						std::cout << "Medic Ability - Dropped Bandages" << std::endl;
 					}
+					else {
+						std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
+					}
+					break;
+				}
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
 				switch (player.playerClass) {
-					case PlayerClass::DEFAULT:
-						break;
-					case PlayerClass::ASSAULT:
-						//ASSAULT SECOND ABILITY GOES HERE
-						break;
-					case PlayerClass::MEDIC:
-						if (!onCoolDown2) {
-							medic_dash();
-							std::cout << "Medic Ability - Dash" << std::endl;
-						}
-						else {
-							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
-						}
+				case PlayerClass::DEFAULT:
+					break;
+				case PlayerClass::ASSAULT:
+					//ASSAULT SECOND ABILITY GOES HERE
+					break;
+				case PlayerClass::MEDIC:
+					if (!onCoolDown2) {
+						medic_dash();
+						std::cout << "Medic Ability - Dash" << std::endl;
 					}
+					else {
+						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+					}
+				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
 				switch (player.playerClass) {
-					case PlayerClass::DEFAULT:
-						break;
-					case PlayerClass::ASSAULT:
-						break;
-					case PlayerClass::MEDIC:
-						if (!onCoolDown3) {
-							medic_heal();
-							std::cout << "Medic Ability - Guardian Angel" << std::endl;
-						}
-						else {
-							std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
-						}
-						break;
+				case PlayerClass::DEFAULT:
+					break;
+				case PlayerClass::ASSAULT:
+					break;
+				case PlayerClass::MEDIC:
+					if (!onCoolDown3) {
+						medic_heal();
+						std::cout << "Medic Ability - Guardian Angel" << std::endl;
 					}
+					else {
+						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+					}
+					break;
+				}
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
@@ -416,25 +416,8 @@ bool EndlessState::handleEvents() {
 			case sf::Mouse::Button::Left:
 				// LMB pressed
 
-				// create projectiles
-				projectiles.emplace_back();
-
-				// TODO - implement mags
-				{
-					unsigned nRounds = inventory.getNumItem(Item::type::ammo_9mm);
-					if (nRounds > 0) {
-						inventory.removeItem(Item::type::ammo_9mm, 1);
-
-						Projectile& proj = projectiles.back();
-						proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-						proj.setTexture(texProjectile);
-						// set mask bounds to just the sprite bounds (default)
-						proj.setMaskBounds(proj.getLocalBounds());
-						proj.speed = 12;
-						proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
-						proj.setRotation(proj.direction);
-					}
-				}
+				// NOTE: moved attacks to mouse holding so user can do automatic fire
+				// TODO make it so that only full-auto weapons can be held
 				break;
 			case sf::Mouse::Button::Right:
 				// RMB pressed
@@ -461,6 +444,25 @@ bool EndlessState::handleEvents() {
 		}
 	}
 
+	// check mouse state for holding (enabling auto fire)
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+		// try to use weapon
+		if (inventory.useWielded()) {
+			// TODO - check to make sure weapon is ranged
+			projectiles.emplace_back();
+			Projectile& proj = projectiles.back();
+			proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+			proj.setTexture(texProjectile);
+			// set mask bounds to just the sprite bounds (default)
+			proj.setMaskBounds(proj.getLocalBounds());
+			proj.speed = 12;
+			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
+			proj.setRotation(proj.direction);
+			proj.damage = inventory.getWielded().getDamage();
+		}
+	}
+
+	// tell game state to continue
 	return true;
 }
 
@@ -809,7 +811,7 @@ void EndlessState::logic() {
 	ammoCount.setFont(font);
 	ammoCount.setCharacterSize(12);
 	ammoCount.setColor(sf::Color::Black);
-	ammoCount.setString(std::to_string(1) + "/" + std::to_string(inventory.getNumItem(Item::type::ammo_9mm))); // TODO implement mags and more ammo types
+	ammoCount.setString(std::to_string(inventory.getRoundsLeft()) + "/" + std::to_string(inventory.getNumItem(Item::type::ammo_9mm))); // TODO implement mags and more ammo types
 	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
 	//grenade counter
 	int gCount = 3;
@@ -820,6 +822,8 @@ void EndlessState::logic() {
 	grenadesNum.setColor(sf::Color::Black);
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+
+	inventory.tick();
 }
 
 void EndlessState::render() {
