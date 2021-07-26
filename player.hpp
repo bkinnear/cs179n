@@ -10,6 +10,7 @@ public:
 	Player(PlayerClass playerClass) : playerClass(playerClass) {};
 
 	bool movingLeft = false, movingUp = false, movingDown = false, movingRight = false;
+	bool isDeadEye = false;
 
 	const PlayerClass playerClass;
 };

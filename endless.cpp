@@ -115,7 +115,7 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, {0, 0, 8, 8}, 6, 20);
-	explosionLarge = loadEffect(texExplosionLarge, { 0,0,32,32 }, 6, 20);
+	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -191,6 +191,9 @@ void EndlessState::updateCooldowns() {
 			if (onCoolDown3) {
 				if (elapsed3.asSeconds() < cooldown3) {
 					elapsed3 = abilityTimer3.getElapsedTime();
+					if (elapsed3.asSeconds() > 5) { //increase damage for 5 seconds
+						player.isDeadEye = false; // turn off deadeye after 5 seconds
+					}
 				}
 				else {
 					onCoolDown3 = false;
@@ -244,7 +247,17 @@ void EndlessState::medic_heal() {
 }
 
 void EndlessState::assault_ammo() {
+	onCoolDown1 = true;
 
+	itemsOnMap.emplace_back();
+	itemsOnMap.back().first = Item::type::ammo_crate;
+	sf::Sprite& spr = itemsOnMap.back().second;
+	spr.setTexture(inventory.texItemTileset);
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setScale(.5, .5);
+	spr.setPosition(player.getPosition().x, player.getPosition().y);
+
+	abilityTimer1.restart();
 }
 
 void EndlessState::assault_grenade() {
@@ -267,6 +280,8 @@ void EndlessState::assault_grenade() {
 
 void EndlessState::assault_deadeye() {
 	onCoolDown3 = true;
+
+	player.isDeadEye = true;
 
 	abilityTimer3.restart();
 }
@@ -473,6 +488,13 @@ bool EndlessState::handleEvents() {
 						break;
 					case PlayerClass::ASSAULT:
 						//ASSAULT FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							assault_ammo();
+							std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
+						}
 						break;
 					case PlayerClass::MEDIC:
 						//MEDIC FIRST ABILITY GOES HERE
@@ -839,7 +861,7 @@ void EndlessState::updateProjectiles() {
 		}
 
 		if (projItr->isGrenade == true) {
-			float maxRange = 500.f;
+			float maxRange = 250.f;
 			float dist = Utils::pointDistance(player.getPosition(), projItr->getPosition());
 			
 			if (dist > maxRange || !(tileMap.areaClear(*projItr, moveVector))) {
@@ -872,7 +894,12 @@ void EndlessState::updateProjectiles() {
 					breaking = true;
 
 				// deal damage to enemy
-				enemyItr->health -= 25;//(projItr)->damage; // TODO set this to the bullet's damage
+				if (player.isDeadEye) {
+					enemyItr->health -= 50; //is deadeye is active double damage
+				}
+				else {
+					enemyItr->health -= 25;// // TODO set this to the bullet's damage
+				}
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
 					spawnEnemies(1);
