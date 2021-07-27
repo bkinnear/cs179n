@@ -128,7 +128,7 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	fpsCounter.setFillColor(sf::Color(0x00EE00FF));
 	fpsCounter.setOutlineColor(sf::Color(0x000000FF));
 	fpsCounter.setOutlineThickness(2.f);
-	fpsTimes.reserve(60);
+	fpsTimes.reserve(65);
 
 	// load item details shape (the box behind the text)
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
@@ -1131,7 +1131,7 @@ void EndlessState::render() {
 	mainViewTarget = { floor(player.getPosition().x), floor(player.getPosition().y) };
 
 	// move the view towards target
-	sf::Vector2f delta(floor(mainViewTarget.x - mainView.getCenter().x)/2, floor(mainViewTarget.y - mainView.getCenter().y)/2);
+	sf::Vector2f delta(floor((mainViewTarget.x - mainView.getCenter().x)/10), floor((mainViewTarget.y - mainView.getCenter().y)/10));
 	mainView.move(delta);
 
 	// we must update view any time we change something in it
