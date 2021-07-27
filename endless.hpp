@@ -61,6 +61,16 @@ private:
 	sf::Sprite grenadeIcon;
 	sf::Text grenadesNum;
 
+	// dialog GUI
+	int dialogTreeIndex = 0;
+	void setDialog(const std::string&, const std::string&);
+	void hideDialog();
+	bool showDialog = false;
+	sf::RectangleShape dialogBox1;
+	sf::RectangleShape dialogBox2;
+	sf::Text dialogSpeaker;
+	sf::Text dialogMessage;
+
 	// projectiles
 	std::list<Projectile> projectiles;
   

@@ -47,6 +47,29 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	//txtItemDetails.setOutlineColor(sf::Color::Black);
 	//txtItemDetails.setOutlineThickness(1);
 
+	// load dialog GUI
+	dialogBox1.setSize({480.f, 160.f});
+	dialogBox1.setFillColor(sf::Color(0xf5eeceee));
+	dialogBox1.setOutlineColor(sf::Color(0x000000FF));
+	dialogBox1.setOutlineThickness(1.f);
+	dialogBox1.setPosition({game.portWidth / 2 - 240.f, game.portHeight - 220.f});
+
+	dialogBox2.setSize({96.f, 28.f});
+	dialogBox2.setFillColor(sf::Color(0xcef5f1ee));
+	dialogBox2.setOutlineColor(sf::Color(0x000000FF));
+	dialogBox2.setOutlineThickness(1.f);
+	dialogBox2.setPosition(dialogBox1.getPosition() + sf::Vector2f({16.f, -29.f}));
+
+	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({4.f, 4.f}));
+	dialogMessage.setFont(font);
+	dialogMessage.setCharacterSize(14);
+	dialogMessage.setColor(sf::Color(0x000000ff));
+
+	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 4.f }));
+	dialogSpeaker.setFont(font);
+	dialogSpeaker.setCharacterSize(14);
+	dialogSpeaker.setColor(sf::Color(0x000000ff));
+
 	// load item details shape (the box behind the text)
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
 	shpItemDetails.setOutlineThickness(1.f);
@@ -327,6 +350,22 @@ bool EndlessState::handleEvents() {
 			break;
 			case sf::Keyboard::R: // reload weapon
 				inventory.reloadWielded();
+				break;
+			case sf::Keyboard::T:
+				switch (dialogTreeIndex++) {
+				case 0:
+					setDialog("Bryce", "I can see you...");
+					break;
+				case 1:
+					setDialog("Bryce", "jk");
+					break;
+				case 2:
+					setDialog("Bryce", "ok bye");
+					break;
+				case 3:
+					hideDialog();
+					break;
+				}
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
 				switch (player.playerClass) {
@@ -706,6 +745,16 @@ void EndlessState::updateProjectiles() {
 	}
 }
 
+void EndlessState::setDialog(const std::string& speaker, const std::string& msg) {
+	showDialog = true;
+	dialogSpeaker.setString(speaker + ':');
+	dialogMessage.setString(msg);
+}
+
+void EndlessState::hideDialog() {
+	showDialog = false;
+}
+
 EndlessState::~EndlessState() {
 	// here we would deallocate any resources we use in this gamestate
 }
@@ -891,6 +940,13 @@ void EndlessState::render() {
 	gwindow.draw(ammoCount);
 	gwindow.draw(grenadeIcon);
 	gwindow.draw(grenadesNum);
+
+	if (showDialog) {
+		gwindow.draw(dialogBox1);
+		gwindow.draw(dialogBox2);
+		gwindow.draw(dialogMessage);
+		gwindow.draw(dialogSpeaker);
+	}
 
 	// update window
 	gwindow.display();
