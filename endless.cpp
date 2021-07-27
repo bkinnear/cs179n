@@ -531,33 +531,33 @@ bool EndlessState::handleEvents() {
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
 				switch (player.playerClass) {
-					case PlayerClass::DEFAULT:
-						break;
-					case PlayerClass::ASSAULT:
-						//ASSAULT FIRST ABILITY GOES HERE
-						if (!onCoolDown1) {
-							assault_ammo();
-							std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
-						}
-						else {
-							std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
-						}
-						break;
-					case PlayerClass::MEDIC:
-						//MEDIC FIRST ABILITY GOES HERE
-						if (!onCoolDown1) {
-							medic_bandage();
-							std::cout << "Medic Ability - Dropped Bandages" << std::endl;
-						}
-						else {
-							std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
-						}
-						break;
+				case PlayerClass::DEFAULT:
+					break;
+				case PlayerClass::ASSAULT:
+					//ASSAULT FIRST ABILITY GOES HERE
+					if (!onCoolDown1) {
+						assault_ammo();
+						std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+					}
+					else {
+						std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::MEDIC:
+					//MEDIC FIRST ABILITY GOES HERE
+					if (!onCoolDown1) {
+						medic_bandage();
+						std::cout << "Medic Ability - Dropped Bandages" << std::endl;
+					}
+					else {
+						std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
 					}
 					break;
 				}
 				break;
+				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
+				std::cout << "2" << std::endl;
 				switch (player.playerClass) {
 				case PlayerClass::DEFAULT:
 					break;
@@ -583,34 +583,35 @@ bool EndlessState::handleEvents() {
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
 				switch (player.playerClass) {
-					case PlayerClass::DEFAULT:
-						break;
-					case PlayerClass::ASSAULT:
-						if (!onCoolDown3) {
-							assault_deadeye();
-							std::cout << "Assault Ability - Dead Eye" << std::endl;
-						}
-						else {
-							std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
-						}
-						break;
-					case PlayerClass::MEDIC:
-						if (!onCoolDown3) {
-							medic_heal();
-							std::cout << "Medic Ability - Guardian Angel" << std::endl;
-						}
-						else {
-							std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
-						}
-						break;
+				case PlayerClass::DEFAULT:
+					break;
+				case PlayerClass::ASSAULT:
+					if (!onCoolDown3) {
+						assault_deadeye();
+						std::cout << "Assault Ability - Dead Eye" << std::endl;
+					}
+					else {
+						std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
 					}
 					break;
+				case PlayerClass::MEDIC:
+					if (!onCoolDown3) {
+						medic_heal();
+						std::cout << "Medic Ability - Guardian Angel" << std::endl;
+					}
+					else {
+						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+					}
+					break;
+				}
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
 				game.setState(new EndlessState(game, player.playerClass));
 				delete this;
 				return false;
+				break;
+			}
 			break;
 		case sf::Event::KeyReleased:
 			switch (e.key.code) {
@@ -1119,8 +1120,13 @@ void EndlessState::render() {
 	// = v   world drawing   v  = //
 	// ========================== //
 
-	// move view to center on player
-	mainView.setCenter(floor(player.getPosition().x), floor(player.getPosition().y));
+	// move view target to center on player
+	mainViewTarget = { floor(player.getPosition().x), floor(player.getPosition().y) };
+
+	// move the view towards target
+	sf::Vector2f delta(floor(mainViewTarget.x - mainView.getCenter().x)/2, floor(mainViewTarget.y - mainView.getCenter().y)/2);
+	mainView.move(delta);
+
 	// we must update view any time we change something in it
 	// set the main view to draw the main map
 	gwindow.setView(mainView);

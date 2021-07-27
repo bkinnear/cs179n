@@ -39,8 +39,12 @@ public:
 	void updateProjectiles();
 
 private:
+	// views
 	sf::View mainView;
 	sf::View guiView;
+
+	// main view target (what it moves towards)
+	sf::Vector2f mainViewTarget;
 
 	// mouse position in window (updated every logic tick)
 	sf::Vector2i winMousePos;
