@@ -187,7 +187,13 @@ const Item& Inventory::getWielded() const {
 }
 
 void Inventory::reloadWielded() {
-	// make weapon reload for time set by item
+	// ignore if mag is full
+	if (roundsLeft == wielded.getMagCapacity())
+		return;
+	// ignore if already reloading
+	if (weaponReloadTick >= 0)
+		return;
+
 	weaponReloadTick = wielded.getReloadTime() * 60;
 	weaponReady = false;
 }
