@@ -551,29 +551,26 @@ bool EndlessState::handleEvents() {
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
 				switch (player.playerClass) {
-					case PlayerClass::DEFAULT:
-						break;
-					case PlayerClass::ASSAULT:
-						if (!onCoolDown2) {
-							assault_grenade();
-							std::cout << "Assault Ability - Grenade" << std::endl;
-						}
-						else {
-							std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
-						}
-						break;
-					case PlayerClass::MEDIC:
-						if (!onCoolDown2) {
-							medic_dash();
-							std::cout << "Medic Ability - Dash" << std::endl;
-						}
-						else {
-							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
-						}
+				case PlayerClass::DEFAULT:
+					break;
+				case PlayerClass::ASSAULT:
+					if (!onCoolDown2) {
+						assault_grenade();
+						std::cout << "Assault Ability - Grenade" << std::endl;
+					}
+					else {
+						std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::MEDIC:
+					if (!onCoolDown2) {
+						medic_dash();
+						std::cout << "Medic Ability - Dash" << std::endl;
 					}
 					else {
 						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
 					}
+					break;
 				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
@@ -600,14 +597,12 @@ bool EndlessState::handleEvents() {
 						break;
 					}
 					break;
-				}
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
 				game.setState(new EndlessState(game, player.playerClass));
 				delete this;
 				return false;
-			}
 			break;
 		case sf::Event::KeyReleased:
 			switch (e.key.code) {
@@ -667,10 +662,11 @@ bool EndlessState::handleEvents() {
 
 	// check mouse state for holding (enabling auto fire)
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+		// LMB held
 		// try to use weapon
 		if (inventory.useWielded()) {
-      shotSound.setBuffer(gunShotBuffer);
-  		shotSound.setVolume(50);
+			shotSound.setBuffer(gunShotBuffer);
+			shotSound.setVolume(50);
 			shotSound.play();
 			// TODO - check to make sure weapon is ranged
 			projectiles.emplace_back();
@@ -683,11 +679,14 @@ bool EndlessState::handleEvents() {
 			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
 			proj.setRotation(proj.direction);
 			proj.damage = inventory.getWielded().getDamage();
-		} else {
-      shotSound.setBuffer(emptyGunBuffer);
-			shotSound.setVolume(25);
-			shotSound.play();
-    }
+		}
+		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
+			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
+				shotSound.setBuffer(emptyGunBuffer);
+				shotSound.setVolume(25);
+				shotSound.play();
+			}
+		}
 	}
 
 	// tell game state to continue
