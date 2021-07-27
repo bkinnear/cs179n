@@ -688,7 +688,7 @@ bool EndlessState::handleEvents() {
 			proj.speed = 12;
 			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
 			proj.setRotation(proj.direction);
-			proj.damage = inventory.getWielded().getDamage();
+			proj.damage = inventory.getWielded().getDamage() * (2*player.isDeadEye);
 		}
 		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
 			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
