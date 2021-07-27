@@ -860,7 +860,10 @@ void EndlessState::logic() {
 	ammoCount.setFont(font);
 	ammoCount.setCharacterSize(12);
 	ammoCount.setColor(sf::Color::Black);
-	ammoCount.setString(std::to_string(inventory.getRoundsLeft()) + "/" + std::to_string(inventory.getNumItem(Item::type::ammo_9mm))); // TODO implement mags and more ammo types
+	if (inventory.getWielded().getAmmoType() == Item::type::null)
+		ammoCount.setString("-/-");
+	else
+		ammoCount.setString(std::to_string(inventory.getRoundsLeft()) + "/" + std::to_string(inventory.getNumItem(inventory.getWielded().getAmmoType())));
 	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
 	//grenade counter
 	int gCount = 3;
