@@ -3,7 +3,7 @@
 
 Game::Game():
 	title("The Last War"),
-	window(sf::VideoMode::getFullscreenModes()[0], "The Last War", sf::Style::Fullscreen),
+	window(sf::VideoMode(1366, 768), "The Last War"),
 	curState(nullptr)
 {
 	window.setFramerateLimit(60);
