@@ -934,6 +934,9 @@ void EndlessState::updateProjectiles() {
 					}
 				}
 				projItr = projectiles.erase(projItr);
+				if (projItr == projectiles.end())
+					break;
+				continue;
 			}
 		}
 		else {
