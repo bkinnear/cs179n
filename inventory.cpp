@@ -1,5 +1,7 @@
 #include "inventory.hpp"
 #include <iostream>
+#include <algorithm>
+
 // returns inventory slot offset
 inline sf::Vector2f getSlotOffset(unsigned x, unsigned y) {
 	float dx, dy;
@@ -79,6 +81,9 @@ unsigned Inventory::getNumItem(Item::type type) {
 }
 
 void Inventory::removeItem(Item::type type, unsigned num) {
+	if (num == 0)
+		return;
+
 	// search for item
 	for (unsigned y = 0; y < height; y++) {
 		for (unsigned x = 0; x < width; x++) {
@@ -140,6 +145,11 @@ void Inventory::wieldItemAt(float x, float y) {
 	// unwield if in wielded slot
 	if (sf::FloatRect(241.f, 12.f, 48.f, 48.f).contains(x, y)) {
 		addItem(wielded.itemType, wielded.num);
+		
+		// return ammo in mag to inventory
+		addItem(wielded.getAmmoType(), roundsLeft);
+
+		// set wielded slot to empty
 		wielded = Item();
 	}
 
@@ -158,8 +168,75 @@ void Inventory::wieldItemAt(float x, float y) {
 		Item toWield = inventoryGrid[gridY][gridX];
 		inventoryGrid[gridY][gridX] = Item();
 		addItem(wielded.itemType, wielded.num);
+
 		// wield the item
 		wielded = toWield;
+
+		// reset wielded item variables
+		roundsLeft = 0;
+		weaponWaitTick = -1;
+		weaponReloadTick = -1;
+
+		// automatically reload new weapon
+		reloadWielded();
+	}
+}
+
+const Item& Inventory::getWielded() const {
+	return wielded;
+}
+
+void Inventory::reloadWielded() {
+	// make weapon reload for time set by item
+	weaponReloadTick = wielded.getReloadTime() * 60;
+	weaponReady = false;
+}
+
+int Inventory::getRoundsLeft() const {
+	return roundsLeft;
+}
+
+bool Inventory::useWielded() {
+	switch (wielded.itemType) {
+	case Item::type::MP5:
+	case Item::type::M4:
+		if (weaponReady) {
+			if (roundsLeft == 0) {
+				reloadWielded();
+				return false;
+			}
+			roundsLeft--;
+			weaponReady = false;
+			weaponWaitTick = wielded.getDelayTime();
+			return true;
+		}
+		else
+			return false;
+	default:
+		return false; // Return false, not wielding an item that can be used
+	}
+}
+
+void Inventory::tick() {
+	if (weaponWaitTick > 0)
+		weaponWaitTick--;
+	else if (weaponWaitTick == 0) {
+		// weapon ready to fire again
+		weaponWaitTick = -1; // stop ticking
+		if (weaponReloadTick == -1)
+			weaponReady = true;
+	}
+
+	if (weaponReloadTick > 0)
+		weaponReloadTick--;
+	else if (weaponReloadTick == 0) {
+		// reload weapon
+		weaponReloadTick = -1; // stop ticking
+		int roundsNeeded = wielded.getMagCapacity() - roundsLeft; // rounds needed to "top off" mag
+		int roundsToReload = std::min((int)getNumItem(wielded.getAmmoType()), roundsNeeded); // rounds that will actually be used up
+		removeItem(wielded.getAmmoType(), roundsToReload); // remove rounds being used
+		roundsLeft += roundsToReload; // add rounds to count of rounds in mag
+		weaponReady = true;
 	}
 }
 

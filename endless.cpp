@@ -10,9 +10,6 @@
 // the main game window
 #define gwindow game.window
 
-int magCount = 30;//temporarily set string until magazine ammo counter is made
-int totalCount = 300;//temporarily set string until total ammo counter is made
-
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
@@ -100,6 +97,29 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	txtItemDetails.setColor(sf::Color(0x303030FF));
 	//txtItemDetails.setOutlineColor(sf::Color::Black);
 	//txtItemDetails.setOutlineThickness(1);
+
+	// load dialog GUI
+	dialogBox1.setSize({480.f, 160.f});
+	dialogBox1.setFillColor(sf::Color(0xf5eeceee));
+	dialogBox1.setOutlineColor(sf::Color(0x000000FF));
+	dialogBox1.setOutlineThickness(1.f);
+	dialogBox1.setPosition({game.portWidth / 2 - 240.f, game.portHeight - 220.f});
+
+	dialogBox2.setSize({96.f, 28.f});
+	dialogBox2.setFillColor(sf::Color(0xcef5f1ee));
+	dialogBox2.setOutlineColor(sf::Color(0x000000FF));
+	dialogBox2.setOutlineThickness(1.f);
+	dialogBox2.setPosition(dialogBox1.getPosition() + sf::Vector2f({16.f, -29.f}));
+
+	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({4.f, 4.f}));
+	dialogMessage.setFont(font);
+	dialogMessage.setCharacterSize(14);
+	dialogMessage.setColor(sf::Color(0x000000ff));
+
+	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 4.f }));
+	dialogSpeaker.setFont(font);
+	dialogSpeaker.setCharacterSize(14);
+	dialogSpeaker.setColor(sf::Color(0x000000ff));
 
 	// load item details shape (the box behind the text)
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
@@ -482,6 +502,25 @@ bool EndlessState::handleEvents() {
 				}
 			}
 			break;
+			case sf::Keyboard::R: // reload weapon
+				inventory.reloadWielded();
+				break;
+			case sf::Keyboard::T:
+				switch (dialogTreeIndex++) {
+				case 0:
+					setDialog("Bryce", "I can see you...");
+					break;
+				case 1:
+					setDialog("Bryce", "jk");
+					break;
+				case 2:
+					setDialog("Bryce", "ok bye");
+					break;
+				case 3:
+					hideDialog();
+					break;
+				}
+				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
 				switch (player.playerClass) {
 					case PlayerClass::DEFAULT:
@@ -507,6 +546,8 @@ bool EndlessState::handleEvents() {
 						}
 						break;
 					}
+					break;
+				}
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
 				switch (player.playerClass) {
@@ -530,6 +571,10 @@ bool EndlessState::handleEvents() {
 							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
 						}
 					}
+					else {
+						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+					}
+				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
 				switch (player.playerClass) {
@@ -554,6 +599,8 @@ bool EndlessState::handleEvents() {
 						}
 						break;
 					}
+					break;
+				}
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
@@ -590,33 +637,8 @@ bool EndlessState::handleEvents() {
 			case sf::Mouse::Button::Left:
 				// LMB pressed
 
-				// create projectiles
-				projectiles.emplace_back();
-
-				// TODO - implement mags
-				{
-					unsigned nRounds = inventory.getNumItem(Item::type::ammo_9mm);
-					if (nRounds > 0) {
-						inventory.removeItem(Item::type::ammo_9mm, 1);
-						shotSound.setBuffer(gunShotBuffer);
-						shotSound.setVolume(50);
-						shotSound.play();
-
-						Projectile& proj = projectiles.back();
-						proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-						proj.setTexture(texProjectile);
-						// set mask bounds to just the sprite bounds (default)
-						proj.setMaskBounds(proj.getLocalBounds());
-						proj.speed = 12;
-						proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
-						proj.setRotation(proj.direction);
-					}
-					else {
-						shotSound.setBuffer(emptyGunBuffer);
-						shotSound.setVolume(25);
-						shotSound.play();
-					}
-				}
+				// NOTE: moved attacks to mouse holding so user can do automatic fire
+				// TODO make it so that only full-auto weapons can be held
 				break;
 			case sf::Mouse::Button::Right:
 				// RMB pressed
@@ -643,6 +665,32 @@ bool EndlessState::handleEvents() {
 		}
 	}
 
+	// check mouse state for holding (enabling auto fire)
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+		// try to use weapon
+		if (inventory.useWielded()) {
+      shotSound.setBuffer(gunShotBuffer);
+  		shotSound.setVolume(50);
+			shotSound.play();
+			// TODO - check to make sure weapon is ranged
+			projectiles.emplace_back();
+			Projectile& proj = projectiles.back();
+			proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+			proj.setTexture(texProjectile);
+			// set mask bounds to just the sprite bounds (default)
+			proj.setMaskBounds(proj.getLocalBounds());
+			proj.speed = 12;
+			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
+			proj.setRotation(proj.direction);
+			proj.damage = inventory.getWielded().getDamage();
+		} else {
+      shotSound.setBuffer(emptyGunBuffer);
+			shotSound.setVolume(25);
+			shotSound.play();
+    }
+	}
+
+	// tell game state to continue
 	return true;
 }
 
@@ -915,6 +963,16 @@ void EndlessState::updateProjectiles() {
 	}
 }
 
+void EndlessState::setDialog(const std::string& speaker, const std::string& msg) {
+	showDialog = true;
+	dialogSpeaker.setString(speaker + ':');
+	dialogMessage.setString(msg);
+}
+
+void EndlessState::hideDialog() {
+	showDialog = false;
+}
+
 EndlessState::~EndlessState() {
 	// here we would deallocate any resources we use in this gamestate
 }
@@ -1020,7 +1078,10 @@ void EndlessState::logic() {
 	ammoCount.setFont(font);
 	ammoCount.setCharacterSize(12);
 	ammoCount.setColor(sf::Color::Black);
-	ammoCount.setString(std::to_string(1) + "/" + std::to_string(inventory.getNumItem(Item::type::ammo_9mm))); // TODO implement mags and more ammo types
+	if (inventory.getWielded().getAmmoType() == Item::type::null)
+		ammoCount.setString("-/-");
+	else
+		ammoCount.setString(std::to_string(inventory.getRoundsLeft()) + "/" + std::to_string(inventory.getNumItem(inventory.getWielded().getAmmoType())));
 	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
 	//grenade counter
 	int gCount = 3;
@@ -1031,6 +1092,8 @@ void EndlessState::logic() {
 	grenadesNum.setColor(sf::Color::Black);
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+
+	inventory.tick();
 }
 
 void EndlessState::render() {
@@ -1098,6 +1161,13 @@ void EndlessState::render() {
 	gwindow.draw(ammoCount);
 	gwindow.draw(grenadeIcon);
 	gwindow.draw(grenadesNum);
+
+	if (showDialog) {
+		gwindow.draw(dialogBox1);
+		gwindow.draw(dialogBox2);
+		gwindow.draw(dialogMessage);
+		gwindow.draw(dialogSpeaker);
+	}
 
 	// update window
 	gwindow.display();
