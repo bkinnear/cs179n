@@ -128,6 +128,7 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	fpsCounter.setFillColor(sf::Color(0x00EE00FF));
 	fpsCounter.setOutlineColor(sf::Color(0x000000FF));
 	fpsCounter.setOutlineThickness(2.f);
+	fpsTimes.reserve(60);
 
 	// load item details shape (the box behind the text)
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
@@ -1104,9 +1105,15 @@ void EndlessState::logic() {
 	// set FPS for this tick
 	float currentTime = fpsClock.restart().asSeconds();
 	float fps = 1.f / currentTime;
+	fpsTimes.push_back(fps);
 	if (fpsTimer.getElapsedTime().asSeconds() >= .2f) {
-		fpsCounter.setString("FPS: " + std::to_string((int)fps));
+		float fpsAvg = 0;
+		for (float i : fpsTimes)
+			fpsAvg += i;
+		fpsAvg /= fpsTimes.size();
+		fpsCounter.setString("FPS: " + std::to_string((int)fpsAvg));
 		fpsTimer.restart();
+		fpsTimes.resize(0);
 	}
 
 	inventory.tick();

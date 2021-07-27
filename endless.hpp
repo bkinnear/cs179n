@@ -80,6 +80,7 @@ private:
 	sf::Text dialogMessage;
 
 	// FPS counter
+	std::vector<float> fpsTimes;
 	sf::Clock fpsTimer;
 	sf::Clock fpsClock;
 	sf::Text fpsCounter;
