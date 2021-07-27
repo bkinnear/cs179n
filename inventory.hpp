@@ -10,7 +10,7 @@
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, bandages };
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, bandages, ammo_crate};
 
 	// type of item
 	type itemType = type::null;
@@ -35,6 +35,8 @@ struct Item {
 			return "Medkit";
 		case type::bandages:
 			return "Bandages";
+		case type::ammo_crate:
+			return "Ammo Crate";
 		default:
 			return "unknown item";
 		}
@@ -57,8 +59,70 @@ struct Item {
 			return "Medkit. Used for healing.";
 		case type::bandages:
 			return "Bandages. Used for minor healing";
+		case type::ammo_crate:
+			return "Ammo Crate. Used to replenish ammunition";
 		default:
 			return "unknown item desc";
+		}
+	}
+
+	// returns the damage dealt by a wielded item
+	int getDamage() const {
+		switch (itemType) {
+		case type::MP5:
+			return 25;
+		case type::M4:
+			return 35;
+		default:
+			return 0;
+		}
+	}
+
+	// returns the magazine capacity held by a wielded item
+	int getMagCapacity() const {
+		switch (itemType) {
+		case type::MP5:
+			return 30;
+		case type::M4:
+			return 30;
+		default:
+			return 0;
+		}
+	}
+
+	// returns reload time for each weapon in seconds
+	int getReloadTime() const {
+		switch (itemType) {
+		case type::MP5:
+			return 3;
+		case type::M4:
+			return 4;
+		default:
+			return 0;
+		}
+	}
+
+	// returns ammo type of weapon
+	type getAmmoType() const {
+		switch (itemType) {
+		case type::MP5:
+			return type::ammo_9mm;
+		case type::M4:
+			return type::ammo_556;
+		default:
+			return type::null;
+		}
+	}
+
+	// returns delay between each shot in ticks (-1 => semi automatic)
+	int getDelayTime() const {
+		switch (itemType) {
+		case type::MP5:
+			return 5;
+		case type::M4:
+			return 4;
+		default:
+			return -1;
 		}
 	}
 };
@@ -100,6 +164,28 @@ public:
 	*/
 	void wieldItemAt(float x, float y);
 
+	/* returns wielded item
+	*/
+	const Item& getWielded() const;
+
+	/* reloads wielded weapon
+	*/
+	void reloadWielded();
+
+	/* returns rounds left in magazine
+	*/
+	int getRoundsLeft() const;
+
+	/* returns true if weapon can be used
+	 * returns false if weapon is not ready to fire, reloading, or out of ammo
+	 * "uses" ammo if relevant
+	*/
+	bool useWielded();
+
+	/* advance all ticks
+	*/
+	void tick();
+
 	// inventory grid width
 	const unsigned width = 5;
 
@@ -108,6 +194,7 @@ public:
 
 	// item texture set
 	sf::Texture& texItemTileset;
+
 protected:
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -121,6 +208,22 @@ private:
 
 	// wielded item
 	Item wielded;
+	
+	// weapon ready to attack
+	//bool weaponReady = true;
+	
+	// rounds left in wieled weapon magazine
+	int roundsLeft = 0;
+
+	// weapon ready to attack
+	bool weaponReady = true;
+
+	// ticks until weapon can be used again
+	int weaponWaitTick = 0;
+
+	// ticks until mag is loaded
+	int weaponReloadTick = 0;
+
 };
 
 #endif

@@ -105,6 +105,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 	textures.resize(nTextures);
 	for (int i = 1; i < nTextures; i++) {
 		// create new texture for tile of type i
+		std::cout << i << std::endl;
 		textures[i] = &state.createTexture(
 			"res/big_32x32_tileset.png", // TODO make this not a magic string (maybe doesnt matter)
 			sf::IntRect(getTileTexOffset(i), { TILE_SIZE,TILE_SIZE }
@@ -128,8 +129,8 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 	
 	for (int i = 1; i <= num_bldg; i++) {
 		int bldg_num = rand() % 6 + 1;		//randomly selects one of the building presets
-		int x_offset = rand() % 9 + 2;		//generates a random number to determine the x offset
-		int y_offset = rand() % 9 + 2;		//generates a random number to determine the y offset
+		int x_offset = rand() % (mapWidth-12) + 2;		//generates a random number to determine the x offset
+		int y_offset = rand() % (mapHeight-12) + 2;		//generates a random number to determine the y offset
 		bool empty;
 
 		sf::Vector2i offset = {y_offset,x_offset};
@@ -366,12 +367,12 @@ sf::Vector2i TileMap::getTileTexOffset(tileType type) {
 		return { (i - 28) * 32, 704 };
 	if (i <= 41)
 		return { (i - 34) * 32, 736 };
-	if (i <= 59)
+	if (i <= 49)
 		return { (i - 42) * 32, 768 };
-	if (i <= 67)
-		return { (i - 60) * 32, 800 };
-	if (i <= 73)
-		return { (i - 68) * 32, 832 };
+	if (i <= 57)
+		return { (i - 50) * 32, 800 };
+	if (i <= 63)
+		return { (i - 58) * 32, 832 };
 
 	// default set to red rug
 	return { 224, 832 };
@@ -392,9 +393,9 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	for (unsigned x = left; x < right; x++) {
 		for (unsigned y = top; y < bottom; y++) {
 			const Tile& tile = map[y][x];
-			// no tile - draw grass (73)
+			// no tile - draw grass (63)
 			if (tile.type == 0) {
-				sprTile.setTexture(*textures[73]);
+				sprTile.setTexture(*textures[63]);
 				sprTile.setPosition(x * TILE_SIZE, y * TILE_SIZE);
 				target.draw(sprTile, states);
 				continue;

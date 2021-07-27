@@ -67,7 +67,7 @@ private:
 	/* current state being ran in run() */
 	State* curState;
 
-	bool fullscreen = true;
+	bool fullscreen = false;
 };
 
 #endif
