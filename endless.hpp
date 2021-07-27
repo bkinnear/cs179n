@@ -75,6 +75,11 @@ private:
 	sf::Text dialogSpeaker;
 	sf::Text dialogMessage;
 
+	// FPS counter
+	sf::Clock fpsTimer;
+	sf::Clock fpsClock;
+	sf::Text fpsCounter;
+
 	// projectiles
 	std::list<Projectile> projectiles;
 	sf::SoundBuffer gunShotBuffer;

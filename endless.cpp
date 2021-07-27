@@ -121,6 +121,14 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	dialogSpeaker.setCharacterSize(14);
 	dialogSpeaker.setColor(sf::Color(0x000000ff));
 
+	// load FPS counter
+	fpsCounter.setPosition({ 4.f, 4.f });
+	fpsCounter.setFont(font);
+	fpsCounter.setCharacterSize(16);
+	fpsCounter.setFillColor(sf::Color(0x00EE00FF));
+	fpsCounter.setOutlineColor(sf::Color(0x000000FF));
+	fpsCounter.setOutlineThickness(2.f);
+
 	// load item details shape (the box behind the text)
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
 	shpItemDetails.setOutlineThickness(1.f);
@@ -1092,6 +1100,14 @@ void EndlessState::logic() {
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
 
+	// set FPS for this tick
+	float currentTime = fpsClock.restart().asSeconds();
+	float fps = 1.f / currentTime;
+	if (fpsTimer.getElapsedTime().asSeconds() >= .2f) {
+		fpsCounter.setString("FPS: " + std::to_string((int)fps));
+		fpsTimer.restart();
+	}
+
 	inventory.tick();
 }
 
@@ -1167,6 +1183,8 @@ void EndlessState::render() {
 		gwindow.draw(dialogMessage);
 		gwindow.draw(dialogSpeaker);
 	}
+
+	gwindow.draw(fpsCounter);
 
 	// update window
 	gwindow.display();
