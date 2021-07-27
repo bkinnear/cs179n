@@ -11,6 +11,7 @@
 #include "npc.hpp"
 #include "mask.hpp"
 #include "classes.hpp"
+#include "gamemode.hpp"
 
 #include <list>
 
@@ -26,12 +27,6 @@ public:
 	bool handleEvents();
 
 	void chooseClass(PlayerClass);
-
-	void spawnWeapons();
-
-	void spawnEnemies(int);
-	void updateEnemies();
-	void renderEnemies();
 
 	void updateAllies();
 	void renderAllies();

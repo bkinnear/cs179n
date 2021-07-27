@@ -9,6 +9,7 @@
 #include "projectile.hpp"
 #include "enemy.hpp"
 #include "mask.hpp"
+#include "gamemode.hpp"
 
 #include<list>
 
@@ -22,12 +23,6 @@ public:
 
 	// returns false if state exits
 	bool handleEvents();
-
-	void spawnWeapons();
-
-	void spawnEnemies(int);
-	void updateEnemies();
-	void renderEnemies(int);
 
 	void updateProjectiles();
 
