@@ -743,7 +743,7 @@ void EndlessState::updateProjectiles() {
 						enemyItr->health -= 120;
 						if (enemyItr->health <= 0) {
 							enemyItr = enemies.erase(enemyItr);
-							spawnEnemies(1);
+							GameMode::spawnEnemies(1, texEnemyRight, enemies, tileMap);
 						}
 					}
 				}
@@ -773,7 +773,7 @@ void EndlessState::updateProjectiles() {
 				}
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
-					spawnEnemies(1);
+					GameMode::spawnEnemies(1, texEnemyRight, enemies, tileMap);
 					if (enemyItr == enemies.end())
 						break;
 				}

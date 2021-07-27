@@ -148,6 +148,7 @@ void GameMode::spawnWeapons(std::list<std::pair<Item::type, sf::Sprite>> &itemsO
 }
 
 void GameMode::spawnEnemies(int noOfEnemies, sf::Texture& texEnemyRight, std::list<Enemy>& enemies, TileMap& tileMap) {
+
 	for (int i = 0;i < noOfEnemies;i++)
 	{
 		Enemy enemy;
