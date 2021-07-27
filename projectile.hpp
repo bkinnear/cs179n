@@ -10,9 +10,11 @@ public:
 
 	bool shoot = false;
 
+	bool isGrenade = false;
+
 	int speed = 15;
 	float direction;
-	int damage;
+	int damage = 25;
 };
 
 #endif

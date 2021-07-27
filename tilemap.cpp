@@ -129,8 +129,8 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 	
 	for (int i = 1; i <= num_bldg; i++) {
 		int bldg_num = rand() % 6 + 1;		//randomly selects one of the building presets
-		int x_offset = rand() % 9 + 2;		//generates a random number to determine the x offset
-		int y_offset = rand() % 9 + 2;		//generates a random number to determine the y offset
+		int x_offset = rand() % (mapWidth-12) + 2;		//generates a random number to determine the x offset
+		int y_offset = rand() % (mapHeight-12) + 2;		//generates a random number to determine the y offset
 		bool empty;
 
 		sf::Vector2i offset = {y_offset,x_offset};

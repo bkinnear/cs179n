@@ -49,6 +49,10 @@ private:
 
 	/* ==v== place any vars we need in this state in here ==v== */
 
+	// Music
+	sf::Music music;
+	sf::Music ambientZombie;
+
 	// player
 	Player player;
 
@@ -73,6 +77,9 @@ private:
 
 	// projectiles
 	std::list<Projectile> projectiles;
+	sf::SoundBuffer gunShotBuffer;
+	sf::SoundBuffer emptyGunBuffer;
+	sf::Sound shotSound;
   
 	// inventory
 	Inventory inventory;
@@ -86,6 +93,12 @@ private:
 
 	// enemies
 	std::list<Enemy> enemies;
+	sf::SoundBuffer zombieBuffer1;
+	sf::SoundBuffer zombieBuffer2;
+	sf::SoundBuffer zombieBuffer3;
+	sf::SoundBuffer zombieBuffer4;
+	sf::SoundBuffer zombieBuffer5;
+	sf::Sound zombieSound;
 	int maximumEnemyCount = 99;
 	int defaultEnemySpawningCount = 3;//Default count
 
@@ -99,11 +112,14 @@ private:
 	// textures
 	sf::Texture& texPlayerRight;
 	sf::Texture& texPlayerLeft;
+	sf::Texture& texAllyRight;
+	sf::Texture& texAllyLeft;
 	sf::Texture& texProjectile;
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
 	sf::Texture& texWeaponMP5;
 	sf::Texture& texExplosionSmall;
+	sf::Texture& texExplosionLarge;
 	sf::Texture& playerDeath;
   
 	// fonts
@@ -111,6 +127,12 @@ private:
 
 	// effects
 	Effect* explosionSmall;
+	Effect* explosionLarge;
+
+	// interactions
+	sf::SoundBuffer doorOpen;
+	sf::SoundBuffer doorClose;
+	sf::Sound doorInteract;
 
 	// ability variables
 	sf::Time elapsed1;
@@ -134,6 +156,11 @@ private:
 	void medic_bandage();
 	void medic_dash();
 	void medic_heal();
+
+	// assault abilities
+	void assault_grenade();
+	void assault_ammo();
+	void assault_deadeye();
 };
 
 #endif

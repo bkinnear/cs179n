@@ -17,12 +17,15 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	tileMap(*this, 100, 100),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
+	texAllyRight(createTexture("res/player2_r_strip.png")),
+	texAllyLeft(createTexture("res/player2_l_strip.png")),
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
 	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
 	texWeaponMP5(createTexture("res/mp5.png")),
 	texExplosionSmall(createTexture("res/explosion_small_strip.png")),
+	texExplosionLarge(createTexture("res/explosion_large.png")),
 	playerIcon(createTexture("res/Player1_display.png")),
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
@@ -36,6 +39,54 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	/*	=============================
 		 allocate our resources here
 		=============================  */
+
+	if (!music.openFromFile("res/music.wav")) {
+		std::cout << "error loading ambient music" << std::endl;
+	}
+	music.setLoop(true);
+	music.setVolume(80);
+	music.play();
+
+	if (!ambientZombie.openFromFile("res/zombie_ambient.ogg")) {
+		std::cout << "error loading ambient zombie" << std::endl;
+	}
+	ambientZombie.setLoop(true);
+	ambientZombie.setVolume(50);
+	ambientZombie.play();
+
+
+	//gun sounds
+	if (!gunShotBuffer.loadFromFile("res/gun-shot.wav")) {
+		std::cout << "error loading gunshot noises" << std::endl;
+	}
+	if (!emptyGunBuffer.loadFromFile("res/empty-gun.wav")) {
+		std::cout << "error loading gunshot noises" << std::endl;
+	}
+
+	//zombie sounds
+	if (!zombieBuffer1.loadFromFile("res/zombie_groan.wav")) {
+		std::cout << "error loading zombie noises" << std::endl;
+	}
+	if (!zombieBuffer2.loadFromFile("res/zombie-gargles.wav")) {
+		std::cout << "error loading zombie noises" << std::endl;
+	}
+	if (!zombieBuffer3.loadFromFile("res/zombie-growl-3.wav")) {
+		std::cout << "error loading zombie noises" << std::endl;
+	}
+	if (!zombieBuffer4.loadFromFile("res/zombie-snarl.wav")) {
+		std::cout << "error loading zombie noises" << std::endl;
+	}
+	if (!zombieBuffer5.loadFromFile("res/zombie_groan2.wav")) {
+		std::cout << "error loading zombie noises" << std::endl;
+	}
+
+	//doors opening and closing
+	if (!doorOpen.loadFromFile("res/door-open.wav")) {
+		std::cout << "error loading open door noises" << std::endl;
+	}
+	if (!doorClose.loadFromFile("res/door-closing.wav")) {
+		std::cout << "error loading close door noises" << std::endl;
+	}
 
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
@@ -84,6 +135,7 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, {0, 0, 8, 8}, 6, 20);
+	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -94,7 +146,7 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	spawnWeapons();
 
 	// add ally
-	allies.emplace_back(texPlayerLeft);
+	allies.emplace_back(texAllyLeft);
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 }
 
@@ -138,6 +190,36 @@ void EndlessState::updateCooldowns() {
 			}
 			break;
 		case PlayerClass::ASSAULT:
+			if (onCoolDown1) {
+				if (elapsed1.asSeconds() < cooldown1) {
+					elapsed1 = abilityTimer1.getElapsedTime();
+				}
+				else {
+					onCoolDown1 = false;
+					elapsed1 = sf::seconds(0);
+				}
+			}
+			if (onCoolDown2) {
+				if (elapsed2.asSeconds() < cooldown2) {
+					elapsed2 = abilityTimer2.getElapsedTime();
+				}
+				else {
+					onCoolDown2 = false;
+					elapsed2 = sf::seconds(0);
+				}
+			}
+			if (onCoolDown3) {
+				if (elapsed3.asSeconds() < cooldown3) {
+					elapsed3 = abilityTimer3.getElapsedTime();
+					if (elapsed3.asSeconds() > 5) { //increase damage for 5 seconds
+						player.isDeadEye = false; // turn off deadeye after 5 seconds
+					}
+				}
+				else {
+					onCoolDown3 = false;
+					elapsed3 = sf::seconds(0);
+				}
+			}
 			break;
 	}
 }
@@ -184,6 +266,46 @@ void EndlessState::medic_heal() {
 	abilityTimer3.restart();
 }
 
+void EndlessState::assault_ammo() {
+	onCoolDown1 = true;
+
+	itemsOnMap.emplace_back();
+	itemsOnMap.back().first = Item::type::ammo_crate;
+	sf::Sprite& spr = itemsOnMap.back().second;
+	spr.setTexture(inventory.texItemTileset);
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setScale(.5, .5);
+	spr.setPosition(player.getPosition().x, player.getPosition().y);
+
+	abilityTimer1.restart();
+}
+
+void EndlessState::assault_grenade() {
+	onCoolDown2 = true;
+
+	projectiles.emplace_back();
+
+	Projectile& proj = projectiles.back();
+	proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+	proj.setTexture(texProjectile);
+	// set mask bounds to just the sprite bounds (default)
+	proj.setMaskBounds(proj.getLocalBounds());
+	proj.isGrenade = true;
+	proj.speed = 4;
+	proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
+	proj.setRotation(proj.direction);
+
+	abilityTimer2.restart();
+}
+
+void EndlessState::assault_deadeye() {
+	onCoolDown3 = true;
+
+	player.isDeadEye = true;
+
+	abilityTimer3.restart();
+}
+
 void EndlessState::chooseClass(PlayerClass playerClass) {
 	switch (playerClass) {
 		case PlayerClass::MEDIC:
@@ -193,7 +315,10 @@ void EndlessState::chooseClass(PlayerClass playerClass) {
 			player.speed = 3;
 			break;
 		case PlayerClass::ASSAULT:
-			// do assault stuff
+			cooldown1 = 1; //in seconds
+			cooldown2 = 3;
+			cooldown3 = 5;
+			player.speed = 3;
 			break;
 		default:
 			std::cout << "no class chosen" << std::endl;
@@ -244,8 +369,33 @@ void EndlessState::spawnWeapons() {
 }
 
 void EndlessState::spawnEnemies(int noOfEnemies) {
+	int soundNum;
 	for (int i = 0;i < noOfEnemies;i++)
 	{
+		soundNum = rand() % 5;
+		switch (soundNum) {//decides which zombie sound will be played on spawn
+		case 0:
+			zombieSound.setBuffer(zombieBuffer1);
+			break;
+		case 1:
+			zombieSound.setBuffer(zombieBuffer2);
+			break;
+		case 2:
+			zombieSound.setBuffer(zombieBuffer3);
+			break;
+		case 3:
+			zombieSound.setBuffer(zombieBuffer4);
+			break;
+		case 4:
+			zombieSound.setBuffer(zombieBuffer5);
+			break;
+		default:
+			zombieSound.setBuffer(zombieBuffer1);
+			break;
+		}
+		zombieSound.setVolume(25);
+		zombieSound.play();
+
 		Enemy enemy;
 		enemy.hitRate = 15;
 		enemy.speed = 3;
@@ -322,6 +472,8 @@ bool EndlessState::handleEvents() {
 						//Closed Door Type - 1
 						tileMap.setTile(tileX, tileY, 31);
 						std::cout << "changed door to 31" << std::endl;
+						doorInteract.setBuffer(doorOpen);
+						doorInteract.play();
 						break;
 					case 32:
 						//Closed Door Type - 2
@@ -332,6 +484,8 @@ bool EndlessState::handleEvents() {
 						//Opened Door Type - 1
 						tileMap.setTile(tileX, tileY, 30);
 						std::cout << "changed door to 30" << std::endl;
+						doorInteract.setBuffer(doorClose);
+						doorInteract.play();
 						break;
 					case 33:
 						//Opened Door Type - 2
@@ -369,34 +523,53 @@ bool EndlessState::handleEvents() {
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
 				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					//ASSAULT FIRST ABILITY GOES HERE
-					break;
-				case PlayerClass::MEDIC:
-					//MEDIC FIRST ABILITY GOES HERE
-					if (!onCoolDown1) {
-						medic_bandage();
-						std::cout << "Medic Ability - Dropped Bandages" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							assault_ammo();
+							std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						//MEDIC FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							medic_bandage();
+							std::cout << "Medic Ability - Dropped Bandages" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
+						}
+						break;
 					}
 					break;
 				}
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
 				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					//ASSAULT SECOND ABILITY GOES HERE
-					break;
-				case PlayerClass::MEDIC:
-					if (!onCoolDown2) {
-						medic_dash();
-						std::cout << "Medic Ability - Dash" << std::endl;
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						if (!onCoolDown2) {
+							assault_grenade();
+							std::cout << "Assault Ability - Grenade" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown2) {
+							medic_dash();
+							std::cout << "Medic Ability - Dash" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+						}
 					}
 					else {
 						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
@@ -405,17 +578,26 @@ bool EndlessState::handleEvents() {
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
 				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					break;
-				case PlayerClass::MEDIC:
-					if (!onCoolDown3) {
-						medic_heal();
-						std::cout << "Medic Ability - Guardian Angel" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						if (!onCoolDown3) {
+							assault_deadeye();
+							std::cout << "Assault Ability - Dead Eye" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown3) {
+							medic_heal();
+							std::cout << "Medic Ability - Guardian Angel" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+						}
+						break;
 					}
 					break;
 				}
@@ -487,6 +669,9 @@ bool EndlessState::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// try to use weapon
 		if (inventory.useWielded()) {
+      shotSound.setBuffer(gunShotBuffer);
+  		shotSound.setVolume(50);
+			shotSound.play();
 			// TODO - check to make sure weapon is ranged
 			projectiles.emplace_back();
 			Projectile& proj = projectiles.back();
@@ -498,7 +683,11 @@ bool EndlessState::handleEvents() {
 			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
 			proj.setRotation(proj.direction);
 			proj.damage = inventory.getWielded().getDamage();
-		}
+		} else {
+      shotSound.setBuffer(emptyGunBuffer);
+			shotSound.setVolume(25);
+			shotSound.play();
+    }
 	}
 
 	// tell game state to continue
@@ -662,6 +851,9 @@ void EndlessState::updateAllies() {
 				// TODO attack ally's attack target
 				// create projectile
 				projectiles.emplace_back();
+				shotSound.setBuffer(gunShotBuffer);
+				shotSound.setVolume(25);
+				shotSound.play();
 				Projectile& proj = projectiles.back();
 				proj.setPosition(ally.getPosition().x + 16, ally.getPosition().y + 16);
 				proj.setTexture(texProjectile);
@@ -701,7 +893,7 @@ void EndlessState::updateProjectiles() {
 		if (tileMap.areaClear(*projItr, moveVector)) {
 			projItr->move(moveVector);
 		}
-		else {			
+		else {	
 			createEffect(
 				explosionSmall, 
 				Utils::pointEdge(
@@ -716,32 +908,58 @@ void EndlessState::updateProjectiles() {
 			continue;
 		}
 
-		// check for collision with enemies
-		// TODO - make enemies use a spatial hash so this algo's faster
-		// this algo is currently O(K*N) where K = bullets, N = enemies
-		for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-			// ignore if enemy is not colliding with projectile
-			if (!enemyItr->isColliding(*projItr))
-				continue;
+		if (projItr->isGrenade == true) {
+			float maxRange = 250.f;
+			float dist = Utils::pointDistance(player.getPosition(), projItr->getPosition());
+			
+			if (dist > maxRange || !(tileMap.areaClear(*projItr, moveVector))) {
+				createEffect(explosionLarge, projItr->getPosition());
+				for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+					float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
+					if (distToProj <= 150) {
+						enemyItr->health -= 120;
+						if (enemyItr->health <= 0) {
+							enemyItr = enemies.erase(enemyItr);
+							spawnEnemies(1);
+						}
+					}
+				}
+				projItr = projectiles.erase(projItr);
+			}
+		}
+		else {
+			// check for collision with enemies
+			// TODO - make enemies use a spatial hash so this algo's faster
+			// this algo is currently O(K*N) where K = bullets, N = enemies
+			for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+				// ignore if enemy is not colliding with projectile
+				if (!enemyItr->isColliding(*projItr))
+					continue;
 
-			// destroy bullet
-			projItr = projectiles.erase(projItr);
-			if (projItr == projectiles.end())
-				breaking = true;
+				// destroy bullet
+				projItr = projectiles.erase(projItr);
+				if (projItr == projectiles.end())
+					breaking = true;
 
-			// deal damage to enemy
-			enemyItr->health -= 25; // TODO set this to the bullet's damage
-			if (enemyItr->health <= 0) {
-				enemyItr = enemies.erase(enemyItr);
-				spawnEnemies(1);
-				if (enemyItr == enemies.end())
+				// deal damage to enemy
+				if (player.isDeadEye) {
+					enemyItr->health -= 50; //is deadeye is active double damage
+				}
+				else {
+					enemyItr->health -= 25;// // TODO set this to the bullet's damage
+				}
+				if (enemyItr->health <= 0) {
+					enemyItr = enemies.erase(enemyItr);
+					spawnEnemies(1);
+					if (enemyItr == enemies.end())
+						break;
+				}
+				if (breaking)
 					break;
 			}
 			if (breaking)
 				break;
 		}
-		if (breaking)
-			break;
 	}
 }
 
@@ -840,7 +1058,7 @@ void EndlessState::logic() {
 	//HP bar
 	playerHPBack.setSize({ 200.f, 14.f });
 	playerHPBack.setFillColor(sf::Color::Transparent);
-	playerHPBack.setPosition(75, 550);
+	playerHPBack.setPosition(60, 725);
 	playerHPBack.setOutlineColor(sf::Color::Black);
 	playerHPBack.setOutlineThickness(2.f);
 	playerHPBar.setSize({ playerHPBack.getSize().x * (player.health / 100.f), playerHPBack.getSize().y });
