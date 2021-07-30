@@ -10,7 +10,7 @@
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, bandages, ammo_crate};
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, health_pack, ammo_crate};
 
 	// type of item
 	type itemType = type::null;
@@ -33,8 +33,8 @@ struct Item {
 			return "5.56 Rounds";
 		case type::medkit:
 			return "Medkit";
-		case type::bandages:
-			return "Bandages";
+		case type::health_pack:
+			return "Health Pack";
 		case type::ammo_crate:
 			return "Ammo Crate";
 		default:
@@ -56,9 +56,9 @@ struct Item {
 		case type::ammo_556:
 			return "5.56 Rounds. Used for rifles.";
 		case type::medkit:
-			return "Medkit. Used for healing.";
-		case type::bandages:
-			return "Bandages. Used for minor healing";
+			return "Medkit. Used for healing (+50).";
+		case type::health_pack:
+			return "Bandages. Used for minor healing (+10).";
 		case type::ammo_crate:
 			return "Ammo Crate. Used to replenish ammunition";
 		default:
