@@ -13,6 +13,7 @@
 #include "classes.hpp"
 
 #include <list>
+#include <unordered_map>
 
 class EndlessState : public State {
 public:
@@ -112,8 +113,22 @@ private:
 	int maximumEnemyCount = 99;
 	int defaultEnemySpawningCount = 3;//Default count
 
-	//spawned weapons
+	// items
+	// items in world
 	std::list<std::pair<Item::type, sf::Sprite>> itemsOnMap;
+	// spatial hash for itemsOnMap (key = int, value = list of list iterators)
+	std::unordered_map <
+		int,
+		std::list<
+			std::list<std::pair<Item::type, sf::Sprite>>::iterator
+		>
+	> itemHash;
+	// gets hash key from position on map
+	int hashPos(const sf::Vector2i& pos) const;
+	// creates item at position on the map
+	sf::Sprite& createItem(const sf::Vector2i& pos, Item::type type);
+	// returns first item found in tile at map position
+	Item::type getItem(const sf::Vector2i& pos) const;
 
 	// tile map
 	TileMap tileMap;

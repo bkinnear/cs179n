@@ -6,7 +6,7 @@ Game::Game():
 	window(sf::VideoMode(1366, 768), "The Last War"),
 	curState(nullptr)
 {
-	window.setFramerateLimit(60);
+	//window.setFramerateLimit(60);
 	window.setVerticalSyncEnabled(true);
 }
 
@@ -59,7 +59,7 @@ void Game::setFullscreen(bool mode) {
 		window.create(sf::VideoMode(portWidth, portHeight), title);
 
 	// need to reset framerate since we're "recreating" window
-	window.setFramerateLimit(60);
+	//window.setFramerateLimit(60);
 	window.setVerticalSyncEnabled(true);
 }
 

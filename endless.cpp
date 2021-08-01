@@ -6,6 +6,12 @@
 #include <cstdlib>
 #include <vector>
 #include <time.h>
+#include <algorithm>
+
+// map width in tiles
+#define MAP_WIDTH 100
+// map height in tiles
+#define MAP_HEIGHT 100
 
 // the main game window
 #define gwindow game.window
@@ -14,7 +20,7 @@
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	State(game),
 	player(playerClass),
-	tileMap(*this, 100, 100),
+	tileMap(*this, MAP_WIDTH, MAP_HEIGHT),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texAllyRight(createTexture("res/player2_r_strip.png")),
@@ -157,6 +163,37 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	// add ally
 	allies.emplace_back(texAllyLeft);
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+}
+
+int EndlessState::hashPos(const sf::Vector2i& pos) const {
+	return (int)std::floor(pos.x / 32) + (int)std::floor(pos.y / 32) * tileMap.mapWidth;
+}
+
+sf::Sprite& EndlessState::createItem(const sf::Vector2i& pos, Item::type type) {
+	itemsOnMap.push_back(std::pair<Item::type, sf::Sprite>(type, sf::Sprite()));
+	sf::Sprite& spr = itemsOnMap.back().second;
+	spr.setPosition(pos.x, pos.y);
+	spr.setTexture(inventory.texItemTileset);
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setScale(.5, .5);
+
+	// hashkey organizes items in buckets that hold items in 1 tile space (32x32)
+	int hashKey = hashPos(pos);
+	auto itemList = itemHash.find(hashKey);
+	if (itemList == itemHash.end()) {
+		itemHash[hashKey] = {};
+	}
+	itemHash[hashKey].push_back(itemsOnMap.end()--);
+
+	return spr;
+}
+
+Item::type EndlessState::getItem(const sf::Vector2i& pos) const {
+	auto itemListItr = itemHash.find(hashPos(pos));
+	if (itemListItr == itemHash.end())
+		return Item::type::null;
+	else
+		return (*itemListItr).second.front()->first;
 }
 
 void EndlessState::updateCooldowns() {
@@ -340,35 +377,29 @@ void EndlessState::spawnWeapons() {
 	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
 	//sf::Sprite& spr;
 	for (int i = 0; i < numWeapons; ++i) {
+		Item::type itemType = Item::type::null;
 		int randomItem = rand() % 5;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 			case 0:
 				continue;
 				break;
 			case 1:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::MP5;
+				itemType = Item::type::MP5;
 				break;
 			case 2:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::ammo_9mm;
+				itemType = Item::type::ammo_9mm;
 				break;
 			case 3:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::M4;
+				itemType = Item::type::M4;
 				break;
 			case 4:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::ammo_556;
+				itemType = Item::type::ammo_556;
+				break;
 			case 5:
-				itemsOnMap.emplace_back();
-				itemsOnMap.back().first = Item::type::medkit;
+				itemType = Item::type::medkit;
 				break;
 		}
-		sf::Sprite& spr = itemsOnMap.back().second;
-		spr.setTexture(inventory.texItemTileset);
-		spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
-		spr.setScale(.5, .5);
+		sf::Sprite& spr = createItem({ 0, 0 }, itemType);
 		for (;;) {
 			spr.setPosition(rand() % tileMap.mapWidth * TILE_SIZE, rand() % tileMap.mapHeight * TILE_SIZE);
 			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
@@ -1134,7 +1165,7 @@ void EndlessState::render() {
 	mainViewTarget = { floor(player.getPosition().x), floor(player.getPosition().y) };
 
 	// move the view towards target
-	sf::Vector2f delta(floor((mainViewTarget.x - mainView.getCenter().x)/10), floor((mainViewTarget.y - mainView.getCenter().y)/10));
+	sf::Vector2f delta((int)floor(mainViewTarget.x - mainView.getCenter().x)/4, (int)floor(mainViewTarget.y - mainView.getCenter().y)/4);
 	mainView.move(delta);
 
 	// we must update view any time we change something in it
