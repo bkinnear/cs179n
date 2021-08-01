@@ -58,10 +58,12 @@ void Game::setFullscreen(bool mode) {
 		window.create(sf::VideoMode(portWidth, portHeight), title);
 
 	// need to reset framerate since we're "recreating" window
-	if (usingVsync())
+	if (usingVsync()) {
 		window.setVerticalSyncEnabled(true);
-	else
+	} else {
+		window.setVerticalSyncEnabled(false);
 		window.setFramerateLimit(60);
+	}
 }
 
 bool Game::isFullscreen() const {
@@ -78,10 +80,12 @@ void Game::setVsync(bool mode) {
 	else
 		vsync = mode;
 
-	if (usingVsync())
+	if (usingVsync()) {
 		window.setVerticalSyncEnabled(true);
-	else
+	} else {
+		window.setVerticalSyncEnabled(false);
 		window.setFramerateLimit(60);
+	}
 }
 
 bool Game::usingVsync() const {
