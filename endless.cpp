@@ -14,9 +14,36 @@
 #define MAP_HEIGHT 100
 // offset to get middle of player sprite
 #define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
+// minimum distance to pick up items
+#define MIN_DIST_ITEM 48.f
 
 // the main game window
 #define gwindow game.window
+
+inline sf::Vector2i toTileCoords(sf::Vector2f pos) {
+	return {(int)floor(pos.x / 32), (int)floor(pos.y / 32)};
+}
+
+int getLootAmount(Item::type type) {
+	switch (type) {
+	case Item::type::ammo_556:
+		return 30 + rand() % 30;
+	case Item::type::ammo_9mm:
+		return 30 + rand() % 30;
+	case Item::type::MP5:
+		return 1;
+	case Item::type::M4:
+		return 1;
+	case Item::type::ammo_crate:
+		return 1;
+	case Item::type::bandages:
+		return 1;
+	case Item::type::medkit:
+		return 1;
+	default:
+		return 1;
+	}
+}
 
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
@@ -168,11 +195,11 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 }
 
-int EndlessState::hashPos(const sf::Vector2i& pos) const {
-	return (int)std::floor(pos.x / 32) + (int)std::floor(pos.y / 32) * tileMap.mapWidth;
+int EndlessState::hashPos(const sf::Vector2f& pos) const {
+	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
 }
 
-sf::Sprite& EndlessState::createItem(const sf::Vector2i& pos, Item::type type) {
+ItemIterator EndlessState::createItem(const sf::Vector2f& pos, Item::type type) {
 	itemsOnMap.push_back(std::pair<Item::type, sf::Sprite>(type, sf::Sprite()));
 	sf::Sprite& spr = itemsOnMap.back().second;
 	spr.setPosition(pos.x, pos.y);
@@ -186,17 +213,30 @@ sf::Sprite& EndlessState::createItem(const sf::Vector2i& pos, Item::type type) {
 	if (itemList == itemHash.end()) {
 		itemHash[hashKey] = {};
 	}
-	itemHash[hashKey].push_back(itemsOnMap.end()--);
+	itemHash[hashKey].push_back(std::prev(itemsOnMap.end()));
 
-	return spr;
+	return std::prev(itemsOnMap.end());
 }
 
-Item::type EndlessState::getItem(const sf::Vector2i& pos) const {
+void EndlessState::removeItem(ItemIterator itemItr) {
+	// remove item from hash
+	itemHash.at(hashPos(itemItr->second.getPosition())).remove(itemItr);
+	// remove item from item list
+	itemsOnMap.erase(itemItr);
+}
+
+ItemIterator EndlessState::getItem(const sf::Vector2f& pos) {
 	auto itemListItr = itemHash.find(hashPos(pos));
+	// see if hashmap has an entry
 	if (itemListItr == itemHash.end())
-		return Item::type::null;
-	else
-		return (*itemListItr).second.front()->first;
+		return itemsOnMap.end();
+
+	// see if list is empty or not
+	if (itemListItr->second.empty())
+		return itemsOnMap.end();
+
+	// return first item in hashmap entry list
+	return itemListItr->second.front();
 }
 
 void EndlessState::updateCooldowns() {
@@ -276,14 +316,7 @@ void EndlessState::updateCooldowns() {
 void EndlessState::medic_bandage() {
 	onCoolDown1 = true;
 	
-	//ability functionality
-	itemsOnMap.emplace_back();
-	itemsOnMap.back().first = Item::type::bandages;
-	sf::Sprite& spr = itemsOnMap.back().second;
-	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
-	spr.setScale(.5, .5);
-	spr.setPosition(player.getPosition().x, player.getPosition().y);
+	createItem(player.getPosition(), Item::type::bandages);
 
 	//cooldown timer starts
 	abilityTimer1.restart();
@@ -318,13 +351,7 @@ void EndlessState::medic_heal() {
 void EndlessState::assault_ammo() {
 	onCoolDown1 = true;
 
-	itemsOnMap.emplace_back();
-	itemsOnMap.back().first = Item::type::ammo_crate;
-	sf::Sprite& spr = itemsOnMap.back().second;
-	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
-	spr.setScale(.5, .5);
-	spr.setPosition(player.getPosition().x, player.getPosition().y);
+	createItem(player.getPosition(), Item::type::ammo_crate);
 
 	abilityTimer1.restart();
 }
@@ -402,12 +429,13 @@ void EndlessState::spawnWeapons() {
 				itemType = Item::type::medkit;
 				break;
 		}
-		sf::Sprite& spr = createItem({ 0, 0 }, itemType);
+		sf::Vector2f pos;
 		for (;;) {
-			spr.setPosition(rand() % tileMap.mapWidth * TILE_SIZE, rand() % tileMap.mapHeight * TILE_SIZE);
-			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
+			pos = { (float) (rand() % tileMap.mapWidth * TILE_SIZE), (float) (rand() % tileMap.mapHeight * TILE_SIZE) };
+			if (!tileMap.isOpaque(pos.x, pos.y))
 				break;
 		}
+		createItem(pos, itemType);
 	}
 }
 
@@ -485,6 +513,26 @@ bool EndlessState::handleEvents() {
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
+				break;
+			case sf::Keyboard::E:
+				// pick up item
+				// check for items in tiles adjacent to player
+				for (int i = -1; i <= 1; i++) {
+					for (int j = -1; j <= 1; j++) {
+						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
+						ItemIterator itemItr = getItem(pos);
+						if (itemItr == itemsOnMap.end())
+							continue;
+						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, itemItr->second.getPosition());
+						if (distToPlayer <= MIN_DIST_ITEM) {
+							// add item to inventory
+							inventory.addItem(itemItr->first, getLootAmount(itemItr->first));
+
+							// remove item from map
+							removeItem(itemItr);
+						}
+					}
+				}
 				break;
 			case sf::Keyboard::Q:
 			{

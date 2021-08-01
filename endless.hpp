@@ -15,6 +15,8 @@
 #include <list>
 #include <unordered_map>
 
+typedef std::list<std::pair<Item::type, sf::Sprite>>::iterator ItemIterator;
+
 class EndlessState : public State {
 public:
 	EndlessState(Game&, PlayerClass);
@@ -118,18 +120,15 @@ private:
 	// items in world
 	std::list<std::pair<Item::type, sf::Sprite>> itemsOnMap;
 	// spatial hash for itemsOnMap (key = int, value = list of list iterators)
-	std::unordered_map <
-		int,
-		std::list<
-			std::list<std::pair<Item::type, sf::Sprite>>::iterator
-		>
-	> itemHash;
+	std::unordered_map<int, std::list<ItemIterator>> itemHash;
 	// gets hash key from position on map
-	int hashPos(const sf::Vector2i& pos) const;
+	int hashPos(const sf::Vector2f& pos) const;
 	// creates item at position on the map
-	sf::Sprite& createItem(const sf::Vector2i& pos, Item::type type);
-	// returns first item found in tile at map position
-	Item::type getItem(const sf::Vector2i& pos) const;
+	ItemIterator createItem(const sf::Vector2f& pos, Item::type type);
+	// removes item at position on the map
+	void removeItem(ItemIterator);
+	// returns first item found in tile at map position (if no item found returns itemsOnMap.end())
+	ItemIterator getItem(const sf::Vector2f& pos);
 
 	// tile map
 	TileMap tileMap;
