@@ -1,5 +1,6 @@
 #include "endless.hpp"
 #include "utils.hpp"
+#include "menustate.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -24,25 +25,45 @@ inline sf::Vector2i toTileCoords(sf::Vector2f pos) {
 	return {(int)floor(pos.x / 32), (int)floor(pos.y / 32)};
 }
 
+// returns amount of item that picking up a certain item will yield
 int getLootAmount(Item::type type) {
 	switch (type) {
 	case Item::type::ammo_556:
-		return 30 + rand() % 30;
+		return 15 + rand() % 30;
 	case Item::type::ammo_9mm:
-		return 30 + rand() % 30;
+		return 15 + rand() % 30;
 	case Item::type::MP5:
 		return 1;
 	case Item::type::M4:
 		return 1;
 	case Item::type::ammo_crate:
-		return 1;
+		return 15 + rand() % 15;
 	case Item::type::bandages:
 		return 1;
 	case Item::type::medkit:
 		return 1;
-	default:
-		return 1;
 	}
+
+	return 1;
+}
+
+// returns type of item that picking up a certain item will yield
+Item::type getLootItem(Item::type type) {
+	switch (type) {
+	case Item::type::ammo_crate:
+		// ammo crates yield a random ammo type
+		{
+		int r = rand() % 2;
+		switch (r) {
+		case 0:
+			return Item::type::ammo_9mm;
+		case 1:
+			return Item::type::ammo_556;
+		}
+		}
+		break;
+	}
+	return type;
 }
 
 // NOTE: we must call the original constructor and pass it the Game pointer
@@ -526,7 +547,7 @@ bool EndlessState::handleEvents() {
 						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, itemItr->second.getPosition());
 						if (distToPlayer <= MIN_DIST_ITEM) {
 							// add item to inventory
-							inventory.addItem(itemItr->first, getLootAmount(itemItr->first));
+							inventory.addItem(getLootItem(itemItr->first), getLootAmount(itemItr->first));
 
 							// remove item from map
 							removeItem(itemItr);
@@ -694,6 +715,12 @@ bool EndlessState::handleEvents() {
 				delete this;
 				return false;
 				break;
+			case sf::Keyboard::F3:
+				// go back to menu
+				game.setState(new MenuState(game));
+				delete this;
+				return false;
+				break;
 			}
 			break;
 		case sf::Event::KeyReleased:
@@ -770,7 +797,7 @@ bool EndlessState::handleEvents() {
 			proj.speed = 12;
 			proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 			proj.setRotation(proj.direction);
-			proj.damage = inventory.getWielded().getDamage() * (2*player.isDeadEye);
+			proj.damage = inventory.getWielded().getDamage() * std::max(2*player.isDeadEye, 1);
 		}
 		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
 			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
@@ -1030,27 +1057,27 @@ void EndlessState::updateProjectiles() {
 				if (!enemyItr->isColliding(*projItr))
 					continue;
 
+				// deal damage to enemy
+				enemyItr->health -= projItr->damage;
+				std::cout << "DMG: " << projItr->damage << std::endl;
 				// destroy bullet
 				projItr = projectiles.erase(projItr);
 				if (projItr == projectiles.end())
 					breaking = true;
 
-				// deal damage to enemy
-				if (player.isDeadEye) {
-					enemyItr->health -= projItr->damage * 2; //is deadeye is active double damage
-				}
-				else {
-					enemyItr->health -= projItr->damage;
-				}
+				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
 					spawnEnemies(1);
 					if (enemyItr == enemies.end())
 						break;
 				}
+
+				// no more pojectiles, leave loop
 				if (breaking)
 					break;
 			}
+			// no more pojectiles, leave loop
 			if (breaking)
 				break;
 		}
