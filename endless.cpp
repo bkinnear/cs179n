@@ -230,6 +230,38 @@ void EndlessState::updateCooldowns() {
 				}
 			}
 			break;
+		case PlayerClass::SLASHER:
+			if (onCoolDown1) {
+				if (elapsed1.asSeconds() < cooldown1) {
+					elapsed1 = abilityTimer1.getElapsedTime();
+				}
+				else {
+					onCoolDown1 = false;
+					elapsed1 = sf::seconds(0);
+				}
+			}
+			if (onCoolDown2) {
+				if (elapsed2.asSeconds() < cooldown2) {
+					elapsed2 = abilityTimer2.getElapsedTime();
+				}
+				else {
+					onCoolDown2 = false;
+					elapsed2 = sf::seconds(0);
+				}
+			}
+			if (onCoolDown3) {
+				if (elapsed3.asSeconds() < cooldown3) {
+					elapsed3 = abilityTimer3.getElapsedTime();
+					if (elapsed2.asMilliseconds() > 5000) { //dash for 5 seconds
+						player.speed = 3; //set back to default
+					}
+				}
+				else {
+					onCoolDown3 = false;
+					elapsed3 = sf::seconds(0);
+				}
+			}
+			break;
 	}
 }
 
@@ -238,7 +270,7 @@ void EndlessState::medic_bandage() {
 	
 	//ability functionality
 	itemsOnMap.emplace_back();
-	itemsOnMap.back().first = Item::type::bandages;
+	itemsOnMap.back().first = Item::type::health_pack;
 	sf::Sprite& spr = itemsOnMap.back().second;
 	spr.setTexture(inventory.texItemTileset);
 	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
@@ -315,6 +347,26 @@ void EndlessState::assault_deadeye() {
 	abilityTimer3.restart();
 }
 
+void EndlessState::slasher_smash() {
+	onCoolDown1 = true;
+
+	abilityTimer1.restart();
+}
+
+void EndlessState::slasher_warcry() {
+	onCoolDown2 = true;
+
+	abilityTimer2.restart();
+}
+
+void EndlessState::slasher_rage() {
+	onCoolDown3 = true;
+
+	player.speed = 5;
+
+	abilityTimer3.restart();
+}
+
 void EndlessState::chooseClass(PlayerClass playerClass) {
 	switch (playerClass) {
 		case PlayerClass::MEDIC:
@@ -325,6 +377,12 @@ void EndlessState::chooseClass(PlayerClass playerClass) {
 			break;
 		case PlayerClass::ASSAULT:
 			cooldown1 = 1; //in seconds
+			cooldown2 = 3;
+			cooldown3 = 5;
+			player.speed = 3;
+			break;
+		case PlayerClass::SLASHER:
+			cooldown1 = 1;
 			cooldown2 = 3;
 			cooldown3 = 5;
 			player.speed = 3;
@@ -554,11 +612,18 @@ bool EndlessState::handleEvents() {
 						std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
 					}
 					break;
+				case PlayerClass::SLASHER:
+					if (!onCoolDown3) {
+						slasher_smash();
+						std::cout << "Slasher Ability - Smash" << std::endl;
+					}
+					else {
+						std::cout << "Slasher Ability - Smash is on cooldown" << std::endl;
+					}
+					break;
 				}
 				break;
-				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
-				std::cout << "2" << std::endl;
 				switch (player.playerClass) {
 				case PlayerClass::DEFAULT:
 					break;
@@ -578,6 +643,15 @@ bool EndlessState::handleEvents() {
 					}
 					else {
 						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::SLASHER:
+					if (!onCoolDown2) {
+						slasher_warcry();
+						std::cout << "Slasher Ability - Warcry" << std::endl;
+					}
+					else {
+						std::cout << "Slasher Ability - Warcry is on cooldown" << std::endl;
 					}
 					break;
 				}
@@ -602,6 +676,15 @@ bool EndlessState::handleEvents() {
 					}
 					else {
 						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::SLASHER:
+					if (!onCoolDown3) {
+						slasher_rage();
+						std::cout << "Slasher Ability - Rage" << std::endl;
+					}
+					else {
+						std::cout << "Slasher Ability - Rage is on cooldown" << std::endl;
 					}
 					break;
 				}

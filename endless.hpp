@@ -171,6 +171,11 @@ private:
 	void assault_grenade();
 	void assault_ammo();
 	void assault_deadeye();
+
+	// slasher abilities
+	void slasher_smash();
+	void slasher_warcry();
+	void slasher_rage();
 };
 
 #endif

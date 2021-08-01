@@ -30,6 +30,9 @@ ClassMenu::ClassMenu(Game& game) :
 
 	sprAssaultButton.create(createTexture("res/class_assault_strip.png"), { 0, 0, 160, 64 }, 2);
 	sprAssaultButton.setPosition(320.f, 205.f);
+
+	sprSlasherButton.create(createTexture("res/class_slasher_strip.png"), { 0, 0, 160, 64 }, 2);
+	sprSlasherButton.setPosition(320.f, 282.f);
 }
 
 ClassMenu::~ClassMenu() {
@@ -70,6 +73,12 @@ void ClassMenu::logic() {
 				delete this;
 				return;
 			}
+			if (sprSlasherButton.getGlobalBounds().contains(mousePos)) {
+				std::cout << "Chose Slasher\n";
+				game.setState(new EndlessState(game, PlayerClass::SLASHER));
+				delete this;
+				return;
+			}
 
 			break;
 		}
@@ -85,6 +94,11 @@ void ClassMenu::logic() {
 		sprAssaultButton.setIndex(1);
 	else
 		sprAssaultButton.setIndex(0);
+
+	if (sprSlasherButton.getGlobalBounds().contains(mousePos))
+		sprSlasherButton.setIndex(1);
+	else
+		sprSlasherButton.setIndex(0);
 }
 
 void ClassMenu::render() {
@@ -96,6 +110,7 @@ void ClassMenu::render() {
 	// draw the menu buttons
 	gwindow.draw(sprMedicButton);
 	gwindow.draw(sprAssaultButton);
+	gwindow.draw(sprSlasherButton);
 
 	// update window
 	gwindow.display();
