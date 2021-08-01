@@ -795,7 +795,7 @@ void EndlessState::updateEnemies() {
 		// nearest target to enemy
 		Character* nearestTarget = nullptr;
 		// this is set to the max range of enemy attacks
-		float minDist = 512.f; // TODO set this constant somewhere (or make it based on enemy idk)
+		float minDist = 9999.f; // TODO set this constant somewhere (or make it based on enemy idk)
 		// find the nearest target for the enemy to attack (allies and player)
 		for (NPC& ally: allies) {
 			// ignore dead allies
@@ -1037,10 +1037,10 @@ void EndlessState::updateProjectiles() {
 
 				// deal damage to enemy
 				if (player.isDeadEye) {
-					enemyItr->health -= 50; //is deadeye is active double damage
+					enemyItr->health -= projItr->damage * 2; //is deadeye is active double damage
 				}
 				else {
-					enemyItr->health -= 25;// // TODO set this to the bullet's damage
+					enemyItr->health -= projItr->damage;
 				}
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
