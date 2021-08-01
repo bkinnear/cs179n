@@ -22,6 +22,7 @@ typedef AnimSprite Effect;
 */
 class State {
 public:
+	State();
 	State(Game& game): game(game) {};
 	virtual ~State() {};
 

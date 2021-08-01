@@ -94,7 +94,11 @@ const tileType buildingsmall::array[w][h] =
 {13, 30, 14, 15},
 };
 
-
+TileMap::TileMap()
+	:mapWidth(0),
+	mapHeight(0)
+{
+}
 
 TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :	
 	mapWidth(mapWidth),
