@@ -1094,7 +1094,7 @@ void EndlessState::logic() {
 		if (item) {
 			showItemDetails = true;
 
-			txtItemDetails.setString(item->getName());
+			txtItemDetails.setString(item->getName() + '(' + std::to_string(item->num) + ')');
 			txtItemDetails.setPosition(winMousePos.x, winMousePos.y - 16);
 
 			shpItemDetails.setSize({ txtItemDetails.getGlobalBounds().width + 10, txtItemDetails.getGlobalBounds().height + 10 });
