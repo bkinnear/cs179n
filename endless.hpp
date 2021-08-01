@@ -69,6 +69,7 @@ private:
 	sf::Text ammoCount;
 	sf::Sprite grenadeIcon;
 	sf::Text grenadesNum;
+	sf::Sprite reticle;
 
 	// dialog GUI
 	int dialogTreeIndex = 0;

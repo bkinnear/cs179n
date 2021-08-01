@@ -12,6 +12,8 @@
 #define MAP_WIDTH 100
 // map height in tiles
 #define MAP_HEIGHT 100
+// offset to get middle of player sprite
+#define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
 
 // the main game window
 #define gwindow game.window
@@ -35,7 +37,8 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 	playerIcon(createTexture("res/Player1_display.png")),
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
-	grenadeIcon(createTexture("res/grenade_icon.png"))
+	grenadeIcon(createTexture("res/grenade_icon.png")),
+	reticle(createTexture("res/reticle.png"))
 {
 
 	// set main view
@@ -717,7 +720,7 @@ bool EndlessState::handleEvents() {
 			// set mask bounds to just the sprite bounds (default)
 			proj.setMaskBounds(proj.getLocalBounds());
 			proj.speed = 12;
-			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
+			proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 			proj.setRotation(proj.direction);
 			proj.damage = inventory.getWielded().getDamage() * (2*player.isDeadEye);
 		}
@@ -1197,6 +1200,10 @@ void EndlessState::render() {
 
 	// draw effects
 	drawEffects();
+
+	//draw reticle
+	reticle.setPosition(player.getPosition() + sf::Vector2f({-4.5f, -4.5f}) + PLAYER_OFFSET + Utils::vectorInDirection(36.f, Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos)));
+	gwindow.draw(reticle);
 
 	// ========================= //
 	// =  v   GUI drawing   v  = //
