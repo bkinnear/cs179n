@@ -56,6 +56,12 @@ public:
 	// returns whether window is in fullscreen mode
 	bool isFullscreen() const;
 
+	// set vsnyc
+	void setVsync(bool vsync);
+
+	// returns whether window is using vsync
+	bool usingVsync() const;
+
 	// the default view port width
 	float portWidth = 1366.f;
 	// the default view port height
@@ -68,6 +74,7 @@ private:
 	State* curState;
 
 	bool fullscreen = false;
+	bool vsync = false;
 };
 
 #endif

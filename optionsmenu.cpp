@@ -25,6 +25,11 @@ OptionsMenu::OptionsMenu(Game& game) :
 	if (game.isFullscreen())
 		sprFullscreen.setIndex(1);
 
+	sprVsync.create(createTexture("res/options_vsync_strip.png"), { 0, 0, 520/2, 64 }, 2);
+	sprVsync.setPosition(320.f, 192.f);
+	if (game.usingVsync())
+		sprVsync.setIndex(1);
+
 	sprReturnButton.create(createTexture("res/options_return.png"), {0, 0, 160, 64}, 2);
 	sprReturnButton.setPosition(game.portWidth - 200.f, game.portHeight - 120.f);
 }
@@ -53,6 +58,18 @@ void OptionsMenu::logic() {
 					sprFullscreen.setIndex(1);
 				else
 					sprFullscreen.setIndex(0);
+
+				break;
+			}
+
+			// user clicked vsync
+			if (sprVsync.getGlobalBounds().contains(mousePos)) {
+				game.setVsync(!game.usingVsync());
+
+				if (game.usingVsync())
+					sprVsync.setIndex(1);
+				else
+					sprVsync.setIndex(0);
 
 				break;
 			}
@@ -90,6 +107,7 @@ void OptionsMenu::render() {
 
 	// draw the menu buttons
 	gwindow.draw(sprFullscreen);
+	gwindow.draw(sprVsync);
 	gwindow.draw(sprReturnButton);
 
 	// update window
