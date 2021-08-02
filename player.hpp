@@ -11,6 +11,8 @@ public:
 
 	bool movingLeft = false, movingUp = false, movingDown = false, movingRight = false;
 	bool isDeadEye = false;
+	bool isRage = false;
+	bool isWarcry = false;
 
 	const PlayerClass playerClass;
 };

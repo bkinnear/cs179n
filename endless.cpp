@@ -167,9 +167,6 @@ void EndlessState::updateCooldowns() {
 			if (onCoolDown1) {
 				if (elapsed1.asSeconds() < cooldown1) {
 					elapsed1 = abilityTimer1.getElapsedTime();
-					//if ((ceil(elapsed1.asSeconds()) - elapsed1.asSeconds()) < 0.015) {
-						//std::cout << "Ability 1 will be ready in " << 5 - ceil(elapsed1.asSeconds()) << " second(s)." << std::endl;
-					//}
 				}
 				else {
 					onCoolDown1 = false;
@@ -243,6 +240,9 @@ void EndlessState::updateCooldowns() {
 			if (onCoolDown2) {
 				if (elapsed2.asSeconds() < cooldown2) {
 					elapsed2 = abilityTimer2.getElapsedTime();
+					if (elapsed2.asMilliseconds() > 3000) { //warcry for 3 seconds
+						player.isWarcry = false;
+					}
 				}
 				else {
 					onCoolDown2 = false;
@@ -252,8 +252,9 @@ void EndlessState::updateCooldowns() {
 			if (onCoolDown3) {
 				if (elapsed3.asSeconds() < cooldown3) {
 					elapsed3 = abilityTimer3.getElapsedTime();
-					if (elapsed2.asMilliseconds() > 5000) { //dash for 5 seconds
+					if (elapsed3.asMilliseconds() > 5000) { //rage for 5 seconds
 						player.speed = 3; //set back to default
+						player.isRage = false;
 					}
 				}
 				else {
@@ -350,11 +351,32 @@ void EndlessState::assault_deadeye() {
 void EndlessState::slasher_smash() {
 	onCoolDown1 = true;
 
+	sf::Vector2f playerPos = player.getPosition();
+	sf::Vector2f enemyPos;
+	std::list<Enemy>::iterator enemyItr;
+
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
+		enemyPos = enemyItr->getPosition();
+		sf::Vector2f difference = playerPos - enemyPos;
+		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
+
+		if (length < 100) {
+			enemyItr->health -= 25;
+			if (enemyItr->health <= 0) {
+				enemyItr = enemies.erase(enemyItr);
+				spawnEnemies(1);
+			}
+		}
+	}
+
+
 	abilityTimer1.restart();
 }
 
 void EndlessState::slasher_warcry() {
 	onCoolDown2 = true;
+
+	player.isWarcry = true;
 
 	abilityTimer2.restart();
 }
@@ -362,6 +384,7 @@ void EndlessState::slasher_warcry() {
 void EndlessState::slasher_rage() {
 	onCoolDown3 = true;
 
+	player.isDeadEye = true;
 	player.speed = 5;
 
 	abilityTimer3.restart();
@@ -383,8 +406,8 @@ void EndlessState::chooseClass(PlayerClass playerClass) {
 			break;
 		case PlayerClass::SLASHER:
 			cooldown1 = 1;
-			cooldown2 = 3;
-			cooldown3 = 5;
+			cooldown2 = 10;
+			cooldown3 = 15;
 			player.speed = 3;
 			break;
 		default:
@@ -613,7 +636,7 @@ bool EndlessState::handleEvents() {
 					}
 					break;
 				case PlayerClass::SLASHER:
-					if (!onCoolDown3) {
+					if (!onCoolDown1) {
 						slasher_smash();
 						std::cout << "Slasher Ability - Smash" << std::endl;
 					}
@@ -852,7 +875,13 @@ void EndlessState::updateEnemies() {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (!enemy.attack) {
-				nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+				if (player.isWarcry) {
+					nearestTarget->health -= enemy.hitRate * 0.25;
+					std::cout << "Reduced damage due to Warcry!" << std::endl;
+				}
+				else {
+					nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+				}
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
 					nearestTarget->alive = false;
@@ -1039,6 +1068,9 @@ void EndlessState::updateProjectiles() {
 				// deal damage to enemy
 				if (player.isDeadEye) {
 					enemyItr->health -= 50; //is deadeye is active double damage
+				}
+				else if (player.isRage) {
+					enemyItr->health -= projItr->damage * 2;
 				}
 				else {
 					enemyItr->health -= 25;// // TODO set this to the bullet's damage
