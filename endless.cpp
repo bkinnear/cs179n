@@ -1025,6 +1025,8 @@ void EndlessState::updateProjectiles() {
 				break;
 			continue;
 		}
+	GameMode(1, game, playerClass)
+{}
 
 		if (projItr->isGrenade == true) {
 			float maxRange = 250.f;
