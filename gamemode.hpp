@@ -26,7 +26,7 @@ public:
 
 	void spawnEnemies(int);
 	void respawnEnemies();
-	void spawnWeapons();
+	void spawnItems();
 	void updateEnemies(int);
 	void renderEnemies();
 
