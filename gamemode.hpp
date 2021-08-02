@@ -13,8 +13,10 @@
 
 #include <list>
 
-class GameMode : public State {
+// iterator for item on map
+typedef std::list<std::pair<Item::type, sf::Sprite>>::iterator ItemIterator;
 
+class GameMode : public State {
 public:
 	GameMode(int, Game&, PlayerClass);
 	~GameMode();
@@ -23,6 +25,7 @@ public:
 	virtual void render();
 
 	void spawnEnemies(int);
+	void respawnEnemies();
 	void spawnWeapons();
 	void updateEnemies(int);
 	void renderEnemies();
@@ -30,14 +33,13 @@ public:
 	bool handleEvents();
 
 	void updateProjectiles();
+
+	
 	
 	void renderAllies();
 	void updateAllies();
 
-private:
-	
-	int type; //1 - Endless, 2 - Survival
-
+protected:
 	// main view target (what it moves towards)
 	sf::Vector2f mainViewTarget;
 
@@ -125,6 +127,7 @@ private:
 	sf::Text ammoCount;
 	sf::Sprite grenadeIcon;
 	sf::Text grenadesNum;
+	sf::Sprite reticle;
 
 	// inventory
 	Inventory inventory;
@@ -136,8 +139,20 @@ private:
 	// allies
 	std::list<NPC> allies;
 
-	//spawned weapons
+
+	// items
+	// items in world
 	std::list<std::pair<Item::type, sf::Sprite>> itemsOnMap;
+	// spatial hash for itemsOnMap (key = int, value = list of list iterators)
+	std::unordered_map<int, std::list<ItemIterator>> itemHash;
+	// gets hash key from position on map
+	int hashPos(const sf::Vector2f& pos) const;
+	// creates item at position on the map
+	ItemIterator createItem(const sf::Vector2f& pos, Item::type type);
+	// removes item at position on the map
+	void removeItem(ItemIterator);
+	// returns first item found in tile at map position (if no item found returns itemsOnMap.end())
+	ItemIterator getItem(const sf::Vector2f& pos);
 
 	//Endless
 	int maximumEnemyCount = 99;
@@ -180,5 +195,7 @@ private:
 	void assault_ammo();
 	void assault_deadeye();
 
+private:
+	int type; //1 - Endless, 2 - Survival
 };
 #endif
