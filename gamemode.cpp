@@ -212,7 +212,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	else if (type == 2)
 		GameMode::spawnEnemies(currentEnemySpawningCount);
 
-	GameMode::spawnWeapons();
+	GameMode::spawnItems();
 
 	// add ally
 	allies.emplace_back(texAllyLeft);
@@ -1086,13 +1086,13 @@ void GameMode::updateEnemies(int type) {
 	}
 }
 
-void GameMode::spawnWeapons() {
+void GameMode::spawnItems() {
 	//initialize weapon list
-	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
+	int numItems = 20; //set to 5 for testing purposes, otherwise set to rand()%3;
 	//sf::Sprite& spr;
-	for (int i = 0; i < numWeapons; ++i) {
+	for (int i = 0; i < numItems; ++i) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 5;//randomly generate what item to spawn
+		int randomItem = rand() % 7;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1111,6 +1111,9 @@ void GameMode::spawnWeapons() {
 			break;
 		case 5:
 			itemType = Item::type::medkit;
+			break;
+		case 6:
+			itemType = Item::type::ammo_crate;
 			break;
 		}
 		sf::Vector2f pos;
