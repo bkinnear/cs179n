@@ -18,12 +18,6 @@ class EndlessState : public GameMode {
 public:
 	EndlessState(Game&, PlayerClass);
 	~EndlessState();
-
-private:
-
-	GameMode gameMode;
-
-	int temp;
 };
 
 #endif

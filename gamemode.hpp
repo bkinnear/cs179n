@@ -16,8 +16,6 @@
 class GameMode : public State {
 
 public:
-
-	GameMode();
 	GameMode(int, Game&, PlayerClass);
 	~GameMode();
 

@@ -9,10 +9,9 @@
 
 
 // NOTE: we must call the original constructor and pass it the Game pointer
-EndlessState::EndlessState(Game& game, PlayerClass playerClass) : GameMode(1, game, playerClass)
-{
-	temp = 1;
-}
+EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
+	GameMode(1, game, playerClass)
+{}
 
 EndlessState::~EndlessState() {
 	// here we would deallocate any resources we use in this gamestate

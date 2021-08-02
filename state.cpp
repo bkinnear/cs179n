@@ -2,10 +2,6 @@
 
 #define gwindow game.window
 
-State::State()
-{
-
-}
 void State::updateEffects() {
 	for (auto mapItr = effects.begin(); mapItr != effects.end(); mapItr++) {
 		// effect sprite

@@ -17,13 +17,6 @@ class SurvivalState : public GameMode {
 public:
 	SurvivalState(Game&, PlayerClass);
 	~SurvivalState();
-	
-
-private:
-
-	GameMode gameMode;
-
-	int temp;
 };
 
 #endif

@@ -4,10 +4,6 @@
 
 #define gwindow game.window
 
-GameMode::GameMode()
-{
-
-}
 GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	State(game),
 	player(playerClass),
