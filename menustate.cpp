@@ -79,7 +79,7 @@ void MenuState::logic() {
 
 			if (sprSurvivalButton.getGlobalBounds().contains(mousePos)) {
 				std::cout << "Starting Survival Mode\n";
-				game.setState(new SurvivalState(game));
+				game.setState(new SurvivalState(game, PlayerClass::DEFAULT));
 				delete this;
 				return;
 			}
