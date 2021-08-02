@@ -42,6 +42,8 @@ int getLootAmount(Item::type type) {
 		return 1;
 	case Item::type::medkit:
 		return 1;
+	case Item::type::barrel:
+		return 1;
 	}
 
 	return 1;
@@ -74,6 +76,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texAllyRight(createTexture("res/player2_r_strip.png")),
 	texAllyLeft(createTexture("res/player2_l_strip.png")),
+	texDummyRight(createTexture("res/Dummy_stand.png")),
+	texBarrel(createTexture("res/barrel.png")),
+	texShield(createTexture("res/shield.png")),
 	texProjectile(createTexture("res/projectile.png")),
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
@@ -117,6 +122,17 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	}
 	if (!emptyGunBuffer.loadFromFile("res/empty-gun.wav")) {
 		std::cout << "error loading gunshot noises" << std::endl;
+	}
+	if (!mp5ReloadBuffer.loadFromFile("res/mp5-reload.wav")) {
+		std::cout << "error loading mp5-reload noises" << std::endl;
+	}
+
+	//grenade sounds
+	if (!grenadeShotBuffer.loadFromFile("res/grenade-shot.wav")) {
+		std::cout << "error loading grenade shot noises" << std::endl;
+	}
+	if (!grenadeExplodeBuffer.loadFromFile("res/grenade-explode.wav")) {
+		std::cout << "error loading grenade explode noises" << std::endl;
 	}
 
 	//zombie sounds
@@ -218,6 +234,32 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	allies.emplace_back(texAllyLeft);
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 	this->type = type;
+
+	// Player HUD
+//  
+//HP bar
+	playerHPBack.setSize({ 200.f, 14.f });
+	playerHPBack.setFillColor(sf::Color::Transparent);
+	playerHPBack.setPosition(60, 725);
+	playerHPBack.setOutlineColor(sf::Color::Black);
+	playerHPBack.setOutlineThickness(2.f);
+	playerHPBar.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y);
+	playerIcon.setPosition(playerHPBack.getPosition().x - 62, playerHPBack.getPosition().y - 25);
+	//mag and total ammo counter;
+	ammoIcon.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y - 25);
+	ammoCount.setFont(font);
+	ammoCount.setCharacterSize(12);
+	ammoCount.setColor(sf::Color::Black);
+	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
+	//grenade counter
+	int gCount = 3;
+	grenadeIcon.setPosition(playerHPBack.getPosition().x + 75, playerHPBack.getPosition().y - 26);
+	grenadeIcon.setColor(sf::Color::Green);
+	grenadesNum.setFont(font);
+	grenadesNum.setCharacterSize(12);
+	grenadesNum.setColor(sf::Color::Black);
+	grenadesNum.setString("x" + std::to_string(gCount));
+	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -347,6 +389,35 @@ void GameMode::updateCooldowns() {
 			}
 		}
 		break;
+	case PlayerClass::ENGINEER:
+		if (onCoolDown1) {
+			if (elapsed1.asSeconds() < cooldown1) {
+				elapsed1 = abilityTimer1.getElapsedTime();
+			}
+			else {
+				onCoolDown1 = false;
+				elapsed1 = sf::seconds(0);
+			}
+		}
+		if (onCoolDown2) {
+			if (elapsed2.asSeconds() < cooldown2) {
+				elapsed2 = abilityTimer2.getElapsedTime();
+			}
+			else {
+				onCoolDown2 = false;
+				elapsed2 = sf::seconds(0);
+			}
+		}
+		if (onCoolDown3) {
+			if (elapsed3.asSeconds() < cooldown3) {
+				elapsed3 = abilityTimer3.getElapsedTime();
+			}
+			else {
+				onCoolDown3 = false;
+				elapsed3 = sf::seconds(0);
+			}
+		}
+		break;
 	}
 }
 
@@ -461,6 +532,8 @@ bool GameMode::handleEvents() {
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
+				reloadSound.setBuffer(mp5ReloadBuffer);
+				reloadSound.play();
 				inventory.reloadWielded();
 				break;
 			case sf::Keyboard::T:
@@ -503,8 +576,16 @@ bool GameMode::handleEvents() {
 						std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
 					}
 					break;
+				case PlayerClass::ENGINEER:
+					if (!onCoolDown1) {
+						engineer_decoy();
+						std::cout << "Engineer Ability - Deployed Decoy" << std::endl;
+					}
+					else {
+						std::cout << "Engineer Ability - Decoys are on cooldown" << std::endl;
+					}
+					break;
 				}
-				break;
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
 				std::cout << "2" << std::endl;
@@ -529,6 +610,15 @@ bool GameMode::handleEvents() {
 						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
 					}
 					break;
+				case PlayerClass::ENGINEER:
+					if (!onCoolDown2) {
+						engineer_barrel();
+						std::cout << "Engineer Ability - Deployed Barrel" << std::endl;
+					}
+					else {
+						std::cout << "Engineer Ability - Barrels are on cooldown" << std::endl;
+					}
+					break;
 				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
@@ -551,6 +641,15 @@ bool GameMode::handleEvents() {
 					}
 					else {
 						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::ENGINEER:
+					if (!onCoolDown3) {
+						engineer_shield();
+						std::cout << "Engineer Ability - Shield" << std::endl;
+					}
+					else {
+						std::cout << "Engineer Ability - Shield is on cooldown" << std::endl;
 					}
 					break;
 				}
@@ -828,14 +927,7 @@ void GameMode::logic()
 		GameMode::updateEnemies(2);
 	}
 
-	// Player HUD
-	//  
-	//HP bar
-	playerHPBack.setSize({ 200.f, 14.f });
-	playerHPBack.setFillColor(sf::Color::Transparent);
-	playerHPBack.setPosition(60, 725);
-	playerHPBack.setOutlineColor(sf::Color::Black);
-	playerHPBack.setOutlineThickness(2.f);
+
 	playerHPBar.setSize({ playerHPBack.getSize().x * (player.health / 100.f), playerHPBack.getSize().y });
 	if (player.health > 75) {
 		playerHPBar.setFillColor(sf::Color::Green);
@@ -846,27 +938,12 @@ void GameMode::logic()
 	else {
 		playerHPBar.setFillColor(sf::Color::Red);
 	}
-	playerHPBar.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y);
-	playerIcon.setPosition(playerHPBack.getPosition().x - 62, playerHPBack.getPosition().y - 25);
-	//mag and total ammo counter;
-	ammoIcon.setPosition(playerHPBack.getPosition().x, playerHPBack.getPosition().y - 25);
-	ammoCount.setFont(font);
-	ammoCount.setCharacterSize(12);
-	ammoCount.setColor(sf::Color::Black);
 	if (inventory.getWielded().getAmmoType() == Item::type::null)
 		ammoCount.setString("-/-");
 	else
 		ammoCount.setString(std::to_string(inventory.getRoundsLeft()) + "/" + std::to_string(inventory.getNumItem(inventory.getWielded().getAmmoType())));
-	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
-	//grenade counter
-	int gCount = 3;
-	grenadeIcon.setPosition(playerHPBack.getPosition().x + 75, playerHPBack.getPosition().y - 26);
-	grenadeIcon.setColor(sf::Color::Green);
-	grenadesNum.setFont(font);
-	grenadesNum.setCharacterSize(12);
-	grenadesNum.setColor(sf::Color::Black);
-	grenadesNum.setString("x" + std::to_string(gCount));
-	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+
+
 
 	// set FPS for this tick
 	float currentTime = fpsClock.restart().asSeconds();
@@ -910,10 +987,12 @@ void GameMode::updateProjectiles() {
 
 		if (projItr->isGrenade == true) {
 			float maxRange = 250.f;
-			float dist = Utils::pointDistance(player.getPosition(), projItr->getPosition());
+			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
 
 			if (dist > maxRange || !(tileMap.areaClear(*projItr, moveVector))) {
 				createEffect(explosionLarge, projItr->getPosition());
+				grenadeSound.setBuffer(grenadeExplodeBuffer);
+				grenadeSound.play();
 				for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
 					float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
 					if (distToProj <= 150) {
@@ -973,6 +1052,12 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		player.speed = 3;
 		break;
 	case PlayerClass::ASSAULT:
+		cooldown1 = 1; //in seconds
+		cooldown2 = 3;
+		cooldown3 = 5;
+		player.speed = 3;
+		break;
+	case PlayerClass::ENGINEER:
 		cooldown1 = 1; //in seconds
 		cooldown2 = 3;
 		cooldown3 = 5;
@@ -1050,6 +1135,7 @@ void GameMode::updateEnemies(int type) {
 		sf::Vector2f difference = targetPosition - enemyPosition;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
+
 		if (length >= 15)
 		{
 			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
@@ -1074,6 +1160,7 @@ void GameMode::updateEnemies(int type) {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (!enemy.attack) {
+				
 				nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
@@ -1180,6 +1267,7 @@ void GameMode::assault_grenade() {
 	proj.setTexture(texProjectile);
 	// set mask bounds to just the sprite bounds (default)
 	proj.setMaskBounds(proj.getLocalBounds());
+	proj.shotFrom = player.getPosition();
 	proj.isGrenade = true;
 	proj.speed = 4;
 	proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
@@ -1192,6 +1280,39 @@ void GameMode::assault_deadeye() {
 	onCoolDown3 = true;
 
 	player.isDeadEye = true;
+
+	abilityTimer3.restart();
+}
+
+void GameMode::engineer_decoy() {
+	onCoolDown1 = true;
+
+	allies.emplace_back(texDummyRight);
+	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+
+	allies.back().isDummy = true;
+
+	abilityTimer1.restart();
+}
+
+void GameMode::engineer_barrel() {
+	onCoolDown2 = true;
+
+	createItem(player.getPosition(), Item::type::barrel);
+
+	abilityTimer2.restart();
+}
+
+void GameMode::engineer_shield() {
+	onCoolDown3 = true;
+
+	allies.emplace_back(texShield);
+	allies.back().setPosition(player.getPosition() + sf::Vector2f({ -48.f, -48.f}));
+	allies.back().setTextureRect({ 0,0,126,126 });
+	allies.back().isDummy = true;
+	allies.back().isShield = true;
+	allies.back().health = 250;
+	allies.back().centerShield = (allies.back().getPosition() + sf::Vector2f({ +48.f, +48.f }));
 
 	abilityTimer3.restart();
 }
@@ -1246,7 +1367,7 @@ void GameMode::updateAllies() {
 		NPC& ally = *allyItr;
 
 		// if ally dead, do nothing
-		if (!ally.alive)
+		if (!ally.alive||ally.isDummy)
 			continue;
 
 		// reset movement target to follow player every n ticks
@@ -1323,13 +1444,25 @@ void GameMode::renderAllies() {
 		gwindow.draw(ally);
 
 		// draw the HP bar
-		sf::RectangleShape bar1({ 26.f, 6.f });
-		bar1.setFillColor(sf::Color::Black);
-		bar1.setPosition(ally.getPosition().x, ally.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (ally.health / 100.f), 4.f });
-		bar2.setFillColor(sf::Color::Red);
-		bar2.setPosition(ally.getPosition().x + 1, ally.getPosition().y - 9);
-		gwindow.draw(bar1);
-		gwindow.draw(bar2);
+		if (ally.isShield) {
+			sf::RectangleShape bar1({ 62.f, 6.f });
+			bar1.setFillColor(sf::Color::Black);
+			bar1.setPosition(ally.getPosition().x+32, ally.getPosition().y - 10);
+			gwindow.draw(bar1);
+			sf::RectangleShape bar2({ 24.f * (ally.health / 100.f), 4.f });
+			bar2.setFillColor(sf::Color::Red);
+			bar2.setPosition(ally.getPosition().x + 33, ally.getPosition().y - 9);
+			gwindow.draw(bar2);
+		}
+		else {
+			sf::RectangleShape bar1({ 24.f, 6.f });
+			bar1.setFillColor(sf::Color::Black);
+			bar1.setPosition(ally.getPosition().x, ally.getPosition().y - 10);
+			gwindow.draw(bar1);
+			sf::RectangleShape bar2({ 24.f * (ally.health / 100.f), 4.f });
+			bar2.setFillColor(sf::Color::Red);
+			bar2.setPosition(ally.getPosition().x + 1, ally.getPosition().y - 9);
+			gwindow.draw(bar2);
+		}
 	}
 }

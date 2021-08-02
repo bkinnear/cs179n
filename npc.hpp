@@ -19,8 +19,15 @@ public:
 	// whether NPC is moving to target position
 	bool moving = false;
 
+	// check wether NPC is a dummy
+	bool isDummy = false;
+	bool isShield = false;
+
 	// position NPC will move to
 	sf::Vector2f moveTarget;
+
+	// position of center shield
+	sf::Vector2f centerShield;
 };
 
 #endif

@@ -16,5 +16,7 @@ public:
 			attack = 0; //reset attack cooldown
 		}
 	}
+
+	bool isBarrel = false;
 };
 #endif

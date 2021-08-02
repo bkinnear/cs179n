@@ -22,6 +22,7 @@ private:
 	sf::Sprite sprChooseClasses;
 	AnimSprite sprMedicButton;
 	AnimSprite sprAssaultButton;
+	AnimSprite sprEngineerButton;
 };
 
 #endif

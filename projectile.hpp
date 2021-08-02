@@ -12,6 +12,8 @@ public:
 
 	bool isGrenade = false;
 
+	sf::Vector2f shotFrom;
+
 	int speed = 15;
 	float direction;
 	int damage = 25;

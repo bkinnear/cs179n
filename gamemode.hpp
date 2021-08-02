@@ -64,6 +64,9 @@ protected:
 	sf::Texture& texPlayerLeft;
 	sf::Texture& texAllyRight;
 	sf::Texture& texAllyLeft;
+	sf::Texture& texDummyRight;
+	sf::Texture& texBarrel;
+	sf::Texture& texShield;
 	sf::Texture& texProjectile;
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
@@ -80,6 +83,11 @@ protected:
 	std::list<Projectile> projectiles;
 	sf::SoundBuffer gunShotBuffer;
 	sf::SoundBuffer emptyGunBuffer;
+	sf::SoundBuffer mp5ReloadBuffer;
+	sf::SoundBuffer grenadeShotBuffer;
+	sf::SoundBuffer grenadeExplodeBuffer;
+	sf::Sound reloadSound;
+	sf::Sound grenadeSound;
 	sf::Sound shotSound;
 
 	// enemies
@@ -194,6 +202,11 @@ protected:
 	void assault_grenade();
 	void assault_ammo();
 	void assault_deadeye();
+
+	// engineer abilities
+	void engineer_decoy();
+	void engineer_barrel();
+	void engineer_shield();
 
 private:
 	int type; //1 - Endless, 2 - Survival

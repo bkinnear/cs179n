@@ -30,6 +30,9 @@ ClassMenu::ClassMenu(Game& game) :
 
 	sprAssaultButton.create(createTexture("res/class_assault_strip.png"), { 0, 0, 160, 64 }, 2);
 	sprAssaultButton.setPosition(320.f, 205.f);
+
+	sprEngineerButton.create(createTexture("res/class_engineer_strip.png"), { 0, 0, 160, 64 }, 2);
+	sprEngineerButton.setPosition(320.f, 282.f);
 }
 
 ClassMenu::~ClassMenu() {
@@ -70,6 +73,12 @@ void ClassMenu::logic() {
 				delete this;
 				return;
 			}
+			if (sprEngineerButton.getGlobalBounds().contains(mousePos)) {
+				std::cout << "Chose Engineer\n";
+				game.setState(new EndlessState(game, PlayerClass::ENGINEER));
+				delete this;
+				return;
+			}
 
 			break;
 		}
@@ -85,6 +94,11 @@ void ClassMenu::logic() {
 		sprAssaultButton.setIndex(1);
 	else
 		sprAssaultButton.setIndex(0);
+
+	if (sprEngineerButton.getGlobalBounds().contains(mousePos))
+		sprEngineerButton.setIndex(1);
+	else
+		sprEngineerButton.setIndex(0);
 }
 
 void ClassMenu::render() {
@@ -96,6 +110,7 @@ void ClassMenu::render() {
 	// draw the menu buttons
 	gwindow.draw(sprMedicButton);
 	gwindow.draw(sprAssaultButton);
+	gwindow.draw(sprEngineerButton);
 
 	// update window
 	gwindow.display();
