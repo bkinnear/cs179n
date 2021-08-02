@@ -6,8 +6,7 @@ Game::Game():
 	window(sf::VideoMode(1366, 768), "The Last War"),
 	curState(nullptr)
 {
-	window.setFramerateLimit(60);
-	window.setVerticalSyncEnabled(true);
+	setVsync(true);
 }
 
 Game::~Game() {
@@ -59,10 +58,36 @@ void Game::setFullscreen(bool mode) {
 		window.create(sf::VideoMode(portWidth, portHeight), title);
 
 	// need to reset framerate since we're "recreating" window
-	window.setFramerateLimit(60);
-	window.setVerticalSyncEnabled(true);
+	if (usingVsync()) {
+		window.setVerticalSyncEnabled(true);
+	} else {
+		window.setVerticalSyncEnabled(false);
+		window.setFramerateLimit(60);
+	}
 }
 
 bool Game::isFullscreen() const {
 	return fullscreen;
+}
+
+void Game::setVsync(bool mode) {
+	// mode == true => on
+	// mode == false => off 
+
+	// do nothing if already in desired fullscreen mode
+	if (mode == vsync)
+		return;
+	else
+		vsync = mode;
+
+	if (usingVsync()) {
+		window.setVerticalSyncEnabled(true);
+	} else {
+		window.setVerticalSyncEnabled(false);
+		window.setFramerateLimit(60);
+	}
+}
+
+bool Game::usingVsync() const {
+	return vsync;
 }

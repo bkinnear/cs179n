@@ -1,12 +1,7 @@
 #include "endless.hpp"
-#include "utils.hpp"
 
-#include <iostream>
-#include <cmath>
-#include <cstdlib>
-#include <vector>
-#include <time.h>
-
+// the main game window
+#define gwindow game.window
 
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
@@ -14,6 +9,4 @@ EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
 {}
 
 EndlessState::~EndlessState() {
-	// here we would deallocate any resources we use in this gamestate
 }
-

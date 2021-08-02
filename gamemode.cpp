@@ -1,8 +1,70 @@
 #include "gamemode.hpp"
+#include "menustate.hpp"
 
 #include <iostream>
+#include <cmath>
+#include <cstdlib>
+#include <vector>
+#include <ctime>
+#include <list>
+#include <unordered_map>
+#include <algorithm>
+
+// map width in tiles
+#define MAP_WIDTH 100
+// map height in tiles
+#define MAP_HEIGHT 100
+// offset to get middle of player sprite
+#define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
+// minimum distance to pick up items
+#define MIN_DIST_ITEM 48.f
 
 #define gwindow game.window
+
+inline sf::Vector2i toTileCoords(sf::Vector2f pos) {
+	return { (int)floor(pos.x / 32), (int)floor(pos.y / 32) };
+}
+
+// returns amount of item that picking up a certain item will yield
+int getLootAmount(Item::type type) {
+	switch (type) {
+	case Item::type::ammo_556:
+		return 15 + rand() % 30;
+	case Item::type::ammo_9mm:
+		return 15 + rand() % 30;
+	case Item::type::MP5:
+		return 1;
+	case Item::type::M4:
+		return 1;
+	case Item::type::ammo_crate:
+		return 15 + rand() % 15;
+	case Item::type::bandages:
+		return 1;
+	case Item::type::medkit:
+		return 1;
+	}
+
+	return 1;
+}
+
+// returns type of item that picking up a certain item will yield
+Item::type getLootItem(Item::type type) {
+	switch (type) {
+	case Item::type::ammo_crate:
+		// ammo crates yield a random ammo type
+	{
+		int r = rand() % 2;
+		switch (r) {
+		case 0:
+			return Item::type::ammo_9mm;
+		case 1:
+			return Item::type::ammo_556;
+		}
+	}
+	break;
+	}
+	return type;
+}
 
 GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	State(game),
@@ -22,7 +84,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	playerIcon(createTexture("res/Player1_display.png")),
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
-	grenadeIcon(createTexture("res/grenade_icon.png"))
+	grenadeIcon(createTexture("res/grenade_icon.png")),
+	reticle(createTexture("res/reticle.png"))
 {
 
 	// set main view
@@ -143,14 +206,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	inventory.addItem(Item::type::MP5, 1);
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
+	// TODO delegate to children classes
 	if (type == 1)
-	{
 		GameMode::spawnEnemies(defaultEnemySpawningCount);
-	}
 	else if (type == 2)
-	{
 		GameMode::spawnEnemies(currentEnemySpawningCount);
-	}
+
 	GameMode::spawnWeapons();
 
 	// add ally
@@ -159,9 +220,51 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	this->type = type;
 }
 
-GameMode::~GameMode()
-{
+int GameMode::hashPos(const sf::Vector2f& pos) const {
+	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
+}
 
+ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
+	itemsOnMap.push_back(std::pair<Item::type, sf::Sprite>(type, sf::Sprite()));
+	sf::Sprite& spr = itemsOnMap.back().second;
+	spr.setPosition(pos.x, pos.y);
+	spr.setTexture(inventory.texItemTileset);
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setScale(.5, .5);
+
+	// hashkey organizes items in buckets that hold items in 1 tile space (32x32)
+	int hashKey = hashPos(pos);
+	auto itemList = itemHash.find(hashKey);
+	if (itemList == itemHash.end()) {
+		itemHash[hashKey] = {};
+	}
+	itemHash[hashKey].push_back(std::prev(itemsOnMap.end()));
+
+	return std::prev(itemsOnMap.end());
+}
+
+void GameMode::removeItem(ItemIterator itemItr) {
+	// remove item from hash
+	itemHash.at(hashPos(itemItr->second.getPosition())).remove(itemItr);
+	// remove item from item list
+	itemsOnMap.erase(itemItr);
+}
+
+ItemIterator GameMode::getItem(const sf::Vector2f& pos) {
+	auto itemListItr = itemHash.find(hashPos(pos));
+	// see if hashmap has an entry
+	if (itemListItr == itemHash.end())
+		return itemsOnMap.end();
+
+	// see if list is empty or not
+	if (itemListItr->second.empty())
+		return itemsOnMap.end();
+
+	// return first item in hashmap entry list
+	return itemListItr->second.front();
+}
+
+GameMode::~GameMode() {
 }
 
 void GameMode::setDialog(const std::string& speaker, const std::string& msg) {
@@ -277,6 +380,26 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::Tab:
 				showInventory = !showInventory;
 				showItemDetails = false;
+				break;
+			case sf::Keyboard::E:
+				// pick up item
+				// check for items in tiles adjacent to player
+				for (int i = -1; i <= 1; i++) {
+					for (int j = -1; j <= 1; j++) {
+						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
+						ItemIterator itemItr = getItem(pos);
+						if (itemItr == itemsOnMap.end())
+							continue;
+						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, itemItr->second.getPosition());
+						if (distToPlayer <= MIN_DIST_ITEM) {
+							// add item to inventory
+							inventory.addItem(getLootItem(itemItr->first), getLootAmount(itemItr->first));
+
+							// remove item from map
+							removeItem(itemItr);
+						}
+					}
+				}
 				break;
 			case sf::Keyboard::Q:
 			{
@@ -435,13 +558,15 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::F2:
 				// restarts the map
 				if (type == 1)
-				{
 					game.setState(new GameMode(1, game, player.playerClass));
-				}
 				else if (type == 2)
-				{
 					game.setState(new GameMode(2, game, player.playerClass));
-				}
+				delete this;
+				return false;
+				break;
+			case sf::Keyboard::F3:
+				// go back to menu
+				game.setState(new MenuState(game));
 				delete this;
 				return false;
 				break;
@@ -489,16 +614,11 @@ bool GameMode::handleEvents() {
 			}
 			break;
 		case sf::Event::MouseWheelScrolled:
-			if (e.mouseWheelScroll.delta > 0) {
-				std::cout << "up" << std::endl;
-				// mouse scrolling up
+			// TODO set limit for scrolling
+			if (e.mouseWheelScroll.delta > 0)
 				mainView.zoom(.9f);
-			}
-			else {
-				std::cout << "down" << std::endl;
-				// mouse scrolling down
+			else
 				mainView.zoom(1.1f);
-			}
 			break;
 		}
 	}
@@ -519,9 +639,9 @@ bool GameMode::handleEvents() {
 			// set mask bounds to just the sprite bounds (default)
 			proj.setMaskBounds(proj.getLocalBounds());
 			proj.speed = 12;
-			proj.direction = Utils::pointDirection({ player.getPosition().x + 16, player.getPosition().y + 16 }, mousePos);
+			proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 			proj.setRotation(proj.direction);
-			proj.damage = inventory.getWielded().getDamage();
+			proj.damage = inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1);
 		}
 		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
 			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
@@ -648,7 +768,7 @@ void GameMode::logic()
 		if (item) {
 			showItemDetails = true;
 
-			txtItemDetails.setString(item->getName());
+			txtItemDetails.setString(item->getName() + '(' + std::to_string(item->num) + ')');
 			txtItemDetails.setPosition(winMousePos.x, winMousePos.y - 16);
 
 			shpItemDetails.setSize({ txtItemDetails.getGlobalBounds().width + 10, txtItemDetails.getGlobalBounds().height + 10 });
@@ -816,54 +936,28 @@ void GameMode::updateProjectiles() {
 				if (!enemyItr->isColliding(*projItr))
 					continue;
 
+				// deal damage to enemy
+				enemyItr->health -= projItr->damage;
+				std::cout << "DMG: " << projItr->damage << std::endl;
+
 				// destroy bullet
 				projItr = projectiles.erase(projItr);
 				if (projItr == projectiles.end())
 					breaking = true;
 
-				// deal damage to enemy
-				if (player.isDeadEye) {
-					enemyItr->health -= 50; //is deadeye is active double damage
-				}
-				else {
-					enemyItr->health -= 25;// // TODO set this to the bullet's damage
-				}
+				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
-					if (type == 1)
-					{
-						GameMode::spawnEnemies(1);
-					}
-					else if (type == 2)
-					{
-						currentEnemyPresent = currentEnemyPresent - 1;
-						if (currentEnemyPresent == 0)
-						{
-							//Level completed - Move to next Level
-							std::cout << "Level " << currentLevel << " Completed " << "\n";
-							currentLevel = currentLevel + 1;
-							if (currentLevel == maxLevelCount)
-							{
-								//Survival Game End
-								std::cout << "Survival Game Completed " << "\n";
-							}
-							else
-							{
-								currentEnemySpawningCount = currentEnemySpawningCount + 2;
-								currentEnemyPresent = currentEnemySpawningCount;
-
-								GameMode::spawnEnemies(currentEnemySpawningCount);
-								GameMode::renderEnemies();
-								return;
-							}
-						}
-					}
+					respawnEnemies();
 					if (enemyItr == enemies.end())
 						break;
 				}
+
+				// projectile is destroyed - no need to continue
 				if (breaking)
 					break;
 			}
+			// no projectiles left - no need to continue
 			if (breaking)
 				break;
 		}
@@ -997,40 +1091,35 @@ void GameMode::spawnWeapons() {
 	int numWeapons = 5; //set to 5 for testing purposes, otherwise set to rand()%3;
 	//sf::Sprite& spr;
 	for (int i = 0; i < numWeapons; ++i) {
+		Item::type itemType = Item::type::null;
 		int randomItem = rand() % 5;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
 			break;
 		case 1:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::MP5;
+			itemType = Item::type::MP5;
 			break;
 		case 2:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::ammo_9mm;
+			itemType = Item::type::ammo_9mm;
 			break;
 		case 3:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::M4;
+			itemType = Item::type::M4;
 			break;
 		case 4:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::ammo_556;
+			itemType = Item::type::ammo_556;
+			break;
 		case 5:
-			itemsOnMap.emplace_back();
-			itemsOnMap.back().first = Item::type::medkit;
+			itemType = Item::type::medkit;
 			break;
 		}
-		sf::Sprite& spr = itemsOnMap.back().second;
-		spr.setTexture(inventory.texItemTileset);
-		spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
-		spr.setScale(.5, .5);
+		sf::Vector2f pos;
 		for (;;) {
-			spr.setPosition(rand() % tileMap.mapWidth * TILE_SIZE, rand() % tileMap.mapHeight * TILE_SIZE);
-			if (!tileMap.isOpaque(spr.getPosition().x, spr.getPosition().y))
+			pos = { (float)(rand() % tileMap.mapWidth * TILE_SIZE), (float)(rand() % tileMap.mapHeight * TILE_SIZE) };
+			if (!tileMap.isOpaque(pos.x, pos.y))
 				break;
 		}
+		createItem(pos, itemType);
 	}
 }
 
@@ -1038,13 +1127,7 @@ void GameMode::medic_bandage() {
 	onCoolDown1 = true;
 
 	//ability functionality
-	itemsOnMap.emplace_back();
-	itemsOnMap.back().first = Item::type::bandages;
-	sf::Sprite& spr = itemsOnMap.back().second;
-	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
-	spr.setScale(.5, .5);
-	spr.setPosition(player.getPosition().x, player.getPosition().y);
+	createItem(player.getPosition(), Item::type::bandages);
 
 	//cooldown timer starts
 	abilityTimer1.restart();
@@ -1079,14 +1162,8 @@ void GameMode::medic_heal() {
 void GameMode::assault_ammo() {
 	onCoolDown1 = true;
 
-	itemsOnMap.emplace_back();
-	itemsOnMap.back().first = Item::type::ammo_crate;
-	sf::Sprite& spr = itemsOnMap.back().second;
-	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
-	spr.setScale(.5, .5);
-	spr.setPosition(player.getPosition().x, player.getPosition().y);
-
+	createItem(player.getPosition(), Item::type::ammo_crate);
+	
 	abilityTimer1.restart();
 }
 
@@ -1133,6 +1210,31 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 				break;
 		}
 		enemies.push_back(enemy);
+	}
+}
+
+void GameMode::respawnEnemies() {
+	if (type == 1)
+		spawnEnemies(1);
+	else if (type == 2) {
+		currentEnemyPresent = currentEnemyPresent - 1;
+		if (currentEnemyPresent == 0) {
+			//Level completed - Move to next Level
+			std::cout << "Level " << currentLevel << " Completed " << "\n";
+			currentLevel = currentLevel + 1;
+			if (currentLevel == maxLevelCount) {
+				//Survival Game End
+				std::cout << "Survival Game Completed " << "\n";
+			}
+			else {
+				currentEnemySpawningCount = currentEnemySpawningCount + 2;
+				currentEnemyPresent = currentEnemySpawningCount;
+
+				spawnEnemies(currentEnemySpawningCount);
+				renderEnemies();
+				return;
+			}
+		}
 	}
 }
 
@@ -1205,6 +1307,7 @@ void GameMode::updateAllies() {
 				proj.speed = 12;
 				proj.direction = Utils::pointDirection(ally.getPosition(), nearestEnemy->getPosition());
 				proj.setRotation(proj.direction);
+				proj.damage = 25;
 			}
 		}
 	}

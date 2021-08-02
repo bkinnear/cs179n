@@ -21,6 +21,7 @@ private:
 	// place any vars we need in this state in here
 	sf::Sprite sprOptions;
 	AnimSprite sprFullscreen;
+	AnimSprite sprVsync;
 	AnimSprite sprReturnButton;
 };
 
