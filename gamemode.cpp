@@ -231,8 +231,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	GameMode::spawnItems();
 
 	// add ally
-	allies.emplace_back(texAllyLeft);
-	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+	//allies.emplace_back(texAllyLeft);
+	//allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 	this->type = type;
 
 	// Player HUD
@@ -1132,11 +1132,21 @@ void GameMode::updateEnemies(int type) {
 		sf::Vector2f targetPosition = nearestTarget->getPosition();
 		sf::Vector2f enemyPosition = enemy.getPosition();
 
+		int atkDist;
+
+		if (nearestTarget->isShield) {
+			targetPosition = nearestTarget->centerShield;
+			atkDist = 80;
+		}
+		else {
+			atkDist = 15;
+		}
+
 		sf::Vector2f difference = targetPosition - enemyPosition;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
 
-		if (length >= 15)
+		if (length >= atkDist)
 		{
 			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
 			enemy.setAnimSpeed(12);
@@ -1165,6 +1175,9 @@ void GameMode::updateEnemies(int type) {
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
 					nearestTarget->alive = false;
+					if (nearestTarget->isDummy) {
+						
+					}
 					nearestTarget->setColor(sf::Color(255, 0, 0, 255));
 					std::cout << "target has died" << std::endl;
 				}

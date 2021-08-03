@@ -23,6 +23,13 @@ public:
 	// whether character is alive
 	bool alive = true;
 
+	// check wether NPC is a dummy or shield
+	bool isDummy = false;
+	bool isShield = false;
+
+	// position of center shield
+	sf::Vector2f centerShield;
+
 	// sprite movement speed in px per frame
 	int speed = 3;
 };
