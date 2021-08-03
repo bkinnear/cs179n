@@ -38,7 +38,7 @@ int getLootAmount(Item::type type) {
 		return 1;
 	case Item::type::ammo_crate:
 		return 15 + rand() % 15;
-	case Item::type::bandages:
+	case Item::type::health_pack:
 		return 1;
 	case Item::type::medkit:
 		return 1;
@@ -284,9 +284,6 @@ void GameMode::updateCooldowns() {
 		if (onCoolDown1) {
 			if (elapsed1.asSeconds() < cooldown1) {
 				elapsed1 = abilityTimer1.getElapsedTime();
-				//if ((ceil(elapsed1.asSeconds()) - elapsed1.asSeconds()) < 0.015) {
-					//std::cout << "Ability 1 will be ready in " << 5 - ceil(elapsed1.asSeconds()) << " second(s)." << std::endl;
-				//}
 			}
 			else {
 				onCoolDown1 = false;
@@ -339,6 +336,41 @@ void GameMode::updateCooldowns() {
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 5) { //increase damage for 5 seconds
 					player.isDeadEye = false; // turn off deadeye after 5 seconds
+				}
+			}
+			else {
+				onCoolDown3 = false;
+				elapsed3 = sf::seconds(0);
+			}
+		}
+		break;
+	case PlayerClass::SLASHER:
+		if (onCoolDown1) {
+			if (elapsed1.asSeconds() < cooldown1) {
+				elapsed1 = abilityTimer1.getElapsedTime();
+			}
+			else {
+				onCoolDown1 = false;
+				elapsed1 = sf::seconds(0);
+			}
+		}
+		if (onCoolDown2) {
+			if (elapsed2.asSeconds() < cooldown2) {
+				elapsed2 = abilityTimer2.getElapsedTime();
+				if (elapsed2.asMilliseconds() > 3000) { //warcry for 3 seconds
+					player.isWarcry = false;
+				}
+			}
+			else {
+				onCoolDown2 = false;
+				elapsed2 = sf::seconds(0);
+			}
+		}
+		if (onCoolDown3) {
+			if (elapsed3.asSeconds() < cooldown3) {
+				elapsed3 = abilityTimer3.getElapsedTime();
+				if (elapsed2.asMilliseconds() > 5000) { //dash for 5 seconds
+					player.speed = 3; //set back to default
 				}
 			}
 			else {
@@ -497,17 +529,24 @@ bool GameMode::handleEvents() {
 					//MEDIC FIRST ABILITY GOES HERE
 					if (!onCoolDown1) {
 						medic_bandage();
-						std::cout << "Medic Ability - Dropped Bandages" << std::endl;
+						std::cout << "Medic Ability - Dropped Health Pack" << std::endl;
 					}
 					else {
-						std::cout << "Medic Ability - Bandages are on cooldown" << std::endl;
+						std::cout << "Medic Ability - Health Packs are on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::SLASHER:
+					if (!onCoolDown1) {
+						slasher_smash();
+						std::cout << "Slasher Ability - Smash" << std::endl;
+					}
+					else {
+						std::cout << "Slasher Ability - Smash is on cooldown" << std::endl;
 					}
 					break;
 				}
 				break;
-				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
-				std::cout << "2" << std::endl;
 				switch (player.playerClass) {
 				case PlayerClass::DEFAULT:
 					break;
@@ -527,6 +566,15 @@ bool GameMode::handleEvents() {
 					}
 					else {
 						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::SLASHER:
+					if (!onCoolDown2) {
+						slasher_warcry();
+						std::cout << "Slasher Ability - Warcry" << std::endl;
+					}
+					else {
+						std::cout << "Slasher Ability - Warcry is on cooldown" << std::endl;
 					}
 					break;
 				}
@@ -551,6 +599,15 @@ bool GameMode::handleEvents() {
 					}
 					else {
 						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+					}
+					break;
+				case PlayerClass::SLASHER:
+					if (!onCoolDown3) {
+						slasher_rage();
+						std::cout << "Slasher Ability - Rage" << std::endl;
+					}
+					else {
+						std::cout << "Slasher Ability - Rage is on cooldown" << std::endl;
 					}
 					break;
 				}
@@ -978,6 +1035,12 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		cooldown3 = 5;
 		player.speed = 3;
 		break;
+	case PlayerClass::SLASHER:
+		cooldown1 = 1;
+		cooldown2 = 10;
+		cooldown3 = 15;
+		player.speed = 3;
+		break;
 	default:
 		std::cout << "no class chosen" << std::endl;
 		break;
@@ -1074,7 +1137,13 @@ void GameMode::updateEnemies(int type) {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (!enemy.attack) {
-				nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+				if (player.isWarcry) {
+					nearestTarget->health -= enemy.hitRate * 0.25;
+					std::cout << "Reduced damage due to Warcry!" << std::endl;
+				}
+				else {
+					nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+				}
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
 					nearestTarget->alive = false;
@@ -1130,7 +1199,7 @@ void GameMode::medic_bandage() {
 	onCoolDown1 = true;
 
 	//ability functionality
-	createItem(player.getPosition(), Item::type::bandages);
+	createItem(player.getPosition(), Item::type::health_pack);
 
 	//cooldown timer starts
 	abilityTimer1.restart();
@@ -1192,6 +1261,47 @@ void GameMode::assault_deadeye() {
 	onCoolDown3 = true;
 
 	player.isDeadEye = true;
+
+	abilityTimer3.restart();
+}
+
+void GameMode::slasher_smash() {
+	onCoolDown1 = true;
+
+	sf::Vector2f playerPos = player.getPosition();
+	sf::Vector2f enemyPos;
+	std::list<Enemy>::iterator enemyItr;
+
+	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
+		enemyPos = enemyItr->getPosition();
+		sf::Vector2f difference = playerPos - enemyPos;
+		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
+
+		if (length < 100) {
+			enemyItr->health -= 25;
+			if (enemyItr->health <= 0) {
+				enemyItr = enemies.erase(enemyItr);
+				spawnEnemies(1);
+			}
+		}
+	}
+
+	abilityTimer1.restart();
+}
+
+void GameMode::slasher_warcry() {
+	onCoolDown2 = true;
+
+	player.isWarcry = true;
+
+	abilityTimer2.restart();
+}
+
+void GameMode::slasher_rage() {
+	onCoolDown3 = true;
+
+	player.isDeadEye = true;
+	player.speed = 5;
 
 	abilityTimer3.restart();
 }
