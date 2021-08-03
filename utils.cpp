@@ -86,3 +86,19 @@ sf::Vector2f Utils::pointEdge(const sf::Vector2f A, const sf::FloatRect& B) {
 		}
 	}
 }
+
+sf::Vector2i Utils::toTileCoords(sf::Vector2f pos) {
+	return { (int)floor(pos.x / 32), (int)floor(pos.y / 32) };
+}
+
+sf::Vector2i Utils::snapToTile(sf::Vector2f pos) {
+	return { (int)floor(pos.x / 32) * 32, (int)floor(pos.y / 32) * 32 };
+}
+
+sf::Vector2i Utils::snapToTile(sf::Vector2i pos) {
+	return { (int)floor(pos.x / 32) * 32, (int)floor(pos.y / 32) * 32 };
+}
+
+sf::Vector2f Utils::snapToTilef(sf::Vector2f pos) {
+	return { floor(pos.x / 32) * 32, floor(pos.y / 32) * 32 };
+}

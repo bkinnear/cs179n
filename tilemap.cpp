@@ -109,7 +109,6 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 	textures.resize(nTextures);
 	for (int i = 1; i < nTextures; i++) {
 		// create new texture for tile of type i
-		std::cout << i << std::endl;
 		textures[i] = &state.createTexture(
 			"res/big_32x32_tileset.png", // TODO make this not a magic string (maybe doesnt matter)
 			sf::IntRect(getTileTexOffset(i), { TILE_SIZE,TILE_SIZE }
@@ -211,6 +210,9 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 };
 
 void TileMap::setTile(unsigned x, unsigned y, tileType type) {
+	if (x >= mapWidth || y >= mapHeight)
+		return;
+
 	map[y][x].type = type;
 
 	switch (type) {
@@ -289,6 +291,8 @@ bool TileMap::tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off)
 {
 	for (unsigned y = 0; y < h; y++) {
 		for (unsigned x = 0; x < w; x++) {
+			if (x + x_off > mapWidth || y + y_off > mapHeight)
+				break;
 			if (map[y + y_off][x + x_off].type == 0) {
 				if (y == 0 && x == 0) {
 					if (map[y + y_off - 2][x + x_off - 2].type != 0 ||

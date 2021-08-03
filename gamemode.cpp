@@ -11,19 +11,15 @@
 #include <algorithm>
 
 // map width in tiles
-#define MAP_WIDTH 100
+#define MAP_WIDTH 50
 // map height in tiles
-#define MAP_HEIGHT 100
+#define MAP_HEIGHT 50
 // offset to get middle of player sprite
 #define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
 // minimum distance to pick up items
 #define MIN_DIST_ITEM 48.f
 
 #define gwindow game.window
-
-inline sf::Vector2i toTileCoords(sf::Vector2f pos) {
-	return { (int)floor(pos.x / 32), (int)floor(pos.y / 32) };
-}
 
 // returns amount of item that picking up a certain item will yield
 int getLootAmount(Item::type type) {
@@ -68,8 +64,9 @@ Item::type getLootItem(Item::type type) {
 
 GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	State(game),
+	type(type),
 	player(playerClass),
-	tileMap(*this, 100, 100),
+	tileMap(*this, MAP_WIDTH, MAP_HEIGHT),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texAllyRight(createTexture("res/player2_r_strip.png")),
@@ -217,7 +214,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	// add ally
 	allies.emplace_back(texAllyLeft);
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
-	this->type = type;
+	allies.back().setMaskBounds({ 8, 0, 15, 32 });
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -612,6 +609,9 @@ bool GameMode::handleEvents() {
 					break;
 				}
 				break;
+			case sf::Keyboard::F1:
+				std::cout << "Do debug stuff here" << std::endl;
+				break;
 			case sf::Keyboard::F2:
 				// restarts the map
 				if (type == 1)
@@ -646,9 +646,6 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::D:
 			case sf::Keyboard::Right:
 				player.movingRight = false;
-				break;
-			case sf::Keyboard::F1:
-				std::cout << allies.front().moveTarget.x << ", " << allies.front().moveTarget.x << std::endl;
 				break;
 			}
 			break;
@@ -1073,11 +1070,12 @@ void GameMode::updateEnemies(int type) {
 	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
 	{
 		Enemy& enemy = *enemyItr;
-
-		// nearest target to enemy
+		
+		// nearest target
 		Character* nearestTarget = nullptr;
-		// this is set to the max range of enemy attacks
-		float minDist = 512.f; // TODO set this constant somewhere (or make it based on enemy idk)
+
+		// this is set to the max range of enemy targetting
+		float minDist = 4096.f; // TODO set this constant somewhere (or make it based on enemy idk)
 		
 		if (type == 1)
 		{
@@ -1103,31 +1101,45 @@ void GameMode::updateEnemies(int type) {
 			}
 		}
 
-		// if no target for enemy to attack, do nothing
-		if (!nearestTarget)
+		// if no target for enemy to attack or move towards, do nothing
+		if (!nearestTarget) {
+			enemy.attackTarget = nullptr;
 			continue;
+		}
 
-		sf::Vector2f targetPosition = nearestTarget->getPosition();
-		sf::Vector2f enemyPosition = enemy.getPosition();
+		// check if target is same as old target
+		if (nearestTarget != enemy.attackTarget) {
+			enemy.attackTarget = nearestTarget;
+
+			// calculate new path to enemy target
+			enemy.pathClock.restart();
+			enemy.findPath(tileMap, Utils::snapToTile(enemy.attackTarget->getPosition()+PLAYER_OFFSET));
+		}
+
+		// check if enemy can re path to target (only do this every so often, it's expensive)
+		if (enemy.pathClock.getElapsedTime().asSeconds() >= 1.f) {
+			enemy.pathClock.restart();
+			enemy.findPath(tileMap, Utils::snapToTile(enemy.attackTarget->getPosition()+PLAYER_OFFSET));
+		}		
+
+		const sf::Vector2f& targetPosition = enemy.attackTarget->getPosition();
+		const sf::Vector2f& enemyPosition = enemy.getPosition();
 
 		sf::Vector2f difference = targetPosition - enemyPosition;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
 		if (length >= 15)
 		{
-			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
-			enemy.setAnimSpeed(12);
-
-			// move when free
-			if (tileMap.areaClear(enemy, moveVector.x, 0))
-				enemy.move(moveVector.x, 0);
-			if (tileMap.areaClear(enemy, 0, moveVector.y))
-				enemy.move(0, moveVector.y);
+			// enemy far away, move towards enemy
+			if (enemy.isOnPath())
+				enemy.moveOnPath(tileMap);
+			else
+				enemy.moveTowards(tileMap, enemy.attackTarget->getPosition());
 
 			enemy.attack = -1; //reset attack cooldown if player moves away from attack range
 
-			// change texture depending on enemy directionaa
-			if (moveVector.x < 0)
+			// change texture depending on enemy direction
+			if (enemy.direction == 0)
 				enemy.setTexture(texEnemyLeft);
 			else
 				enemy.setTexture(texEnemyRight);
@@ -1360,8 +1372,8 @@ void GameMode::updateAllies() {
 			continue;
 
 		// reset movement target to follow player every n ticks
-		if (ally.updateTick++ >= 60) {
-			ally.updateTick = 0;
+		if (ally.pathClock.getElapsedTime().asSeconds() >= 1.f) {
+			ally.pathClock.restart();
 
 			// only update target if distance from player to ally > 32
 			float distToPlayer = Utils::pointDistance(ally.getPosition(), player.getPosition());
@@ -1370,24 +1382,24 @@ void GameMode::updateAllies() {
 					ally.moveTarget = { player.getPosition().x + (rand() % 3 - 1) * 32, player.getPosition().y + (rand() % 3 - 1) * 32 };
 
 					// make sure ally is not moving to same position as player
-					if (ally.moveTarget != player.getPosition())
+					if (sf::Vector2f(ally.moveTarget) != player.getPosition())
 						break;
 				}
+
+				ally.moving = true;
+				ally.findPath(tileMap, sf::Vector2i(ally.moveTarget));
+			}
+			else {
+				ally.moving = false;
+				ally.setAnimSpeed(-1);
 			}
 		}
 
-		// move ally towards movement target
-		sf::Vector2f difference = ally.moveTarget - ally.getPosition();
-		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
-
-		if (length >= 4) {
-			sf::Vector2f moveVector = sf::Vector2f(difference.x / length, difference.y / length);
-			ally.setAnimSpeed(12);
-			ally.move(moveVector);
-		}
-		else {
-			ally.setAnimSpeed(-1);
-			ally.setIndex(0);
+		if (ally.moving) {
+			if (ally.isOnPath())
+				ally.moveOnPath(tileMap);
+			else
+				ally.moveTowards(tileMap, ally.moveTarget);
 		}
 
 		// attack nearest enemy (in range)

@@ -16,5 +16,7 @@ public:
 			attack = 0; //reset attack cooldown
 		}
 	}
+
+	Character* attackTarget = nullptr;
 };
 #endif
