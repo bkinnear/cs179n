@@ -119,6 +119,7 @@
     <ClCompile Include="classmenu.cpp" />
     <ClCompile Include="endless.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="gamemode.cpp" />
     <ClCompile Include="inventory.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menustate.cpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="enemy.hpp" />
     <ClInclude Include="game.hpp" />
+    <ClInclude Include="gamemode.hpp" />
     <ClInclude Include="inventory.hpp" />
     <ClInclude Include="mask.hpp" />
     <ClInclude Include="menustate.hpp" />

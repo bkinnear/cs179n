@@ -21,6 +21,8 @@ struct Tile {
 */
 class TileMap: public sf::Drawable {
 public:
+	
+	TileMap();
 	TileMap(State& state, unsigned mapWidth, unsigned mapHeight);
 
 	// sets tile at (x, y) to type specified
