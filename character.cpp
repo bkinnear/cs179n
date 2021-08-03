@@ -2,30 +2,14 @@
 #include "tilemap.hpp"
 #include "utils.hpp"
 
-#include <map>
+#include <unordered_map>
 #include <list>
 #include <iostream>
 
-// node for use in path finding
-struct Node {
-    Node::Node(const sf::Vector2i& pos, Node* parent, int cost, int priority) :
-        pos(pos),
-        parent(parent),
-        cost(cost),
-        priority(priority)
-    {}
-
-    sf::Vector2i pos;
-
-    Node* parent;
-
-    int cost;
-    int priority;
-    bool isPath = false;
-};
-
 // returns cost between two nodes (edge on a graph)
 int getCost(const TileMap& tileMap, const Node& a, const Node& b) {
+    if (tileMap.isOpaque(a.pos.x, a.pos.y))
+        return 1000;
     if (tileMap.isOpaque(b.pos.x, b.pos.y))
         return 1000;
     return 1;
@@ -97,6 +81,10 @@ void Character::moveTowards(const TileMap& tileMap, sf::Vector2f target) {
         direction = 1;
 }
 
+int hashPos(const TileMap& tileMap, sf::Vector2i pos) {
+    return (pos.x / 32) + (pos.y / 32) * tileMap.mapWidth;
+}
+
 void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
     // reset path
     while (pathHead != nullptr) {
@@ -109,18 +97,20 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
     // adapted from https://www.redblobgames.com/pathfinding/a-star/introduction.html
 
     std::list<Node*> allNodes;
+    std::unordered_map<int, bool> explored;
 
     // create frontier priority queue
     std::priority_queue<Node*, std::vector<Node*>, NodeComparison> frontier;
     // add start node;
-    Node* start = new Node(Utils::snapToTile(getPosition()), nullptr, 0, 0);
+    Node* start = new Node(Utils::snapToTile(getPosition() + sf::Vector2f({16.f, 16.f})), nullptr, 0, 0);
     frontier.push(start);
     allNodes.push_back(start);
     //std::cout << "start pos: (" << start->pos.x << ", " << start->pos.y << ')' << std::endl;
     // go through frontier nodes until empty
-    while (!frontier.empty() && frontier.size()<=200 && frontier.top()->cost <= 2000) {
+    while (!frontier.empty() && frontier.size() <= 300) {
         Node& cur = *frontier.top(); // get current node from best candidate
         frontier.pop();
+
         /*std::cout << "exploring: (" << cur.pos.x << ", " << cur.pos.y << ") P: " << cur.priority
             << ", T: (" << target.x << ", " << target.y << ") " << std::endl;*/
 
@@ -137,9 +127,18 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
         neighbors.push_back({ cur.pos + sf::Vector2i({ -32, 0 }), &cur, 0, 99 }); // add left node
         neighbors.push_back({ cur.pos + sf::Vector2i({ 0, 32 }), &cur, 0, 99 }); // add right node
         for (Node& next : neighbors) {
+            // check to see if already explored
+            int hashKey = hashPos(tileMap, next.pos);
+            auto itr = explored.find(hashKey);
+            if (itr == explored.end())
+                explored[hashKey] = true;
+            else
+                continue;
+
             int newCost = cur.cost + getCost(tileMap, cur, next);
             if (next.cost == 0 || newCost < next.cost) { // if next is new node or new path is less expensive than old path to next
                 Node* newNode = new Node(next.pos, next.parent, newCost, newCost + heuristic(target, next));
+
                 frontier.push(newNode);
                 allNodes.push_back(newNode);
             }

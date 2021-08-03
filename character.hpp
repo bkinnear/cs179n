@@ -49,8 +49,26 @@ public:
 	// timer to see if path needs to be recalced
 	sf::Clock pathClock;
 
-private:
-	Node* pathHead = nullptr;
+//private:
+	Node* pathHead = nullptr; // TODO MAKE THIS PRIVATE
+};
+
+// node for use in path finding // TODO move to character.cpp
+struct Node {
+	Node::Node(const sf::Vector2i& pos, Node* parent, int cost, int priority) :
+		pos(pos),
+		parent(parent),
+		cost(cost),
+		priority(priority)
+	{}
+
+	sf::Vector2i pos;
+
+	Node* parent;
+
+	int cost;
+	int priority;
+	bool isPath = false;
 };
 
 #endif

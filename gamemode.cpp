@@ -1141,6 +1141,28 @@ void GameMode::renderEnemies()
 		enemy.animateFrame();
 		gwindow.draw(enemy);
 
+		if (enemy.isOnPath()) {
+			sf::CircleShape sh;
+			sh.setFillColor(sf::Color::Green);
+			sh.setPosition(enemy.getPosition() + sf::Vector2f({ 9.f, -20.f }));
+			sh.setRadius(4);
+			sh.setOutlineColor(sf::Color::Black);
+			sh.setOutlineThickness(1.f);
+			gwindow.draw(sh);
+
+			sf::RectangleShape sh2;
+			sh2.setFillColor(sf::Color::Transparent);
+			sh2.setOutlineColor(sf::Color::Blue);
+			sh2.setOutlineThickness(1.f);
+			sh2.setSize({ 32, 32 });
+			Node* pNode = enemy.pathHead;
+			while (pNode != nullptr) {
+				sh2.setPosition(sf::Vector2f(pNode->pos));
+				gwindow.draw(sh2);
+				pNode = pNode->parent;
+			}
+		}
+
 		// draw the HP bar
 		sf::RectangleShape bar1({ 26.f, 6.f });
 		bar1.setFillColor(sf::Color::Black);

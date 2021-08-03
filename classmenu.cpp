@@ -35,7 +35,7 @@ ClassMenu::ClassMenu(Game& game) :
 	sprSlasherButton.setPosition(320.f, 282.f);
 
 	sprEngineerButton.create(createTexture("res/class_engineer_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprEngineerButton.setPosition(320.f, 282.f);
+	sprEngineerButton.setPosition(320.f, 362.f);
 }
 
 ClassMenu::~ClassMenu() {
