@@ -9,8 +9,10 @@ public:
 		Character(texture, {0, 0, 32, 32}, 4)
 	{};
 
-	// tick used to determine when to update NCP position
-	unsigned updateTick = 0;
+	// position that ally is moving towards
+	sf::Vector2f moveTarget;
+	
+	// tick for when ally can attack again
 	unsigned attackTick = 0;
 
 	// range at which NPC can engage enemies
@@ -18,9 +20,6 @@ public:
 
 	// whether NPC is moving to target position
 	bool moving = false;
-
-	// position NPC will move to
-	sf::Vector2f moveTarget;
 };
 
 #endif
