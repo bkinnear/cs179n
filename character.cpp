@@ -6,12 +6,15 @@
 #include <list>
 #include <iostream>
 
+// max distance for pathing (in tiles)
+#define MAX_DIST 100
+
 // returns cost between two nodes (edge on a graph)
 int getCost(const TileMap& tileMap, const Node& a, const Node& b) {
     if (tileMap.isOpaque(a.pos.x, a.pos.y))
-        return 1000;
+        return MAX_DIST;
     if (tileMap.isOpaque(b.pos.x, b.pos.y))
-        return 1000;
+        return MAX_DIST;
     return 1;
 }
 
@@ -107,7 +110,7 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
     allNodes.push_back(start);
     //std::cout << "start pos: (" << start->pos.x << ", " << start->pos.y << ')' << std::endl;
     // go through frontier nodes until empty
-    while (!frontier.empty() && frontier.size() <= 300) {
+    while (!frontier.empty() && frontier.size() <= 300 && frontier.top()->cost <= MAX_DIST) {
         Node& cur = *frontier.top(); // get current node from best candidate
         frontier.pop();
 
