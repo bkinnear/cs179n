@@ -698,7 +698,7 @@ bool GameMode::handleEvents() {
 			proj.speed = 12;
 			proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 			proj.setRotation(proj.direction);
-			proj.damage = inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1);
+			proj.damage = inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * (int)floor(std::max(1.5f * player.isRage, 1.f));
 		}
 		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
 			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
@@ -1300,7 +1300,7 @@ void GameMode::slasher_warcry() {
 void GameMode::slasher_rage() {
 	onCoolDown3 = true;
 
-	player.isDeadEye = true;
+	player.isRage = true;
 	player.speed = 5;
 
 	abilityTimer3.restart();
