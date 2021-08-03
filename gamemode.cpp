@@ -1210,8 +1210,8 @@ void GameMode::updateEnemies(int type) {
 			enemy.findPath(tileMap, Utils::snapToTile(enemy.attackTarget->getPosition()+PLAYER_OFFSET));
 		}		
 
-		const sf::Vector2f& targetPosition = enemy.attackTarget->getPosition();
-		const sf::Vector2f& enemyPosition = enemy.getPosition();
+		sf::Vector2f targetPosition = enemy.attackTarget->getPosition();
+		sf::Vector2f enemyPosition = enemy.getPosition();
 
 		int atkDist;
 

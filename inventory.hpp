@@ -10,7 +10,7 @@
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, health_pack, ammo_crate, , barrel, shield };
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, health_pack, ammo_crate, barrel, shield };
 
 	// type of item
 	type itemType = type::null;
