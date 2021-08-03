@@ -23,6 +23,7 @@ private:
 	AnimSprite sprMedicButton;
 	AnimSprite sprAssaultButton;
 	AnimSprite sprSlasherButton;
+	AnimSprite sprEngineerButton;
 };
 
 #endif
