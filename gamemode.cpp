@@ -595,6 +595,8 @@ bool GameMode::handleEvents() {
 				case PlayerClass::ASSAULT:
 					if (!onCoolDown2) {
 						assault_grenade();
+						shotSound.setBuffer(grenadeShotBuffer);
+						shotSound.play();
 						std::cout << "Assault Ability - Grenade" << std::endl;
 					}
 					else {
