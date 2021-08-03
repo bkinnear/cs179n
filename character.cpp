@@ -34,7 +34,7 @@ int getCost(const TileMap& tileMap, const Node& a, const Node& b) {
 // returns priority of node depending on distance from target
 int heuristic(const sf::Vector2i& target, const Node& node) {
     // manhattan distance on a square grid
-    return abs(target.x - node.pos.x) + abs(target.y - node.pos.y);
+    return (abs(target.x - node.pos.x) + abs(target.y - node.pos.y))/32;
 }
 
 // A* Node comparison
