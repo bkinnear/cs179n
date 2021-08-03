@@ -100,8 +100,7 @@ protected:
 	sf::Sound zombieSound;
 
 	// FPS counter
-	std::vector<float> fpsTimes;
-	sf::Clock fpsTimer;
+	unsigned fpsTick;
 	sf::Clock fpsClock;
 	sf::Text fpsCounter;
 
@@ -212,6 +211,8 @@ protected:
 	void slasher_smash();
 	void slasher_warcry();
 	void slasher_rage();
+
+	bool debugging = false;
 
 private:
 	int type; //1 - Endless, 2 - Survival

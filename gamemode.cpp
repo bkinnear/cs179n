@@ -197,7 +197,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	fpsCounter.setFillColor(sf::Color(0x00EE00FF));
 	fpsCounter.setOutlineColor(sf::Color(0x000000FF));
 	fpsCounter.setOutlineThickness(2.f);
-	fpsTimes.reserve(65);
+	fpsTick = 0;
 
 	// load item details shape (the box behind the text)
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
@@ -712,7 +712,14 @@ bool GameMode::handleEvents() {
 				}
 				break;
 			case sf::Keyboard::F1:
-				std::cout << "Do debug stuff here" << std::endl;
+				std::cout << "Debug mode ";
+				debugging = !debugging;
+				if (debugging)
+					std::cout << "on";
+				else
+					std::cout << "off";
+				
+				std::cout << std::endl;
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
@@ -1000,20 +1007,12 @@ void GameMode::logic()
 	else
 		ammoCount.setString(std::to_string(inventory.getRoundsLeft()) + "/" + std::to_string(inventory.getNumItem(inventory.getWielded().getAmmoType())));
 
-
-
-	// set FPS for this tick
-	float currentTime = fpsClock.restart().asSeconds();
-	float fps = 1.f / currentTime;
-	fpsTimes.push_back(fps);
-	if (fpsTimer.getElapsedTime().asSeconds() >= .2f) {
-		float fpsAvg = 0;
-		for (float i : fpsTimes)
-			fpsAvg += i;
-		fpsAvg /= fpsTimes.size();
-		fpsCounter.setString("FPS: " + std::to_string((int)fpsAvg));
-		fpsTimer.restart();
-		fpsTimes.resize(0);
+	// increment frames in fpsTick
+	fpsTick++;
+	if (fpsClock.getElapsedTime().asSeconds() >= .99f) {
+		fpsCounter.setString("FPS: " + std::to_string(fpsTick));
+		fpsClock.restart();
+		fpsTick = 0;
 	}
 
 	inventory.tick();
@@ -1141,25 +1140,27 @@ void GameMode::renderEnemies()
 		enemy.animateFrame();
 		gwindow.draw(enemy);
 
-		if (enemy.isOnPath()) {
-			sf::CircleShape sh;
-			sh.setFillColor(sf::Color::Green);
-			sh.setPosition(enemy.getPosition() + sf::Vector2f({ 9.f, -20.f }));
-			sh.setRadius(4);
-			sh.setOutlineColor(sf::Color::Black);
-			sh.setOutlineThickness(1.f);
-			gwindow.draw(sh);
+		if (debugging) {
+			if (enemy.isOnPath()) {
+				sf::CircleShape sh;
+				sh.setFillColor(sf::Color::Green);
+				sh.setPosition(enemy.getPosition() + sf::Vector2f({ 9.f, -20.f }));
+				sh.setRadius(4);
+				sh.setOutlineColor(sf::Color::Black);
+				sh.setOutlineThickness(1.f);
+				gwindow.draw(sh);
 
-			sf::RectangleShape sh2;
-			sh2.setFillColor(sf::Color::Transparent);
-			sh2.setOutlineColor(sf::Color::Blue);
-			sh2.setOutlineThickness(1.f);
-			sh2.setSize({ 32, 32 });
-			Node* pNode = enemy.pathHead;
-			while (pNode != nullptr) {
-				sh2.setPosition(sf::Vector2f(pNode->pos));
-				gwindow.draw(sh2);
-				pNode = pNode->parent;
+				sf::RectangleShape sh2;
+				sh2.setFillColor(sf::Color::Transparent);
+				sh2.setOutlineColor(sf::Color::Blue);
+				sh2.setOutlineThickness(1.f);
+				sh2.setSize({ 32, 32 });
+				Node* pNode = enemy.pathHead;
+				while (pNode != nullptr) {
+					sh2.setPosition(sf::Vector2f(pNode->pos));
+					gwindow.draw(sh2);
+					pNode = pNode->parent;
+				}
 			}
 		}
 
@@ -1514,7 +1515,6 @@ void GameMode::respawnEnemies() {
 				currentEnemyPresent = currentEnemySpawningCount;
 
 				spawnEnemies(currentEnemySpawningCount);
-				renderEnemies();
 				return;
 			}
 		}
