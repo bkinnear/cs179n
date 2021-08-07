@@ -125,6 +125,17 @@ struct Item {
 			return -1;
 		}
 	}
+
+	int getMeleeDelayTime() const {
+		switch (itemType) {
+		case type::MP5:
+			return 75;
+		case type::M4:
+			return 150;
+		default:
+			return -1;
+		}
+	}
 };
 
 sf::Vector2i getItemTexOffset(Item::type type); //declared here because inventory.cpp has an inline call, but endless.cpp needs to use it
@@ -181,6 +192,8 @@ public:
 	 * "uses" ammo if relevant
 	*/
 	bool useWielded();
+
+	bool useWieldedMelee();
 
 	/* advance all ticks
 	*/

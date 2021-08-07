@@ -223,6 +223,29 @@ bool Inventory::useWielded() {
 	}
 }
 
+bool Inventory::useWieldedMelee() {
+	switch (wielded.itemType) {
+	case Item::type::MP5:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	case Item::type::M4:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	default:
+		return false; // Return false, not wielding an item that can be used
+	}
+}
+
 void Inventory::tick() {
 	if (weaponWaitTick > 0)
 		weaponWaitTick--;

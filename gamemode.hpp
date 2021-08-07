@@ -86,9 +86,11 @@ protected:
 	sf::SoundBuffer mp5ReloadBuffer;
 	sf::SoundBuffer grenadeShotBuffer;
 	sf::SoundBuffer grenadeExplodeBuffer;
+	sf::SoundBuffer meleeSoundBuffer;
 	sf::Sound reloadSound;
 	sf::Sound grenadeSound;
 	sf::Sound shotSound;
+	sf::Sound meleeSound;
 
 	// enemies
 	std::list<Enemy> enemies;
