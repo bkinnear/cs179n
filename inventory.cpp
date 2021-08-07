@@ -241,6 +241,22 @@ bool Inventory::useWieldedMelee() {
 		}
 		else
 			return false;
+	case Item::type::dagger:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	case Item::type::baseball_bat:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
 	default:
 		return false; // Return false, not wielding an item that can be used
 	}

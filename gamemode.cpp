@@ -1332,7 +1332,7 @@ void GameMode::spawnItems() {
 	//sf::Sprite& spr;
 	for (int i = 0; i < numItems; ++i) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 7;//randomly generate what item to spawn
+		int randomItem = rand() % 9;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1354,6 +1354,12 @@ void GameMode::spawnItems() {
 			break;
 		case 6:
 			itemType = Item::type::ammo_crate;
+			break;
+		case 7:
+			itemType = Item::type::dagger;
+			break;
+		case 8:
+			itemType = Item::type::baseball_bat;
 			break;
 		}
 		sf::Vector2f pos;
