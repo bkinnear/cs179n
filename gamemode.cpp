@@ -64,7 +64,7 @@ Item::type getLootItem(Item::type type) {
 	return type;
 }
 
-GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
+GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, bool isLoadCall):
 	State(game),
 	type(type),
 	player(playerClass),
@@ -219,12 +219,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	inventory.addItem(Item::type::MP5, 1);
 	inventory.addItem(Item::type::ammo_9mm, 95);
 
-	// TODO delegate to children classes
-	if (type == 1)
-		GameMode::spawnEnemies(defaultEnemySpawningCount);
-	else if (type == 2)
-		GameMode::spawnEnemies(currentEnemySpawningCount);
-
 	GameMode::spawnItems();
 
 	// add ally
@@ -257,6 +251,31 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	grenadesNum.setColor(sf::Color::Black);
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+
+	if (isLoadCall)
+	{
+		if (type == 1)
+		{
+			player.setPosition(gameLoadMeta.endlessMeta.playerPosX, gameLoadMeta.endlessMeta.playerPosY);
+		}
+		else if(type == 2)
+		{
+			player.setPosition(gameLoadMeta.survivalMeta.playerPosX, gameLoadMeta.survivalMeta.playerPosY);
+			currentLevel = gameLoadMeta.survivalMeta.currentLevel;
+			currentEnemySpawningCount = (currentLevel * 2) + 1;
+			currentEnemyPresent = currentEnemySpawningCount;
+			GameMode::spawnEnemies(currentEnemySpawningCount);
+		}
+	}
+	else
+	{
+		// TODO delegate to children classes
+		if (type == 1)
+			GameMode::spawnEnemies(defaultEnemySpawningCount);
+		else if (type == 2)
+			GameMode::spawnEnemies(currentEnemySpawningCount);
+	}
+	
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -453,7 +472,7 @@ void GameMode::updateCooldowns() {
 bool GameMode::handleEvents() {
 	// handle events
 	sf::Event e;
-	while (game.window.pollEvent(e)) {
+	while (!gamestateChange && game.window.pollEvent(e)) {
 		switch (e.type) {
 		case sf::Event::Closed:
 			// delete this gamestate
@@ -724,9 +743,9 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::F2:
 				// restarts the map
 				if (type == 1)
-					game.setState(new GameMode(1, game, player.playerClass));
+					game.setState(new GameMode(1, game, player.playerClass, gameMeta, false));
 				else if (type == 2)
-					game.setState(new GameMode(2, game, player.playerClass));
+					game.setState(new GameMode(2, game, player.playerClass, gameMeta, false));
 				delete this;
 				return false;
 				break;
@@ -735,6 +754,31 @@ bool GameMode::handleEvents() {
 				game.setState(new MenuState(game));
 				delete this;
 				return false;
+				break;
+			case sf::Keyboard::L://Load game
+			{
+				if (!isLoadInvoked) // Invoke loading only once
+				{
+					isLoadInvoked = true; 
+					loadGame();
+				}
+			}
+				break;
+			case sf::Keyboard::K://Save Game
+			{
+				if (type == 1)//Endless Meta save
+				{
+					gameMeta.endlessMeta.playerPosX = player.getPosition().x;
+					gameMeta.endlessMeta.playerPosY = player.getPosition().y;
+				}
+				else if (type == 2)//Survival Meta save
+				{
+					gameMeta.survivalMeta.currentLevel = currentLevel;
+					gameMeta.survivalMeta.playerPosX = player.getPosition().x;
+					gameMeta.survivalMeta.playerPosY = player.getPosition().y;
+				}
+				saveGame();
+			}
 				break;
 			}
 			break;
@@ -814,7 +858,11 @@ bool GameMode::handleEvents() {
 			}
 		}
 	}
-
+	if (gamestateChange)
+	{
+		gamestateChange = false;
+		return false;
+	}
 	// tell game state to continue
 	return true;
 }
@@ -1624,4 +1672,75 @@ void GameMode::renderAllies() {
 			gwindow.draw(bar2);
 		}
 	}
+}
+
+
+void GameMode::loadGame()
+{
+	FILE* readFile;
+
+	char* fileNameChar = const_cast<char*>(metaFileName.c_str());
+	readFile = fopen(fileNameChar, "r");
+
+	if (readFile == NULL)
+	{
+		std::cout << "Cannot open meta file" << "\n";
+		return;
+	}
+	struct GameMeta loadMeta;
+	while (fread(&loadMeta, sizeof(struct GameMeta), 1, readFile))
+	{
+		gameMeta.survivalMeta.currentLevel = loadMeta.survivalMeta.currentLevel;
+		gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
+		gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
+
+		gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
+		gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
+
+		initGame();
+		std::cout << "Survival Level = " << gameMeta.survivalMeta.currentLevel << " & Player X = " << gameMeta.survivalMeta.playerPosX << " & Player Y = " << gameMeta.survivalMeta.playerPosY << "\n";
+		std::cout << "Endless Player X = " << gameMeta.endlessMeta.playerPosX << " & Player Y = " << gameMeta.endlessMeta.playerPosY << "\n";
+	}
+	fclose(readFile);
+}
+
+void GameMode::initGame()
+{
+	gamestateChange = true;
+	if (type == 1)//Start a new endless game state with the saved properties
+	{
+		game.setState(new GameMode(1, game, player.playerClass, gameMeta, true));
+	}
+	else if (type == 2)//Start a new endless game state with the saved properties
+	{
+		game.setState(new GameMode(2, game, player.playerClass, gameMeta, true));
+	}
+	delete this;
+	return;
+}
+
+void GameMode::saveGame()
+{
+	FILE* writeFile;
+
+	char* fileNameChar = const_cast<char*>(metaFileName.c_str());
+	writeFile = fopen(fileNameChar, "w");
+
+	if (writeFile == NULL)
+	{
+		std::cout << "Cannot open meta file" << "\n";
+		return;
+	}
+	fwrite(&gameMeta, sizeof(struct GameMeta), 1, writeFile);
+	if (fwrite != 0)
+	{
+		std::cout << "Successfully Saved!" << "\n";
+		isLoadInvoked = false;
+	}
+	else
+	{
+		std::cout << "Error in Saving" << "\n";
+	}
+	fclose(writeFile);
+
 }
