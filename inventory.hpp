@@ -62,7 +62,7 @@ struct Item {
 		case type::medkit:
 			return "Medkit. Used for healing (+50).";
 		case type::health_pack:
-			return "Health Pack. Used for minor healing (+10).";
+			return "Health Pack. Used for minor healing (+20).";
 		case type::ammo_crate:
 			return "Ammo Crate. Used to replenish ammunition";
 		case type::dagger:

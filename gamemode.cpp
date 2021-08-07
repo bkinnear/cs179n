@@ -795,8 +795,41 @@ bool GameMode::handleEvents() {
 				// RMB pressed
 				// 
 				// equip item
-				if (showInventory)
-					inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+				if (showInventory) {
+					//using switch to enable the usage of non-weapon items
+					switch (inventory.getItemAt(winMousePos.x, winMousePos.y)->itemType) {
+						case Item::type::medkit:
+							if (player.health == 100) {
+								std::cout << "Player already at max health." << std::endl;
+								break;
+							}
+							else if (player.health < 50) {
+								player.health += 50;
+							}
+							else {
+								player.health = 100;
+							}
+							inventory.removeItem(Item::type::medkit, 1);
+							break;
+						case Item::type::health_pack:
+							if (player.health == 100) {
+								std::cout << "Player already at max health." << std::endl;
+								break;
+							}
+							else if (player.health < 80) {
+								player.health += 20;
+							}
+							else {
+								player.health = 100;
+							}
+							inventory.removeItem(Item::type::health_pack, 1);
+							break;
+						default:
+							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+							break;
+
+					}
+				}
 
 				break;
 			}
