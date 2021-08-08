@@ -1262,9 +1262,9 @@ void GameMode::updateEnemies(int type) {
 
 			// change texture depending on enemy direction
 			if (enemy.direction == 0)
-				enemy.setTexture(texEnemyLeft);
-			else
 				enemy.setTexture(texEnemyRight);
+			else
+				enemy.setTexture(texEnemyLeft);
 		}
 		else
 		{
@@ -1481,7 +1481,8 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 
 	for (int i = 0;i < noOfEnemies;i++)
 	{
-		Enemy enemy;
+		enemies.push_back(Enemy());
+		Enemy& enemy = enemies.back();
 		enemy.hitRate = 15;
 		enemy.speed = 3;
 		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
@@ -1493,7 +1494,6 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 			if (tileMap.areaClear(enemy, 0, 0))
 				break;
 		}
-		enemies.push_back(enemy);
 	}
 }
 

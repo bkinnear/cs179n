@@ -2,6 +2,7 @@
 #define CHARACTER_H_
 
 #include <queue>
+#include <future>
 
 #include "anim.hpp"
 
@@ -24,8 +25,10 @@ public:
 
 	void moveOnPath(const TileMap& tileMap);
 	void moveTowards(const TileMap& tileMap, sf::Vector2f target);
+	// non blocking function to start finding new path to a target
 	void findPath(const TileMap& tileMap, sf::Vector2i target);
-	bool isOnPath() const { return (pathHead != nullptr); };
+	// updates to latest path and returns if path exists
+	bool isOnPath();
 
 	// character health
 	int health = 100;
@@ -49,8 +52,13 @@ public:
 	// timer to see if path needs to be recalced
 	sf::Clock pathClock;
 
-//private:
-	Node* pathHead = nullptr; // TODO MAKE THIS PRIVATE
+	Node* pathHead = nullptr; // TODO MAKE THIS PRIVATE WHEN NO LOGNER NEEDED FOR DEBUG
+
+private:
+	std::future<Node*> nextPathHead;
+
+	// non-blocking function to check to see if new path is available
+	void updatePath();
 };
 
 // node for use in path finding // TODO move to character.cpp
