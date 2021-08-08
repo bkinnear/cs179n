@@ -124,8 +124,7 @@ void Character::updatePath() {
 
 void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {    
     if (!nextPathHead.valid()) {
-        // we are not currently finding new path
-        std::cout << "getting new path" << std::endl;
+        // we are not currently finding new path or storing old path result
 
         // get the start position of charcter
         sf::Vector2i start = Utils::snapToTile(getPosition() + sf::Vector2f({ 16.f, 16.f }));
