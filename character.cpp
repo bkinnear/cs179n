@@ -106,18 +106,12 @@ void Character::updatePath() {
 
             pathHead = nextPathHead.get();
 
-            /*
-            // ignore head node if further from target than current position
-            // TODO review
-            float distToTarget = Utils::pointDistance(getPosition(), { (float)target.x, (float)target.y });
-            float distToHead;
-            do {
-                distToHead = Utils::pointDistance(sf::Vector2f(pathHead->pos), { (float)target.x, (float)target.y });
-                Node* oldHead = pathHead;
-                pathHead = pathHead->parent;
-                delete oldHead;
-            } while (pathHead != nullptr && distToHead > distToTarget);
-            */
+            // delete the first head for smoother path adoption
+            if (pathHead) {
+                Node* parent = pathHead->parent;
+                delete pathHead;
+                pathHead = parent;
+            }
         }
     }
 }
