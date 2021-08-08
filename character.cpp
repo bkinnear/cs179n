@@ -9,6 +9,8 @@
 // max distance for pathing (in tiles)
 #define MAX_DIST 100
 
+Node* createPath(const TileMap* tileMap, sf::Vector2i start, sf::Vector2i target);
+
 // returns cost between two nodes (edge on a graph)
 int getCost(const TileMap& tileMap, const Node& a, const Node& b) {
     if (tileMap.isOpaque(a.pos.x, a.pos.y))
@@ -34,11 +36,13 @@ public:
 
 void Character::moveOnPath(const TileMap& tileMap) {
     // check for path to follow
-    if (!pathHead)
-        return;
+    if (!isOnPath())
+            return;
+
+    Node* head = pathHead;
     
     // find delta between next path node and current position
-    sf::Vector2f delta = sf::Vector2f(pathHead->pos) - getPosition();
+    sf::Vector2f delta = sf::Vector2f(head->pos) - getPosition();
     float len = sqrt(powf(delta.x, 2) + powf(delta.y, 2));
     sf::Vector2f moveVector = sf::Vector2f(delta.x / len, delta.y / len);
 
@@ -58,9 +62,8 @@ void Character::moveOnPath(const TileMap& tileMap) {
     // reached node in path, move to next node
     if (len <= 2) {
         //std::cout << "reached node. New pathhead: " << pathHead->parent << std::endl;
-        Node* oldHead = pathHead;
-        pathHead = pathHead->parent;
-        delete oldHead;
+        pathHead = head->parent;
+        delete head;
     }
 }
 
@@ -88,13 +91,58 @@ int hashPos(const TileMap& tileMap, sf::Vector2i pos) {
     return (pos.x / 32) + (pos.y / 32) * tileMap.mapWidth;
 }
 
-void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
-    // reset path
-    while (pathHead != nullptr) {
-        Node* parent = pathHead->parent;
-        delete pathHead;
-        pathHead = parent;
+void Character::updatePath() {
+    std::cout << "updating path" << std::endl;
+    // check if new path available
+    if (nextPathHead.valid()) {
+        std::cout << "new path adopted" << std::endl;
+        if (nextPathHead.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
+            // new path is available
+            
+            // reset path
+            while (pathHead != nullptr) {
+                Node* parent = pathHead->parent;
+                delete pathHead;
+                pathHead = parent;
+            }
+
+            pathHead = nextPathHead.get();
+        }
     }
+
+    /*
+    // ignore head node if further from target than current position
+    // TODO review
+    float distToTarget = Utils::pointDistance(getPosition(), { (float)target.x, (float)target.y });
+    float distToHead;
+    do {
+        distToHead = Utils::pointDistance(sf::Vector2f(pathHead->pos), { (float)target.x, (float)target.y });
+        Node* oldHead = pathHead;
+        pathHead = pathHead->parent;
+        delete oldHead;
+    } while (pathHead != nullptr && distToHead > distToTarget);
+    */
+}
+
+void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {    
+    if (!nextPathHead.valid()) {
+        // we are not currently finding new path
+        std::cout << "getting new path" << std::endl;
+
+        // get the start position of charcter
+        sf::Vector2i start = Utils::snapToTile(getPosition() + sf::Vector2f({ 16.f, 16.f }));
+        // create and run new async path finding task
+        nextPathHead = std::async(createPath, &tileMap, start, target);
+    }
+}
+
+bool Character::isOnPath() {
+    updatePath();
+    return (pathHead != nullptr);
+}
+
+Node* createPath(const TileMap* tileMap, sf::Vector2i start, sf::Vector2i target) {
+    Node* head = nullptr;
 
     // A* algorithm
     // adapted from https://www.redblobgames.com/pathfinding/a-star/introduction.html
@@ -105,21 +153,20 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
     // create frontier priority queue
     std::priority_queue<Node*, std::vector<Node*>, NodeComparison> frontier;
     // add start node;
-    Node* start = new Node(Utils::snapToTile(getPosition() + sf::Vector2f({16.f, 16.f})), nullptr, 0, 0);
-    frontier.push(start);
-    allNodes.push_back(start);
+    Node* startNode = new Node(start, nullptr, 0, 0);
+    frontier.push(startNode);
+    allNodes.push_back(startNode);
     //std::cout << "start pos: (" << start->pos.x << ", " << start->pos.y << ')' << std::endl;
     // go through frontier nodes until empty
     while (!frontier.empty() && frontier.size() <= 300 && frontier.top()->cost <= MAX_DIST) {
         Node& cur = *frontier.top(); // get current node from best candidate
         frontier.pop();
 
-        /*std::cout << "exploring: (" << cur.pos.x << ", " << cur.pos.y << ") P: " << cur.priority
-            << ", T: (" << target.x << ", " << target.y << ") " << std::endl;*/
+        //std::cout << "exploring: (" << cur.pos.x << ", " << cur.pos.y << ") P: " << cur.priority << ", T: (" << target.x << ", " << target.y << ") " << std::endl;
 
         // set path if current node is on target position
         if (cur.pos == target) {
-            pathHead = &cur;
+            head = &cur;
             break;
         }
 
@@ -131,14 +178,14 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
         neighbors.push_back({ cur.pos + sf::Vector2i({ 0, 32 }), &cur, 0, 99 }); // add right node
         for (Node& next : neighbors) {
             // check to see if already explored
-            int hashKey = hashPos(tileMap, next.pos);
+            int hashKey = hashPos(*tileMap, next.pos);
             auto itr = explored.find(hashKey);
             if (itr == explored.end())
                 explored[hashKey] = true;
             else
                 continue;
 
-            int newCost = cur.cost + getCost(tileMap, cur, next);
+            int newCost = cur.cost + getCost(*tileMap, cur, next);
             if (next.cost == 0 || newCost < next.cost) { // if next is new node or new path is less expensive than old path to next
                 Node* newNode = new Node(next.pos, next.parent, newCost, newCost + heuristic(target, next));
 
@@ -148,20 +195,20 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
         }
     }
 
-    if (!pathHead)
-        return;
-
     // set isPath flag for path nodes and reverse path
     Node* pLastNode = nullptr;
-    for (;;) {
-        pathHead->isPath = true;
-        Node* oldParent = pathHead->parent;
-        pathHead->parent = pLastNode;
-        pLastNode = pathHead;
-        if (oldParent != nullptr)
-            pathHead = oldParent;
-        else
-            break;
+    if (head) {
+        for (;;) {
+            head->isPath = true;
+            Node* nextNode = head->parent;
+            head->parent = pLastNode;
+            pLastNode = head;
+
+            if (nextNode)
+                head = nextNode;
+            else
+                break;
+        }
     }
 
     // delete useless nodes
@@ -170,15 +217,7 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
             delete node;
     }
 
-    // ignore head node if further from target than current position
-    float distCur = Utils::pointDistance(getPosition(), { (float)target.x, (float)target.y });
-    float distHead;
-    do {
-        distHead = Utils::pointDistance(sf::Vector2f(pathHead->pos), { (float)target.x, (float)target.y });
-        Node* oldHead = pathHead;
-        pathHead = pathHead->parent;
-        delete oldHead;
-    } while (distHead > distCur && pathHead != nullptr);
+    return head;
 
     /*std::cout << "Found path to target: \n\t";
     Node* pNode = pathHead;
@@ -194,3 +233,4 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
     }
     std::cout << std::endl;*/
 }
+
