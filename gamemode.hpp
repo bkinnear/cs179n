@@ -200,6 +200,7 @@ protected:
 		{
 			int playerPosX = 0;
 			int playerPosY = 0;
+			std::vector<std::vector<Tile>> currentMap;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -207,6 +208,7 @@ protected:
 			int currentLevel = 1;
 			int playerPosX = 0;
 			int playerPosY = 0;
+			std::vector<std::vector<Tile>> currentMap;
 		}survivalMeta;
 	}gameMeta;
 
