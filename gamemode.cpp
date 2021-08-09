@@ -132,6 +132,11 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 		std::cout << "error loading grenade explode noises" << std::endl;
 	}
 
+	//melee sounds
+	if (!meleeSoundBuffer.loadFromFile("res/melee_impact.wav")) {
+		std::cout << "error loading melee impact noises" << std::endl;
+	}
+
 	//zombie sounds
 	if (!zombieBuffer1.loadFromFile("res/zombie_groan.wav")) {
 		std::cout << "error loading zombie noises" << std::endl;
@@ -718,7 +723,7 @@ bool GameMode::handleEvents() {
 					std::cout << "on";
 				else
 					std::cout << "off";
-				
+
 				std::cout << std::endl;
 				break;
 			case sf::Keyboard::F2:
@@ -735,6 +740,26 @@ bool GameMode::handleEvents() {
 				game.setState(new MenuState(game));
 				delete this;
 				return false;
+				break;
+			case sf::Keyboard::V:
+				//melee
+				if (inventory.useWieldedMelee()) {
+					meleeSound.setBuffer(meleeSoundBuffer);
+					meleeSound.setVolume(50);
+					meleeSound.play();
+					// TODO - check to make sure weapon is ranged
+					projectiles.emplace_back();
+					Projectile& proj = projectiles.back();
+					proj.isMelee = true;
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					// set mask bounds to just the sprite bounds (default)
+					proj.setMaskBounds(proj.getLocalBounds());
+					proj.speed = 25;
+					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					proj.setRotation(proj.direction);
+					proj.damage = inventory.getWielded().getDamage() * 1.5f;
+				}
 				break;
 			}
 			break;
@@ -770,8 +795,41 @@ bool GameMode::handleEvents() {
 				// RMB pressed
 				// 
 				// equip item
-				if (showInventory)
-					inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+				if (showInventory) {
+					//using switch to enable the usage of non-weapon items
+					switch (inventory.getItemAt(winMousePos.x, winMousePos.y)->itemType) {
+						case Item::type::medkit:
+							if (player.health == 100) {
+								std::cout << "Player already at max health." << std::endl;
+								break;
+							}
+							else if (player.health < 50) {
+								player.health += 50;
+							}
+							else {
+								player.health = 100;
+							}
+							inventory.removeItem(Item::type::medkit, 1);
+							break;
+						case Item::type::health_pack:
+							if (player.health == 100) {
+								std::cout << "Player already at max health." << std::endl;
+								break;
+							}
+							else if (player.health < 80) {
+								player.health += 20;
+							}
+							else {
+								player.health = 100;
+							}
+							inventory.removeItem(Item::type::health_pack, 1);
+							break;
+						default:
+							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+							break;
+
+					}
+				}
 
 				break;
 			}
@@ -1063,6 +1121,15 @@ void GameMode::updateProjectiles() {
 			}
 		}
 		else {
+			//check if melee projectile, to shorten distance
+			if (projItr->isMelee) {
+				projItr->meleeRange--;
+				if (projItr->meleeRange == 0) {
+					//melee reached max range
+					projItr = projectiles.erase(projItr);
+					break;
+				}
+			}
 			// check for collision with enemies
 			// TODO - make enemies use a spatial hash so this algo's faster
 			// this algo is currently O(K*N) where K = bullets, N = enemies
@@ -1298,7 +1365,7 @@ void GameMode::spawnItems() {
 	//sf::Sprite& spr;
 	for (int i = 0; i < numItems; ++i) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 7;//randomly generate what item to spawn
+		int randomItem = rand() % 9;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1320,6 +1387,12 @@ void GameMode::spawnItems() {
 			break;
 		case 6:
 			itemType = Item::type::ammo_crate;
+			break;
+		case 7:
+			itemType = Item::type::dagger;
+			break;
+		case 8:
+			itemType = Item::type::baseball_bat;
 			break;
 		}
 		sf::Vector2f pos;
