@@ -244,13 +244,15 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	GameMode::spawnItems();
 
 	// add ally
-	allies.emplace_back(texAllyLeft);
-	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
-	allies.back().setMaskBounds({ 8, 0, 15, 32 });
+	if (type == 1) {
+		allies.emplace_back(texAllyLeft);
+		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+		allies.back().setMaskBounds({ 8, 0, 15, 32 });
+	}
 
 	// Player HUD
-//  
-//HP bar
+	//  
+	//HP bar
 	playerHPBack.setSize({ 200.f, 14.f });
 	playerHPBack.setFillColor(sf::Color::Transparent);
 	playerHPBack.setPosition(60, 725);
@@ -1353,16 +1355,16 @@ void GameMode::updateEnemies(int type) {
 		// this is set to the max range of enemy targetting
 		float minDist = 4096.f; // TODO set this constant somewhere (or make it based on enemy idk)
 		
-		if (type == 1)	
+			
 		// check player
-		{
-			float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
-			if (dist < minDist) {
-				minDist = dist;
-				nearestTarget = &player;
-			}
+		float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
+		if (dist < minDist) {
+			minDist = dist;
+			nearestTarget = &player;
 		}
+
 		//check NPCs
+		if (type == 1)
 		{
 			// find the nearest target for the enemy to attack (allies and player)
 			for (NPC& ally : allies) {
