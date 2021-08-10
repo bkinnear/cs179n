@@ -257,12 +257,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		if (type == 1)
 		{
 			player.setPosition(gameLoadMeta.endlessMeta.playerPosX, gameLoadMeta.endlessMeta.playerPosY);
-			tileMap.setTileMap(gameLoadMeta.endlessMeta.currentMap);
+			//tileMap.setTileMap(gameLoadMeta.endlessMeta.currentMap);
 		}
 		else if(type == 2)
 		{
 			player.setPosition(gameLoadMeta.survivalMeta.playerPosX, gameLoadMeta.survivalMeta.playerPosY);
-			tileMap.setTileMap(gameLoadMeta.survivalMeta.currentMap);
+			//tileMap.setTileMap(gameLoadMeta.survivalMeta.currentMap);
 			currentLevel = gameLoadMeta.survivalMeta.currentLevel;
 			currentEnemySpawningCount = (currentLevel * 2) + 1;
 			currentEnemyPresent = currentEnemySpawningCount;
@@ -772,14 +772,14 @@ bool GameMode::handleEvents() {
 				{
 					gameMeta.endlessMeta.playerPosX = player.getPosition().x;
 					gameMeta.endlessMeta.playerPosY = player.getPosition().y;
-					gameMeta.endlessMeta.currentMap = tileMap.getTileMap();
+					//gameMeta.endlessMeta.currentMap = tileMap.getTileMap();
 				}
 				else if (type == 2)//Survival Meta save
 				{
 					gameMeta.survivalMeta.currentLevel = currentLevel;
 					gameMeta.survivalMeta.playerPosX = player.getPosition().x;
 					gameMeta.survivalMeta.playerPosY = player.getPosition().y;
-					gameMeta.survivalMeta.currentMap = tileMap.getTileMap();
+					//gameMeta.survivalMeta.currentMap = tileMap.getTileMap();
 				}
 				saveGame();
 			}
@@ -1696,12 +1696,13 @@ void GameMode::loadGame()
 		gameMeta.survivalMeta.currentLevel = loadMeta.survivalMeta.currentLevel;
 		gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
 		gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
-		gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
+		//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
 
 		gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
 		gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
-		gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
+		//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
 
+		/*
 		for (std::vector <Tile>& tileMap : gameMeta.survivalMeta.currentMap)
 		{
 			for (Tile& tile : tileMap)
@@ -1710,6 +1711,7 @@ void GameMode::loadGame()
 			}
 			std::cout << "\n";
 		}
+		*/
 		std::cout << "Survival Level = " << gameMeta.survivalMeta.currentLevel << " & Player X = " << gameMeta.survivalMeta.playerPosX << " & Player Y = " << gameMeta.survivalMeta.playerPosY << "\n";
 		std::cout << "Endless Player X = " << gameMeta.endlessMeta.playerPosX << " & Player Y = " << gameMeta.endlessMeta.playerPosY << "\n";
 		
