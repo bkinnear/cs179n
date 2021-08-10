@@ -1,17 +1,12 @@
 #ifndef ENEMY_H_
 #define ENEMY_H_
 
-#include "game.hpp"
-#include "state.hpp"
-#include <Windows.h>
+#include "character.hpp"
 
-class Enemy : public AnimSprite {
+class Enemy : public Character {
 public:
-
-	// sprite movement speed in px per frame
-	int health = 100;
-	int speed;//Endless Mode - 3 || Survival Mode = Dynamically Increasing
-	int hitRate;//Endless Mode - 2 || Survival Mode = Dynamically increasing
+	// speed // Endless Mode - 3 || Survival Mode = Dynamically Increasing from 3
+	int hitRate;//Endless Mode - 15 || Survival Mode = Dynamically increasing from 15
 
 	int attack = -1;
 
@@ -21,5 +16,9 @@ public:
 			attack = 0; //reset attack cooldown
 		}
 	}
+
+	bool isBarrel = false;
+
+	Character* attackTarget = nullptr;
 };
 #endif

@@ -1,4 +1,6 @@
 #include "inventory.hpp"
+#include <iostream>
+#include <algorithm>
 
 // returns inventory slot offset
 inline sf::Vector2f getSlotOffset(unsigned x, unsigned y) {
@@ -11,7 +13,7 @@ inline sf::Vector2f getSlotOffset(unsigned x, unsigned y) {
 }
 
 // returns item texture offset
-inline sf::Vector2i getItemTexOffset(Item::type type) {
+sf::Vector2i getItemTexOffset(Item::type type) {
 	int dx;
 
 	dx = ((int)type - 1) * 48;
@@ -62,17 +64,31 @@ void Inventory::addItem(Item::type type, unsigned num) {
 
 void Inventory::moveItem(unsigned x, unsigned y, unsigned x2, unsigned y2) {
 	// swaps item at <x, y> with item at <x2, y2>
-	Item temp = inventoryGrid[x2][y2];
-	inventoryGrid[x2][y2] = inventoryGrid[x][y];
-	inventoryGrid[x][y] = temp;
+	Item temp = inventoryGrid[y2][x2];
+	inventoryGrid[y2][x2] = inventoryGrid[y][x];
+	inventoryGrid[y][y] = temp;
+}
+
+unsigned Inventory::getNumItem(Item::type type) {
+	// search for item and return number
+	for (unsigned y = 0; y < height; y++)
+		for (unsigned x = 0; x < width; x++)
+			if (inventoryGrid[y][x].itemType == type)
+				return inventoryGrid[y][x].num;
+
+	// if item not found, code will reach here
+	return 0;
 }
 
 void Inventory::removeItem(Item::type type, unsigned num) {
+	if (num == 0)
+		return;
+
 	// search for item
 	for (unsigned y = 0; y < height; y++) {
 		for (unsigned x = 0; x < width; x++) {
 			if (inventoryGrid[y][x].itemType == type) {
-				Item& item = inventoryGrid[x][y];
+				Item& item = inventoryGrid[y][x];
 				if (item.num <= num) {
 					// no items left - set item type to null
 					item.itemType = Item::type::null;
@@ -129,6 +145,11 @@ void Inventory::wieldItemAt(float x, float y) {
 	// unwield if in wielded slot
 	if (sf::FloatRect(241.f, 12.f, 48.f, 48.f).contains(x, y)) {
 		addItem(wielded.itemType, wielded.num);
+		
+		// return ammo in mag to inventory
+		addItem(wielded.getAmmoType(), roundsLeft);
+
+		// set wielded slot to empty
 		wielded = Item();
 	}
 
@@ -147,8 +168,120 @@ void Inventory::wieldItemAt(float x, float y) {
 		Item toWield = inventoryGrid[gridY][gridX];
 		inventoryGrid[gridY][gridX] = Item();
 		addItem(wielded.itemType, wielded.num);
+
 		// wield the item
 		wielded = toWield;
+
+		// reset wielded item variables
+		roundsLeft = 0;
+		weaponWaitTick = -1;
+		weaponReloadTick = -1;
+
+		// automatically reload new weapon
+		reloadWielded();
+	}
+}
+
+const Item& Inventory::getWielded() const {
+	return wielded;
+}
+
+void Inventory::reloadWielded() {
+	// ignore if mag is full
+	if (roundsLeft == wielded.getMagCapacity())
+		return;
+	// ignore if already reloading
+	if (weaponReloadTick >= 0)
+		return;
+
+	weaponReloadTick = wielded.getReloadTime() * 60;
+	weaponReady = false;
+}
+
+int Inventory::getRoundsLeft() const {
+	return roundsLeft;
+}
+
+bool Inventory::useWielded() {
+	switch (wielded.itemType) {
+	case Item::type::MP5:
+	case Item::type::M4:
+		if (weaponReady) {
+			if (roundsLeft == 0) {
+				reloadWielded();
+				return false;
+			}
+			roundsLeft--;
+			weaponReady = false;
+			weaponWaitTick = wielded.getDelayTime();
+			return true;
+		}
+		else
+			return false;
+	default:
+		return false; // Return false, not wielding an item that can be used
+	}
+}
+
+bool Inventory::useWieldedMelee() {
+	switch (wielded.itemType) {
+	case Item::type::MP5:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	case Item::type::M4:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	case Item::type::dagger:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	case Item::type::baseball_bat:
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true;
+		}
+		else
+			return false;
+	default:
+		return false; // Return false, not wielding an item that can be used
+	}
+}
+
+void Inventory::tick() {
+	if (weaponWaitTick > 0)
+		weaponWaitTick--;
+	else if (weaponWaitTick == 0) {
+		// weapon ready to fire again
+		weaponWaitTick = -1; // stop ticking
+		if (weaponReloadTick == -1)
+			weaponReady = true;
+	}
+
+	if (weaponReloadTick > 0)
+		weaponReloadTick--;
+	else if (weaponReloadTick == 0) {
+		// reload weapon
+		weaponReloadTick = -1; // stop ticking
+		int roundsNeeded = wielded.getMagCapacity() - roundsLeft; // rounds needed to "top off" mag
+		int roundsToReload = std::min((int)getNumItem(wielded.getAmmoType()), roundsNeeded); // rounds that will actually be used up
+		removeItem(wielded.getAmmoType(), roundsToReload); // remove rounds being used
+		roundsLeft += roundsToReload; // add rounds to count of rounds in mag
+		weaponReady = true;
 	}
 }
 
