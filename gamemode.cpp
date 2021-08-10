@@ -806,6 +806,26 @@ bool GameMode::handleEvents() {
 				saveGame();
 			}
 				break;
+			case sf::Keyboard::V:
+				//melee
+				if (inventory.useWieldedMelee()) {
+					meleeSound.setBuffer(meleeSoundBuffer);
+					meleeSound.setVolume(50);
+					meleeSound.play();
+					// TODO - check to make sure weapon is ranged
+					projectiles.emplace_back();
+					Projectile& proj = projectiles.back();
+					proj.isMelee = true;
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					// set mask bounds to just the sprite bounds (default)
+					proj.setMaskBounds(proj.getLocalBounds());
+					proj.speed = 25;
+					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					proj.setRotation(proj.direction);
+					proj.damage = inventory.getWielded().getDamage() * 1.5f;
+				}
+				break;
 			}
 			break;
 		case sf::Event::KeyReleased:
