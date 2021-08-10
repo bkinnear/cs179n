@@ -17,27 +17,6 @@
 typedef std::list<std::pair<Item::type, sf::Sprite>>::iterator ItemIterator;
 
 class GameMode : public State {
-public:
-	GameMode(int, Game&, PlayerClass);
-	~GameMode();
-
-	virtual void logic();
-	virtual void render();
-
-	void spawnEnemies(int);
-	void respawnEnemies();
-	void spawnItems();
-	void updateEnemies(int);
-	void renderEnemies();
-
-	bool handleEvents();
-
-	void updateProjectiles();
-
-	
-	
-	void renderAllies();
-	void updateAllies();
 
 protected:
 	// main view target (what it moves towards)
@@ -228,8 +207,55 @@ protected:
 	void slasher_rage();
 
 	bool debugging = false;
+	bool isLoadInvoked = false;
 
-private:
-	int type; //1 - Endless, 2 - Survival
+	struct GameMeta
+	{
+		struct EndlessMeta
+		{
+			int playerPosX = 0;
+			int playerPosY = 0;
+			//std::vector<std::vector<Tile>> currentMap;
+		}endlessMeta;
+
+		struct SurvivalMeta
+		{
+			int currentLevel = 1;
+			int playerPosX = 0;
+			int playerPosY = 0;
+			//std::vector<std::vector<Tile>> currentMap;
+		}survivalMeta;
+	}gameMeta;
+
+	bool gamestateChange = false;
+	std::string metaFileName = "thelastwar.dat";
+	void loadGame();
+	void saveGame();
+	void initGame();
+	private:
+		int type; //1 - Endless, 2 - Survival
+
+public:
+
+	GameMode(int, Game&, PlayerClass, GameMeta, bool);
+	~GameMode();
+
+	virtual void logic();
+	virtual void render();
+
+	void spawnEnemies(int);
+	void respawnEnemies();
+	void spawnItems();
+	void updateEnemies(int);
+	void renderEnemies();
+
+	bool handleEvents();
+
+	void updateProjectiles();
+
+
+
+	void renderAllies();
+	void updateAllies();
 };
 #endif

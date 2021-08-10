@@ -445,3 +445,13 @@ sf::FloatRect TileMap::getTileBounds(float x, float y) const {
 
 	return { tileX * (float)TILE_SIZE, tileY * (float)TILE_SIZE, (float)TILE_SIZE, (float)TILE_SIZE};
 }
+
+std::vector<std::vector<Tile>> TileMap::getTileMap()
+{
+	return map;
+}
+
+void TileMap::setTileMap(std::vector<std::vector<Tile>>& map)
+{
+	this->map = map;
+}

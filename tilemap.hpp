@@ -25,6 +25,9 @@ public:
 	TileMap();
 	TileMap(State& state, unsigned mapWidth, unsigned mapHeight);
 
+	std::vector<std::vector<Tile>> getTileMap();
+	void setTileMap(std::vector<std::vector<Tile>>&);
+
 	// sets tile at (x, y) to type specified
 	void setTile(unsigned x, unsigned y, tileType type);
 

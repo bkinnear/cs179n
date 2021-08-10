@@ -9,7 +9,7 @@
 
 // NOTE: we must call the original constructor and pass it the Game pointer
 SurvivalState::SurvivalState(Game& game, PlayerClass playerClass) :
-	GameMode(2, game, playerClass)
+	GameMode(2, game, playerClass, gameMeta, false)
 {}
 
 
