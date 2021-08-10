@@ -62,6 +62,10 @@ protected:
 	// textures
 	sf::Texture& texPlayerRight;
 	sf::Texture& texPlayerLeft;
+	sf::Texture& texPlayerRightMp5;
+	sf::Texture& texPlayerLeftMp5;
+	sf::Texture& texPlayerRightM4;
+	sf::Texture& texPlayerLeftM4;
 	sf::Texture& texAllyRight;
 	sf::Texture& texAllyLeft;
 	sf::Texture& texDummyRight;
@@ -73,6 +77,8 @@ protected:
 	sf::Texture& texWeaponMP5;
 	sf::Texture& texExplosionSmall;
 	sf::Texture& texExplosionLarge;
+	sf::Texture& texDeadEyeOpen;
+	sf::Texture& texDeadEyeClose;
 	sf::Texture& playerDeath;
 
 	// Music
@@ -110,11 +116,18 @@ protected:
 	// effects
 	Effect* explosionSmall;
 	Effect* explosionLarge;
+	Effect* deadEyeOpen;
+	Effect* deadEyeClose;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
 	sf::SoundBuffer doorClose;
 	sf::Sound doorInteract;
+
+	// engineer sounds
+	sf::SoundBuffer mechNoise;
+	sf::SoundBuffer het_hon;
+	sf::Sound dropTech;
 
 	// dialog GUI
 	int dialogTreeIndex = 0;

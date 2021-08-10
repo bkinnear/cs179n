@@ -17,8 +17,8 @@ public:
 		}
 	}
 
-	Character* attackTarget = nullptr;
-
 	bool isBarrel = false;
+
+	Character* attackTarget = nullptr;
 };
 #endif

@@ -64,13 +64,17 @@ Item::type getLootItem(Item::type type) {
 	return type;
 }
 
-GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
+GameMode::GameMode(int type, Game& game, PlayerClass playerClass) :
 	State(game),
 	type(type),
 	player(playerClass),
 	tileMap(*this, MAP_WIDTH, MAP_HEIGHT),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
+	texPlayerRightMp5(createTexture("res/player_r_mp5_strip.png")),
+	texPlayerLeftMp5(createTexture("res/player_l_mp5_strip.png")),
+	texPlayerRightM4(createTexture("res/player_r_m4_strip.png")),
+	texPlayerLeftM4(createTexture("res/player_l_m4_strip.png")),
 	texAllyRight(createTexture("res/player2_r_strip.png")),
 	texAllyLeft(createTexture("res/player2_l_strip.png")),
 	texDummyRight(createTexture("res/Dummy_stand.png")),
@@ -83,6 +87,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	texWeaponMP5(createTexture("res/mp5.png")),
 	texExplosionSmall(createTexture("res/explosion_small_strip.png")),
 	texExplosionLarge(createTexture("res/explosion_large.png")),
+	texDeadEyeOpen(createTexture("res/deadeye_open.png")),
+	texDeadEyeClose(createTexture("res/deadeye_close.png")),
 	playerIcon(createTexture("res/Player1_display.png")),
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
@@ -157,6 +163,14 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 		std::cout << "error loading close door noises" << std::endl;
 	}
 
+	//dropping tech
+	if (!mechNoise.loadFromFile("res/mechanical_noise.wav")) {
+		std::cout << "error loading mechanical noises" << std::endl;
+	}
+	if (!het_hon.loadFromFile("res/het_hon.wav")) {
+		std::cout << "error loading shield noises" << std::endl;
+	}
+
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 
@@ -208,12 +222,15 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
 	player.setMaskBounds({ 6, 2, 18, 27 });
 	player.speed = 2;
+	
 	// set player class vars
 	chooseClass(playerClass);
 
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
+	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,16,16 }, 6, 12);
+	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,16,16 }, 6, 12);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -257,6 +274,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass):
 	grenadesNum.setColor(sf::Color::Black);
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -373,8 +391,8 @@ void GameMode::updateCooldowns() {
 		if (onCoolDown3) {
 			if (elapsed3.asSeconds() < cooldown3) {
 				elapsed3 = abilityTimer3.getElapsedTime();
-				if (elapsed3.asSeconds() > 5) { //increase damage for 5 seconds
-					player.isDeadEye = false; // turn off deadeye after 5 seconds
+				if (elapsed3.asSeconds() > 10) { //increase damage for 10 seconds
+					player.isDeadEye = false; // turn off deadeye after 10 seconds
 				}
 			}
 			else {
@@ -561,8 +579,10 @@ bool GameMode::handleEvents() {
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
-				reloadSound.setBuffer(mp5ReloadBuffer);
-				reloadSound.play();
+				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() || !inventory.useWielded()) {
+					reloadSound.setBuffer(mp5ReloadBuffer);
+					reloadSound.play();
+				}
 				inventory.reloadWielded();
 				break;
 			case sf::Keyboard::T:
@@ -632,8 +652,6 @@ bool GameMode::handleEvents() {
 				case PlayerClass::ASSAULT:
 					if (!onCoolDown2) {
 						assault_grenade();
-						shotSound.setBuffer(grenadeShotBuffer);
-						shotSound.play();
 						std::cout << "Assault Ability - Grenade" << std::endl;
 					}
 					else {
@@ -793,6 +811,12 @@ bool GameMode::handleEvents() {
 		if (inventory.useWielded()) {
 			shotSound.setBuffer(gunShotBuffer);
 			shotSound.setVolume(50);
+			if (inventory.getWielded().itemType == Item::type::MP5) {
+				shotSound.setPitch(3);
+			}
+			if (inventory.getWielded().itemType == Item::type::M4) {
+				shotSound.setPitch(1);
+			}
 			shotSound.play();
 			// TODO - check to make sure weapon is ranged
 			projectiles.emplace_back();
@@ -944,12 +968,35 @@ void GameMode::logic()
 
 	// update player sprite
 	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.alive) {
+		Item::type weaponType = inventory.getWielded().itemType;
 		if (player.getAnimSpeed() == -1)
 			player.setAnimSpeed(12);
-		if (player.movingLeft)
-			player.setTexture(texPlayerLeft);
-		if (player.movingRight)
-			player.setTexture(texPlayerRight);
+		switch (weaponType) {
+		case Item::type::MP5:
+			if (player.movingLeft) {
+				player.setTexture(texPlayerLeftMp5);
+			}
+			if (player.movingRight) {
+				player.setTexture(texPlayerRightMp5);
+			}
+			break;
+		case Item::type::M4:
+			if (player.movingLeft) {
+				player.setTexture(texPlayerLeftM4);
+			}
+			if (player.movingRight) {
+				player.setTexture(texPlayerRightM4);
+			}
+			break;
+		default:
+			if (player.movingLeft) {
+				player.setTexture(texPlayerLeft);
+			}
+			if (player.movingRight) {
+				player.setTexture(texPlayerRight);
+			}
+			break;
+		}			
 	}
 	else {
 		player.setIndex(0);
@@ -1108,9 +1155,9 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		player.speed = 3;
 		break;
 	case PlayerClass::ASSAULT:
-		cooldown1 = 1; //in seconds
-		cooldown2 = 3;
-		cooldown3 = 5;
+		cooldown1 = 5; 
+		cooldown2 = 10;
+		cooldown3 = 20;
 		player.speed = 3;
 		break;
 	case PlayerClass::SLASHER:
@@ -1120,10 +1167,10 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		player.speed = 3;
 		break;
 	case PlayerClass::ENGINEER:
-		cooldown1 = 1; //in seconds
-		cooldown2 = 3;
-		cooldown3 = 5;
-		player.speed = 3;
+		cooldown1 = 10; 
+		cooldown2 = 15;
+		cooldown3 = 20;
+		player.speed = 2;
 		break;
 	default:
 		std::cout << "no class chosen" << std::endl;
@@ -1173,6 +1220,7 @@ void GameMode::renderEnemies()
 		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
 		gwindow.draw(bar1);
 		gwindow.draw(bar2);
+
 	}
 }
 void GameMode::updateEnemies(int type) {
@@ -1188,7 +1236,16 @@ void GameMode::updateEnemies(int type) {
 		// this is set to the max range of enemy targetting
 		float minDist = 4096.f; // TODO set this constant somewhere (or make it based on enemy idk)
 		
-		if (type == 1)
+		if (type == 1)	
+		// check player
+		{
+			float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
+			if (dist < minDist) {
+				minDist = dist;
+				nearestTarget = &player;
+			}
+		}
+		//check NPCs
 		{
 			// find the nearest target for the enemy to attack (allies and player)
 			for (NPC& ally : allies) {
@@ -1197,18 +1254,12 @@ void GameMode::updateEnemies(int type) {
 					continue;
 
 				float dist = Utils::pointDistance(enemy.getPosition(), ally.getPosition());
-				if (dist < minDist) {
+				float playertoCenter = Utils::pointDistance(player.getPosition(), ally.centerShield);
+				float enemytoCenter = Utils::pointDistance(enemy.getPosition(), ally.centerShield);
+				if (dist < minDist || playertoCenter < enemytoCenter) {
 					minDist = dist;
 					nearestTarget = &ally;
 				}
-			}
-		}	
-		// check player
-		{
-			float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
-			if (dist < minDist) {
-				minDist = dist;
-				nearestTarget = &player;
 			}
 		}
 
@@ -1281,9 +1332,6 @@ void GameMode::updateEnemies(int type) {
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
 					nearestTarget->alive = false;
-					if (nearestTarget->isDummy) {
-						
-					}
 					nearestTarget->setColor(sf::Color(255, 0, 0, 255));
 					std::cout << "target has died" << std::endl;
 				}
@@ -1293,6 +1341,7 @@ void GameMode::updateEnemies(int type) {
 }
 
 void GameMode::spawnItems() {
+
 	//initialize weapon list
 	int numItems = 20; //set to 5 for testing purposes, otherwise set to rand()%3;
 	//sf::Sprite& spr;
@@ -1392,6 +1441,10 @@ void GameMode::assault_grenade() {
 	proj.direction = Utils::pointDirection(player.getPosition(), mousePos);
 	proj.setRotation(proj.direction);
 
+	shotSound.setBuffer(grenadeShotBuffer);
+	shotSound.setPitch(1);
+	shotSound.play();
+
 	abilityTimer2.restart();
 }
 
@@ -1399,6 +1452,7 @@ void GameMode::assault_deadeye() {
 	onCoolDown3 = true;
 
 	player.isDeadEye = true;
+	createEffect(deadEyeOpen, player.getPosition()+sf::Vector2f(10.f, -12.f));
 
 	abilityTimer3.restart();
 }
@@ -1447,9 +1501,15 @@ void GameMode::slasher_rage() {
 void GameMode::engineer_decoy() {
 	onCoolDown1 = true;
 
-	allies.emplace_back(texDummyRight);
-	allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+	dropTech.setBuffer(mechNoise);
+	dropTech.play();
 
+	allies.emplace_back(texDummyRight);
+	if (mousePos.x > player.getPosition().x) {
+		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+	}else
+		allies.back().setPosition(player.getPosition() + sf::Vector2f({ -32.f, 0.f }));
+	
 	allies.back().isDummy = true;
 
 	abilityTimer1.restart();
@@ -1465,6 +1525,9 @@ void GameMode::engineer_barrel() {
 
 void GameMode::engineer_shield() {
 	onCoolDown3 = true;
+
+	dropTech.setBuffer(het_hon);
+	dropTech.play();
 
 	allies.emplace_back(texShield);
 	allies.back().setPosition(player.getPosition() + sf::Vector2f({ -48.f, -48.f}));
@@ -1526,8 +1589,16 @@ void GameMode::updateAllies() {
 		NPC& ally = *allyItr;
 
 		// if ally dead, do nothing
-		if (!ally.alive||ally.isDummy)
+		float playerToShieldCenter = Utils::pointDistance(player.getPosition(), ally.centerShield);
+		if (!ally.alive) {
+			allyItr = allies.erase(allyItr);
+		}
+		else if (ally.isShield && playerToShieldCenter > 80.f) {
+			allyItr = allies.erase(allyItr);
+		}
+		else if (ally.isDummy) {
 			continue;
+		}
 
 		// reset movement target to follow player every n ticks
 		if (ally.pathClock.getElapsedTime().asSeconds() >= 1.f) {
