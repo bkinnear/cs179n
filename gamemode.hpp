@@ -157,7 +157,7 @@ protected:
 
 	//Endless
 	int maximumEnemyCount = 99;
-	int defaultEnemySpawningCount = 3;//Default count
+	int defaultEnemySpawningCount = 10;//Default count
 
 	//Survival
 	int maxLevelCount = 20;

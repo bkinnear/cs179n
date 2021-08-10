@@ -248,6 +248,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		allies.emplace_back(texAllyLeft);
 		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 		allies.back().setMaskBounds({ 8, 0, 15, 32 });
+		allies.emplace_back(texAllyLeft);
+		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
+		allies.back().setMaskBounds({ 8, 0, 15, 32 });
 	}
 
 	// Player HUD
