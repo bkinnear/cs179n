@@ -12,6 +12,9 @@ public:
 
 	bool isGrenade = false;
 
+	bool isMelee = false;
+	int meleeRange = 2;
+
 	sf::Vector2f shotFrom;
 
 	int speed = 15;
