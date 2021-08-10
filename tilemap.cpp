@@ -59,7 +59,7 @@ const tileType building2::array[w][h] =
 const tileType building3::array[w][h] =
 {
 {1, 30, 2, 2, 26,  3},
-{8, 9, 61, 61, 9, 10},
+{8, 9, 51, 51, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
@@ -69,7 +69,7 @@ const tileType building3::array[w][h] =
 const tileType building4::array[w][h] =
 {
 {1, 26, 2, 2, 30, 3},
-{8, 61, 61, 61, 9, 10},
+{8, 51, 51, 51, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
 {8, 9, 9, 9, 9, 10},
