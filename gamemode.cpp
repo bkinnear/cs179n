@@ -142,6 +142,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	if (!meleeSoundBuffer.loadFromFile("res/melee_impact.wav")) {
 		std::cout << "error loading melee impact noises" << std::endl;
 	}
+	if (!meleeSwingBuffer.loadFromFile("res/melee_swing.wav")) {
+		std::cout << "error loading melee swing noises" << std::endl;
+	}
 
 	//zombie sounds
 	if (!zombieBuffer1.loadFromFile("res/zombie_groan.wav")) {
@@ -814,9 +817,9 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::V:
 				//melee
 				if (inventory.useWieldedMelee()) {
-					meleeSound.setBuffer(meleeSoundBuffer);
-					meleeSound.setVolume(50);
-					meleeSound.play();
+					meleeSwing.setBuffer(meleeSwingBuffer);
+					meleeSwing.setVolume(225);
+					meleeSwing.play();
 					// TODO - check to make sure weapon is ranged
 					projectiles.emplace_back();
 					Projectile& proj = projectiles.back();
@@ -1241,6 +1244,11 @@ void GameMode::updateProjectiles() {
 				if (!enemyItr->isColliding(*projItr))
 					continue;
 				// deal damage to enemy
+				if (projItr->isMelee) {
+					meleeSound.setBuffer(meleeSoundBuffer);
+					meleeSound.setVolume(50);
+					meleeSound.play();
+				}
 				enemyItr->health -= projItr->damage;
 				std::cout << "DMG: " << projItr->damage << std::endl;
 
