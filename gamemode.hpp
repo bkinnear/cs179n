@@ -218,6 +218,8 @@ protected:
 			int playerPosX = 0;
 			int playerPosY = 0;
 			//std::vector<std::vector<Tile>> currentMap;
+			int maxScore = 0;
+			int currentScore = 0;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -226,16 +228,23 @@ protected:
 			int playerPosX = 0;
 			int playerPosY = 0;
 			//std::vector<std::vector<Tile>> currentMap;
+			int maxScore = 0;
+			int currentScore = 0;
 		}survivalMeta;
 	}gameMeta;
 
 	bool gamestateChange = false;
 	std::string metaFileName = "thelastwar.dat";
-	void loadGame();
+	void loadGame(bool);
 	void saveGame();
 	void initGame();
 	private:
 		int type; //1 - Endless, 2 - Survival
+
+		int currentEndlessScore = 0;
+		int currentSurvivalScore = 0;
+		int maxEndlessScore = 0;
+		int maxSurvivalScore = 0;
 
 public:
 

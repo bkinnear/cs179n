@@ -288,16 +288,20 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		{
 			player.setPosition(gameLoadMeta.endlessMeta.playerPosX, gameLoadMeta.endlessMeta.playerPosY);
 			//tileMap.setTileMap(gameLoadMeta.endlessMeta.currentMap);
+			currentEndlessScore = gameLoadMeta.endlessMeta.currentScore;
 		}
 		else if(type == 2)
 		{
 			player.setPosition(gameLoadMeta.survivalMeta.playerPosX, gameLoadMeta.survivalMeta.playerPosY);
+			currentSurvivalScore = gameLoadMeta.survivalMeta.currentScore;
 			//tileMap.setTileMap(gameLoadMeta.survivalMeta.currentMap);
 			currentLevel = gameLoadMeta.survivalMeta.currentLevel;
 			currentEnemySpawningCount = (currentLevel * 2) + 1;
 			currentEnemyPresent = currentEnemySpawningCount;
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 		}
+		maxEndlessScore = gameLoadMeta.endlessMeta.maxScore;
+		maxSurvivalScore = gameLoadMeta.survivalMeta.maxScore;
 	}
 	else
 	{
@@ -306,6 +310,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			GameMode::spawnEnemies(defaultEnemySpawningCount);
 		else if (type == 2)
 			GameMode::spawnEnemies(currentEnemySpawningCount);
+		loadGame(false);
+		maxEndlessScore = gameMeta.endlessMeta.maxScore;
+		maxSurvivalScore = gameMeta.survivalMeta.maxScore;
 	}
 	
 }
@@ -792,7 +799,7 @@ bool GameMode::handleEvents() {
 				if (!isLoadInvoked) // Invoke loading only once
 				{
 					isLoadInvoked = true; 
-					loadGame();
+					loadGame(true);
 				}
 			}
 				break;
@@ -803,6 +810,8 @@ bool GameMode::handleEvents() {
 					gameMeta.endlessMeta.playerPosX = player.getPosition().x;
 					gameMeta.endlessMeta.playerPosY = player.getPosition().y;
 					//gameMeta.endlessMeta.currentMap = tileMap.getTileMap();
+					gameMeta.endlessMeta.maxScore = maxEndlessScore;
+					gameMeta.endlessMeta.currentScore = currentEndlessScore;
 				}
 				else if (type == 2)//Survival Meta save
 				{
@@ -810,6 +819,8 @@ bool GameMode::handleEvents() {
 					gameMeta.survivalMeta.playerPosX = player.getPosition().x;
 					gameMeta.survivalMeta.playerPosY = player.getPosition().y;
 					//gameMeta.survivalMeta.currentMap = tileMap.getTileMap();
+					gameMeta.survivalMeta.maxScore = maxSurvivalScore;
+					gameMeta.survivalMeta.currentScore = currentSurvivalScore;
 				}
 				saveGame();
 			}
@@ -1218,6 +1229,14 @@ void GameMode::updateProjectiles() {
 					if (distToProj <= 150) {
 						enemyItr->health -= 120;
 						if (enemyItr->health <= 0) {
+							if (type == 1)
+							{
+								currentEndlessScore += 1;
+							}
+							else if (type == 2)
+							{
+								currentSurvivalScore += 1;
+							}
 							enemyItr = enemies.erase(enemyItr);
 							GameMode::spawnEnemies(1);
 						}
@@ -1259,6 +1278,14 @@ void GameMode::updateProjectiles() {
 
 				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
+					if (type == 1)
+					{
+						currentEndlessScore += 1;
+					}
+					else if (type == 2)
+					{
+						currentSurvivalScore += 1;
+					}
 					enemyItr = enemies.erase(enemyItr);
 					respawnEnemies();
 					if (enemyItr == enemies.end())
@@ -1461,6 +1488,16 @@ void GameMode::updateEnemies(int type) {
 				}
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
+					if (type == 1)
+					{
+						maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
+						std::cout << " Score = " << currentEndlessScore << " AND Max Endless Score = " << maxEndlessScore << "\n";
+					}
+					else if (type == 2) 
+					{
+						maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
+						std::cout << " Score = " << currentSurvivalScore << " AND Max Survival Score = " << maxSurvivalScore << "\n";
+					}
 					nearestTarget->alive = false;
 					nearestTarget->setColor(sf::Color(255, 0, 0, 255));
 					std::cout << "target has died" << std::endl;
@@ -1608,6 +1645,7 @@ void GameMode::slasher_smash() {
 		if (length < 100) {
 			enemyItr->health -= 25;
 			if (enemyItr->health <= 0) {
+				currentEndlessScore += 1;
 				enemyItr = enemies.erase(enemyItr);
 				spawnEnemies(1);
 			}
@@ -1834,7 +1872,7 @@ void GameMode::renderAllies() {
 }
 
 
-void GameMode::loadGame()
+void GameMode::loadGame(bool isLoadCall)
 {
 	FILE* readFile;
 
@@ -1852,10 +1890,14 @@ void GameMode::loadGame()
 		gameMeta.survivalMeta.currentLevel = loadMeta.survivalMeta.currentLevel;
 		gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
 		gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
+		gameMeta.survivalMeta.maxScore = loadMeta.survivalMeta.maxScore;
+		gameMeta.survivalMeta.currentScore = loadMeta.survivalMeta.currentScore;
 		//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
 
 		gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
 		gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
+		gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
+		gameMeta.endlessMeta.currentScore = loadMeta.endlessMeta.currentScore;
 		//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
 
 		/*
@@ -1868,10 +1910,13 @@ void GameMode::loadGame()
 			std::cout << "\n";
 		}
 		*/
-		std::cout << "Survival Level = " << gameMeta.survivalMeta.currentLevel << " & Player X = " << gameMeta.survivalMeta.playerPosX << " & Player Y = " << gameMeta.survivalMeta.playerPosY << "\n";
-		std::cout << "Endless Player X = " << gameMeta.endlessMeta.playerPosX << " & Player Y = " << gameMeta.endlessMeta.playerPosY << "\n";
+		std::cout << "Survival Level = Current Score = " << gameMeta.survivalMeta.currentScore << " and Max Score = " << gameMeta.survivalMeta.maxScore << "\n";
+		std::cout << "Endless Level = Current Score = " << gameMeta.endlessMeta.currentScore << " and Max Score = " << gameMeta.endlessMeta.maxScore << "\n";
 		
-		initGame();
+		if (isLoadCall)
+		{
+			initGame();
+		}
 	}
 	fclose(readFile);
 }
