@@ -867,9 +867,9 @@ bool GameMode::handleEvents() {
 			case sf::Mouse::Button::Right:
 				// RMB pressed
 				// 
-				// equip item
 				if (showInventory) {
 					//using switch to enable the usage of non-weapon items
+					sf::Vector2f pos;
 					switch (inventory.getItemAt(winMousePos.x, winMousePos.y)->itemType) {
 						case Item::type::medkit:
 							if (player.health == 100) {
@@ -897,7 +897,23 @@ bool GameMode::handleEvents() {
 							}
 							inventory.removeItem(Item::type::health_pack, 1);
 							break;
+						case Item::type::walkie_talkie:
+							//call in ally
+							//spawn ally at random location, at least 450.f away from player, and on clear tile
+							allies.emplace_back(texAllyLeft);
+							for (;;) {
+								pos = { (float)(rand() % tileMap.mapWidth * TILE_SIZE), (float)(rand() % tileMap.mapHeight * TILE_SIZE) };
+								float dist = Utils::pointDistance(player.getPosition(), pos);
+								if (!tileMap.isOpaque(pos.x, pos.y) && dist > 450.f)
+									std::cout << "Walkie-talkie called in ally at position (" << pos.x << "," << pos.y << ")" << std::endl;
+									break;
+							}
+							allies.back().setPosition(pos);
+							allies.back().setMaskBounds({ 8, 0, 15, 32 });
+							inventory.removeItem(Item::type::walkie_talkie, 1);
+							break;
 						default:
+							// equip item
 							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
 							break;
 
@@ -1477,7 +1493,7 @@ void GameMode::spawnItems() {
 	//sf::Sprite& spr;
 	for (int i = 0; i < numItems; ++i) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 9;//randomly generate what item to spawn
+		int randomItem = 9;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1505,6 +1521,9 @@ void GameMode::spawnItems() {
 			break;
 		case 8:
 			itemType = Item::type::baseball_bat;
+			break;
+		case 9:
+			itemType = Item::type::walkie_talkie;
 			break;
 		}
 		sf::Vector2f pos;
