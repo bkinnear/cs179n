@@ -231,11 +231,15 @@ protected:
 
 	bool gamestateChange = false;
 	std::string metaFileName = "thelastwar.dat";
+	
 	void loadGame();
 	void saveGame();
 	void initGame();
-	private:
-		int type; //1 - Endless, 2 - Survival
+
+	std::list<sf::IntRect> hiddenAreas;
+
+private:
+	int type; //1 - Endless, 2 - Survival
 
 public:
 

@@ -1200,7 +1200,8 @@ void GameMode::logic()
 
 void GameMode::updateProjectiles() {
 	bool breaking = false;
-	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
+	auto projItr = projectiles.begin();
+	while (projItr != projectiles.end()) {
 		// get movement of projectile for this frame
 		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
 		if (tileMap.areaClear(*projItr, moveVector)) {
@@ -1214,14 +1215,13 @@ void GameMode::updateProjectiles() {
 					tileMap.getTileBounds(projItr->getPosition().x + 2.5f * moveVector.x, projItr->getPosition().y + 2.5f * moveVector.y)
 				)
 			);
+
 			// destroy projectile
 			projItr = projectiles.erase(projItr);
-			if (projItr == projectiles.end())
-				break;
 			continue;
 		}
 
-		if (projItr->isGrenade == true) {
+		if (projItr->isGrenade) {
 			float maxRange = 250.f;
 			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
 
@@ -1236,10 +1236,14 @@ void GameMode::updateProjectiles() {
 						if (enemyItr->health <= 0) {
 							enemyItr = enemies.erase(enemyItr);
 							GameMode::spawnEnemies(1);
+							continue;
 						}
 					}
 				}
+
+				//  destroy projectile
 				projItr = projectiles.erase(projItr);
+				continue;
 			}
 		}
 		else {
@@ -1255,10 +1259,15 @@ void GameMode::updateProjectiles() {
 			// check for collision with enemies
 			// TODO - make enemies use a spatial hash so this algo's faster
 			// this algo is currently O(K*N) where K = bullets, N = enemies
-			for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+			bool collided = false;
+			auto enemyItr = enemies.begin();
+			while (enemyItr != enemies.end()) {
 				// ignore if enemy is not colliding with projectile
-				if (!enemyItr->isColliding(*projItr))
+				if (!enemyItr->isColliding(*projItr)) {
+					enemyItr++;
 					continue;
+				}
+
 				// deal damage to enemy
 				if (projItr->isMelee) {
 					meleeSound.setBuffer(meleeSoundBuffer);
@@ -1268,27 +1277,26 @@ void GameMode::updateProjectiles() {
 				enemyItr->health -= projItr->damage;
 				std::cout << "DMG: " << projItr->damage << std::endl;
 
-				// destroy bullet
-				projItr = projectiles.erase(projItr);
-				if (projItr == projectiles.end())
-					breaking = true;
-
 				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
 					respawnEnemies();
-					if (enemyItr == enemies.end())
-						break;
+					continue;
 				}
 
-				// projectile is destroyed - no need to continue
-				if (breaking)
-					break;
-			}
-			// no projectiles left - no need to continue
-			if (breaking)
+				collided = true;
 				break;
+			}
+
+			// destroy bullet
+			if (collided) {
+				projItr = projectiles.erase(projItr);
+				continue;
+			}
 		}
+
+		// move on to next projectile
+		projItr++;
 	}
 }
 
