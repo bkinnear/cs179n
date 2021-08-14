@@ -131,6 +131,12 @@ protected:
 	sf::Sprite grenadeIcon;
 	sf::Text grenadesNum;
 	sf::Sprite reticle;
+	sf::Sprite abilityIcon1;
+	sf::Sprite abilityIcon2;
+	sf::Sprite abilityIcon3;
+	sf::Text abilityClock1;
+	sf::Text abilityClock2;
+	sf::Text abilityClock3;
 
 	// inventory
 	Inventory inventory;
