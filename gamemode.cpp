@@ -68,7 +68,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	State(game),
 	type(type),
 	player(playerClass),
-	tileMap(*this, MAP_WIDTH, MAP_HEIGHT),
+	tileMap(MAP_WIDTH, MAP_HEIGHT),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texPlayerRightMp5(createTexture("res/player_r_mp5_strip.png")),
@@ -95,6 +95,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	grenadeIcon(createTexture("res/grenade_icon.png")),
 	reticle(createTexture("res/reticle.png"))
 {
+	// generate tile map
+	tileMap.generate(this);
 
 	// set main view
 	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
@@ -1025,6 +1027,16 @@ void GameMode::render()
 	// draw effects
 	drawEffects();
 
+	// draw hidden areas
+	sf::RectangleShape areaShape;
+	areaShape.setFillColor(sf::Color::Black);
+	for (auto area : hiddenAreas) {
+		areaShape.setPosition(area.left, area.top);
+		areaShape.setSize({ area.width, area.height });
+		if (!player.getBounds().intersects(area))
+			gwindow.draw(areaShape);
+	}
+
 	// ========================= //
 	// =  v   GUI drawing   v  = //
 	// ========================= //
@@ -1916,6 +1928,10 @@ void GameMode::initGame()
 	}
 	delete this;
 	return;
+}
+
+void GameMode::addHiddenArea(const sf::FloatRect& rect) {
+	hiddenAreas.push_back(rect);
 }
 
 void GameMode::saveGame()

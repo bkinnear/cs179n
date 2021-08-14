@@ -236,7 +236,17 @@ protected:
 	void saveGame();
 	void initGame();
 
-	std::list<sf::IntRect> hiddenAreas;
+	void spawnEnemies(int);
+	void respawnEnemies();
+	void spawnItems();
+	void updateEnemies(int);
+	void renderEnemies();
+	bool handleEvents();
+	void updateProjectiles();
+	void renderAllies();
+	void updateAllies();
+
+	std::list<sf::FloatRect> hiddenAreas;
 
 private:
 	int type; //1 - Endless, 2 - Survival
@@ -249,19 +259,6 @@ public:
 	virtual void logic();
 	virtual void render();
 
-	void spawnEnemies(int);
-	void respawnEnemies();
-	void spawnItems();
-	void updateEnemies(int);
-	void renderEnemies();
-
-	bool handleEvents();
-
-	void updateProjectiles();
-
-
-
-	void renderAllies();
-	void updateAllies();
+	void addHiddenArea(const sf::FloatRect&);
 };
 #endif

@@ -6,7 +6,7 @@
 class Enemy : public Character {
 public:
 	// speed // Endless Mode - 3 || Survival Mode = Dynamically Increasing from 3
-	int hitRate;//Endless Mode - 15 || Survival Mode = Dynamically increasing from 15
+	int hitRate = 15;//Endless Mode - 15 || Survival Mode = Dynamically increasing from 15
 
 	int attack = -1;
 
