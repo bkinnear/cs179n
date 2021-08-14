@@ -310,6 +310,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 	}
 	
+	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -1287,7 +1288,7 @@ void GameMode::updateProjectiles() {
 					meleeSound.play();
 				}
 				enemyItr->health -= projItr->damage;
-				std::cout << "DMG: " << projItr->damage << std::endl;
+				//std::cout << "DMG: " << projItr->damage << std::endl;
 
 				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
