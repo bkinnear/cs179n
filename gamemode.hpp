@@ -100,10 +100,10 @@ protected:
 	sf::Font font;
 
 	// effects
-	Effect* explosionSmall;
-	Effect* explosionLarge;
-	Effect* deadEyeOpen;
-	Effect* deadEyeClose;
+	EffectID explosionSmall;
+	EffectID explosionLarge;
+	EffectID deadEyeOpen;
+	EffectID deadEyeClose;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
