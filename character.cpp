@@ -92,6 +92,9 @@ int hashPos(const TileMap& tileMap, sf::Vector2i pos) {
 }
 
 void Character::updatePath() {
+    if (pathRetrieved)
+        return;
+
     // check if new path available
     if (nextPathHead.valid()) {
         if (nextPathHead.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
@@ -106,6 +109,9 @@ void Character::updatePath() {
 
             pathHead = nextPathHead.get();
 
+            // we have retrieved the path
+            pathRetrieved = true;
+
             // delete the first head for smoother path adoption
             if (pathHead) {
                 Node* parent = pathHead->parent;
@@ -117,6 +123,9 @@ void Character::updatePath() {
 }
 
 void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {    
+    if (pathRetrieved)
+        return;
+
     if (!nextPathHead.valid()) {
         // we are not currently finding new path or storing old path result
 
@@ -124,6 +133,9 @@ void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {
         sf::Vector2i start = Utils::snapToTile(getPosition() + sf::Vector2f({ 16.f, 16.f }));
         // create and run new async path finding task
         nextPathHead = std::async(createPath, &tileMap, start, target);
+
+        // we have new path being created
+        pathRetrieved = false;
     }
 }
 

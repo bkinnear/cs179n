@@ -13,8 +13,11 @@
 
 #include <list>
 
-// iterator for item on map
-typedef std::list<std::pair<Item::type, sf::Sprite>>::iterator ItemIterator;
+// item on map
+struct ItemSpr {
+	Item::type type;
+	sf::Sprite spr;
+};
 
 class GameMode : public State {
 
@@ -97,10 +100,10 @@ protected:
 	sf::Font font;
 
 	// effects
-	Effect* explosionSmall;
-	Effect* explosionLarge;
-	Effect* deadEyeOpen;
-	Effect* deadEyeClose;
+	EffectID explosionSmall;
+	EffectID explosionLarge;
+	EffectID deadEyeOpen;
+	EffectID deadEyeClose;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
@@ -131,6 +134,12 @@ protected:
 	sf::Sprite grenadeIcon;
 	sf::Text grenadesNum;
 	sf::Sprite reticle;
+	sf::Sprite abilityIcon1;
+	sf::Sprite abilityIcon2;
+	sf::Sprite abilityIcon3;
+	sf::Text abilityClock1;
+	sf::Text abilityClock2;
+	sf::Text abilityClock3;
 
 	// inventory
 	Inventory inventory;
@@ -145,17 +154,17 @@ protected:
 
 	// items
 	// items in world
-	std::list<std::pair<Item::type, sf::Sprite>> itemsOnMap;
+	std::list<ItemSpr*> itemsOnMap;
 	// spatial hash for itemsOnMap (key = int, value = list of list iterators)
-	std::unordered_map<int, std::list<ItemIterator>> itemHash;
+	std::unordered_map<int, std::list<ItemSpr*>> itemHash;
 	// gets hash key from position on map
 	int hashPos(const sf::Vector2f& pos) const;
 	// creates item at position on the map
-	ItemIterator createItem(const sf::Vector2f& pos, Item::type type);
+	ItemSpr* createItem(const sf::Vector2f& pos, Item::type type);
 	// removes item at position on the map
-	void removeItem(ItemIterator);
-	// returns first item found in tile at map position (if no item found returns itemsOnMap.end())
-	ItemIterator getItem(const sf::Vector2f& pos);
+	void removeItem(ItemSpr*);
+	// returns pointer to item sprite at map position (nullptr if no item found)
+	ItemSpr* getItemAt(const sf::Vector2f& pos);
 
 	//Endless
 	int maximumEnemyCount = 99;
@@ -240,8 +249,22 @@ protected:
 	void loadGame(bool);
 	void saveGame();
 	void initGame();
-	private:
-		int type; //1 - Endless, 2 - Survival
+
+	void spawnEnemies(int);
+	void respawnEnemies();
+	void spawnItems();
+	void updateEnemies(int);
+	void renderEnemies();
+	bool handleEvents();
+	void updateProjectiles();
+	void renderAllies();
+	void updateAllies();
+
+	std::list<sf::FloatRect> hiddenAreas;
+	std::list<sf::Vector2f> lootSpawnPoints; // TODO create loot spawn points in TileMap::generate that determine where items spawns / what items
+
+private:
+	int type; //1 - Endless, 2 - Survival
 
 		int currentEndlessScore = 0;
 		int currentSurvivalScore = 0;
@@ -260,19 +283,6 @@ public:
 	virtual void logic();
 	virtual void render();
 
-	void spawnEnemies(int);
-	void respawnEnemies();
-	void spawnItems();
-	void updateEnemies(int);
-	void renderEnemies();
-
-	bool handleEvents();
-
-	void updateProjectiles();
-
-
-
-	void renderAllies();
-	void updateAllies();
+	void addHiddenArea(const sf::FloatRect&);
 };
 #endif

@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <list>
 
-typedef AnimSprite Effect;
+typedef unsigned EffectID;
 
 /* Abstract game state object
  * 
@@ -22,7 +22,7 @@ typedef AnimSprite Effect;
 */
 class State {
 public:
-	State(Game& game): game(game) {};
+	State(Game& game) : game(game) {};
 	virtual ~State() {};
 
 	/* defines the game logic of the gamestate */
@@ -51,25 +51,45 @@ public:
 	*/
 	sf::Texture& createTexture(const std::string& fname, sf::IntRect src);
 
-	/* creates effect sprite from texture
-	 * can now be placed in the world with createEffect()
+	/* loads effect from texture
+	 * can be placed in the world with createEffect()
+	 * 
+	 * set animationTime for how long sprite should loop for
+	 * default animationTime = 0.f makes effect delete itself after 1 loop
 	*/
-	Effect* loadEffect(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites, unsigned animationSpeed);
+	EffectID loadEffect(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites, unsigned animationSpeed, float animationTime = 0.f);
 
 	/* creates effect in world using given effect pointer
 	*/
-	void createEffect(Effect* effect, const sf::Vector2f& pos);
+	void createEffect(EffectID effect, const sf::Vector2f& pos);
 
 protected:
 	Game& game;
 
 private:
+	// next effect ID to be used for next effect
+	EffectID nextEffectID = 0;
+	sf::Clock effectClock;
+
+	// data for an effect instance
+	struct Effect {
+		float startTime;
+		unsigned tick = 0;
+		sf::Vector2f pos;
+	};
+
+	// holds effect sprite, life time, and list of effects currently on the map
+	struct EffectData {
+		AnimSprite effectSprite;
+		float lifetime;
+		std::list<Effect> effectList;
+	};
+
 	// holds raw textures - only interact through createTexture()
 	std::list<sf::Texture> textures;
 
-	// holds effects - only interact through loadEffect() and createEffect()
-	std::list<AnimSprite> effectSprites;
-	std::unordered_map<AnimSprite*, std::list<std::pair<unsigned, sf::Vector2f>>> effects;
+	// holds effects and effect data - only interact through loadEffect() and createEffect()
+	std::unordered_map<EffectID, EffectData> effects;
 };
 
 #endif

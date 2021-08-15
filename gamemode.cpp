@@ -64,11 +64,11 @@ Item::type getLootItem(Item::type type) {
 	return type;
 }
 
-GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, bool isLoadCall):
+GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, bool isLoadCall) :
 	State(game),
 	type(type),
 	player(playerClass),
-	tileMap(*this, MAP_WIDTH, MAP_HEIGHT),
+	tileMap(MAP_WIDTH, MAP_HEIGHT),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texPlayerRightMp5(createTexture("res/player_r_mp5_strip.png")),
@@ -95,6 +95,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	grenadeIcon(createTexture("res/grenade_icon.png")),
 	reticle(createTexture("res/reticle.png"))
 {
+	// generate tile map
+	tileMap.generate(this);
 
 	// set main view
 	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
@@ -281,6 +283,29 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	grenadesNum.setColor(sf::Color::Black);
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+	//ability HUD
+	abilityIcon1.setPosition(playerHPBack.getPosition().x+220, playerHPBack.getPosition().y-15);
+	abilityIcon1.setScale(.75, .75);
+	abilityIcon2.setPosition(playerHPBack.getPosition().x+270, playerHPBack.getPosition().y-15);
+	abilityIcon2.setScale(.75, .75);
+	abilityIcon3.setPosition(playerHPBack.getPosition().x+320, playerHPBack.getPosition().y-15);
+	abilityIcon3.setScale(.75, .75);
+	//ability HUD timers
+	abilityClock1.setFont(font);
+	abilityClock1.setCharacterSize(20);
+	abilityClock1.setColor(sf::Color::Black);
+	abilityClock1.setStyle(sf::Text::Bold);
+	abilityClock1.setPosition(playerHPBack.getPosition().x + 232.5, playerHPBack.getPosition().y - 10);
+	abilityClock2.setFont(font);
+	abilityClock2.setCharacterSize(20);
+	abilityClock2.setColor(sf::Color::Black);
+	abilityClock2.setStyle(sf::Text::Bold);
+	abilityClock2.setPosition(playerHPBack.getPosition().x + 282.5, playerHPBack.getPosition().y - 10);
+	abilityClock3.setFont(font);
+	abilityClock3.setCharacterSize(20);
+	abilityClock3.setColor(sf::Color::Black);
+	abilityClock3.setStyle(sf::Text::Bold);
+	abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
 	if (type == 1)
 	{
 		endlessScoreCounter.setPosition({ 5.f, 30.f });
@@ -290,29 +315,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		endlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
 		endlessScoreCounter.setOutlineThickness(2.f);
 
-		maxEndlessScoreCounter.setPosition({ 5.f, 60.f });
-		maxEndlessScoreCounter.setFont(font);
-		maxEndlessScoreCounter.setCharacterSize(16);
-		maxEndlessScoreCounter.setFillColor(sf::Color(0x00EE00FF));
-		maxEndlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
-		maxEndlessScoreCounter.setOutlineThickness(2.f);
-	}
-	else if (type == 2)
-	{
-		survivalScoreCounter.setPosition({ 5.f, 30.f });
-		survivalScoreCounter.setFont(font);
-		survivalScoreCounter.setCharacterSize(16);
-		survivalScoreCounter.setFillColor(sf::Color(0x00EE00FF));
-		survivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
-		survivalScoreCounter.setOutlineThickness(2.f);
-
-		maxSurvivalScoreCounter.setPosition({ 5.f, 60.f });
-		maxSurvivalScoreCounter.setFont(font);
-		maxSurvivalScoreCounter.setCharacterSize(16);
-		maxSurvivalScoreCounter.setFillColor(sf::Color(0x00EE00FF));
-		maxSurvivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
-		maxSurvivalScoreCounter.setOutlineThickness(2.f);
-	}
 	if (isLoadCall)
 	{
 		if (type == 1)
@@ -367,18 +369,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		}
 	}
 	
+	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
 	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
 }
 
-ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
-	itemsOnMap.push_back(std::pair<Item::type, sf::Sprite>(type, sf::Sprite()));
-	sf::Sprite& spr = itemsOnMap.back().second;
+ItemSpr* GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
+	itemsOnMap.push_back(new ItemSpr({ type, sf::Sprite() }));
+	sf::Sprite& spr = itemsOnMap.back()->spr;
 	spr.setPosition(pos.x, pos.y);
 	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back()->type), { 48,48 }));
 	spr.setScale(.5, .5);
 
 	// hashkey organizes items in buckets that hold items in 1 tile space (32x32)
@@ -387,27 +390,29 @@ ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
 	if (itemList == itemHash.end()) {
 		itemHash[hashKey] = {};
 	}
-	itemHash[hashKey].push_back(std::prev(itemsOnMap.end()));
+	itemHash[hashKey].push_back(itemsOnMap.back());
 
-	return std::prev(itemsOnMap.end());
+	return itemsOnMap.back();
 }
 
-void GameMode::removeItem(ItemIterator itemItr) {
+void GameMode::removeItem(ItemSpr* pItem) {
 	// remove item from hash
-	itemHash.at(hashPos(itemItr->second.getPosition())).remove(itemItr);
+	itemHash.at(hashPos(pItem->spr.getPosition())).remove(pItem);
 	// remove item from item list
-	itemsOnMap.erase(itemItr);
+	itemsOnMap.remove(pItem);
+	// free item memory
+	delete pItem;
 }
 
-ItemIterator GameMode::getItem(const sf::Vector2f& pos) {
+ItemSpr* GameMode::getItemAt(const sf::Vector2f& pos) {
 	auto itemListItr = itemHash.find(hashPos(pos));
 	// see if hashmap has an entry
 	if (itemListItr == itemHash.end())
-		return itemsOnMap.end();
+		return nullptr;
 
 	// see if list is empty or not
 	if (itemListItr->second.empty())
-		return itemsOnMap.end();
+		return nullptr;
 
 	// return first item in hashmap entry list
 	return itemListItr->second.front();
@@ -432,15 +437,31 @@ void GameMode::updateCooldowns() {
 	case PlayerClass::MEDIC:
 		if (onCoolDown1) {
 			if (elapsed1.asSeconds() < cooldown1) {
+				if (cooldown1 - elapsed1.asSeconds() > 9) {//if double digit, center the position
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 225.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 232.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock1.setString(std::to_string((cooldown1 - int(elapsed1.asSeconds()))));
 				elapsed1 = abilityTimer1.getElapsedTime();
 			}
-			else {
+			else { //if single digit, move back to original position
 				onCoolDown1 = false;
 				elapsed1 = sf::seconds(0);
+				abilityIcon1.setTexture(createTexture("res/ability_icons/health_pack.png"));
+				abilityClock1.setString("");
 			}
 		}
 		if (onCoolDown2) {
 			if (elapsed2.asSeconds() < cooldown2) {
+				if (cooldown2 - elapsed2.asSeconds() > 9) {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 275.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 282.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock2.setString(std::to_string((cooldown2 - int(elapsed2.asSeconds()))));
 				elapsed2 = abilityTimer2.getElapsedTime();
 				if (elapsed2.asMilliseconds() > 25) { //dash for 25 milliseconds
 					player.speed = 3; //set back to default
@@ -449,39 +470,75 @@ void GameMode::updateCooldowns() {
 			else {
 				onCoolDown2 = false;
 				elapsed2 = sf::seconds(0);
+				abilityIcon2.setTexture(createTexture("res/ability_icons/dash.png"));
+				abilityClock2.setString("");
 			}
 		}
 		if (onCoolDown3) {
 			if (elapsed3.asSeconds() < cooldown3) {
+				if (cooldown3 - elapsed3.asSeconds() > 9) {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 325.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock3.setString(std::to_string((cooldown3 - int(elapsed3.asSeconds()))));
 				elapsed3 = abilityTimer3.getElapsedTime();
 			}
 			else {
 				onCoolDown3 = false;
 				elapsed3 = sf::seconds(0);
+				abilityIcon3.setTexture(createTexture("res/ability_icons/guardian_angel.png"));
+				abilityClock3.setString("");
 			}
 		}
 		break;
 	case PlayerClass::ASSAULT:
 		if (onCoolDown1) {
 			if (elapsed1.asSeconds() < cooldown1) {
+				if (cooldown1 - elapsed1.asSeconds() > 9) {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 225.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 232.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock1.setString(std::to_string((cooldown1 - int(elapsed1.asSeconds()))));
 				elapsed1 = abilityTimer1.getElapsedTime();
 			}
 			else {
 				onCoolDown1 = false;
 				elapsed1 = sf::seconds(0);
+				abilityIcon1.setTexture(createTexture("res/ability_icons/ammo.png"));
+				abilityClock1.setString("");
 			}
 		}
 		if (onCoolDown2) {
 			if (elapsed2.asSeconds() < cooldown2) {
+				if (cooldown2 - elapsed2.asSeconds() > 9) {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 275.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 282.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock2.setString(std::to_string((cooldown2 - int(elapsed2.asSeconds()))));
 				elapsed2 = abilityTimer2.getElapsedTime();
 			}
 			else {
 				onCoolDown2 = false;
 				elapsed2 = sf::seconds(0);
+				abilityIcon2.setTexture(createTexture("res/ability_icons/grenade.png"));
+				abilityClock2.setString("");
 			}
 		}
 		if (onCoolDown3) {
 			if (elapsed3.asSeconds() < cooldown3) {
+				if (cooldown3 - elapsed3.asSeconds() > 9) {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 325.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock3.setString(std::to_string((cooldown3 - int(elapsed3.asSeconds()))));
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 10) { //increase damage for 10 seconds
 					player.isDeadEye = false; // turn off deadeye after 10 seconds
@@ -490,50 +547,95 @@ void GameMode::updateCooldowns() {
 			else {
 				onCoolDown3 = false;
 				elapsed3 = sf::seconds(0);
+				abilityIcon3.setTexture(createTexture("res/ability_icons/deadeye.png"));
+				abilityClock3.setString("");
 			}
 		}
 		break;
 	case PlayerClass::ENGINEER:
 		if (onCoolDown1) {
 			if (elapsed1.asSeconds() < cooldown1) {
+				if (cooldown1 - elapsed1.asSeconds() > 9) {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 225.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 232.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock1.setString(std::to_string((cooldown1 - int(elapsed1.asSeconds()))));
 				elapsed1 = abilityTimer1.getElapsedTime();
 			}
 			else {
 				onCoolDown1 = false;
 				elapsed1 = sf::seconds(0);
+				abilityIcon1.setTexture(createTexture("res/ability_icons/decoy.png"));
+				abilityClock1.setString("");
 			}
 		}
 		if (onCoolDown2) {
 			if (elapsed2.asSeconds() < cooldown2) {
+				if (cooldown2 - elapsed2.asSeconds() > 9) {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 275.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 282.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock2.setString(std::to_string((cooldown2 - int(elapsed2.asSeconds()))));
 				elapsed2 = abilityTimer2.getElapsedTime();
 			}
 			else {
 				onCoolDown2 = false;
 				elapsed2 = sf::seconds(0);
+				abilityIcon2.setTexture(createTexture("res/ability_icons/barrel.png"));
+				abilityClock2.setString("");
 			}
 		}
 		if (onCoolDown3) {
 			if (elapsed3.asSeconds() < cooldown3) {
+				if (cooldown3 - elapsed3.asSeconds() > 9) {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 325.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock3.setString(std::to_string((cooldown3 - int(elapsed3.asSeconds()))));
 				elapsed3 = abilityTimer3.getElapsedTime();
 			}
 			else {
 				onCoolDown3 = false;
 				elapsed3 = sf::seconds(0);
+				abilityIcon3.setTexture(createTexture("res/ability_icons/shield.png"));
+				abilityClock3.setString("");
 			}
 		}
 		break;
 	case PlayerClass::SLASHER:
 		if (onCoolDown1) {
 			if (elapsed1.asSeconds() < cooldown1) {
+				if (cooldown1 - elapsed1.asSeconds() > 9) {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 225.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock1.setPosition(playerHPBack.getPosition().x + 232.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock1.setString(std::to_string((cooldown1 - int(elapsed1.asSeconds()))));
 				elapsed1 = abilityTimer1.getElapsedTime();
 			}
 			else {
 				onCoolDown1 = false;
 				elapsed1 = sf::seconds(0);
+				abilityIcon1.setTexture(createTexture("res/ability_icons/smash.png"));
+				abilityClock1.setString("");
 			}
 		}
 		if (onCoolDown2) {
 			if (elapsed2.asSeconds() < cooldown2) {
+				if (cooldown2 - elapsed2.asSeconds() > 9) {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 275.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock2.setPosition(playerHPBack.getPosition().x + 282.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock2.setString(std::to_string((cooldown2 - int(elapsed2.asSeconds()))));
 				elapsed2 = abilityTimer2.getElapsedTime();
 				if (elapsed2.asMilliseconds() > 3000) { //warcry for 3 seconds
 					player.isWarcry = false;
@@ -542,10 +644,19 @@ void GameMode::updateCooldowns() {
 			else {
 				onCoolDown2 = false;
 				elapsed2 = sf::seconds(0);
+				abilityIcon2.setTexture(createTexture("res/ability_icons/warcry.png"));
+				abilityClock2.setString("");
 			}
 		}
 		if (onCoolDown3) {
 			if (elapsed3.asSeconds() < cooldown3) {
+				if (cooldown3 - elapsed3.asSeconds() > 9) {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 325.5, playerHPBack.getPosition().y - 10);
+				}
+				else {
+					abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+				}
+				abilityClock3.setString(std::to_string((cooldown3 - int(elapsed3.asSeconds()))));
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed2.asMilliseconds() > 5000) { //dash for 5 seconds
 					player.speed = 3; //set back to default
@@ -554,6 +665,8 @@ void GameMode::updateCooldowns() {
 			else {
 				onCoolDown3 = false;
 				elapsed3 = sf::seconds(0);
+				abilityIcon3.setTexture(createTexture("res/ability_icons/rage.png"));
+				abilityClock3.setString("");
 			}
 		}
 		break;
@@ -597,16 +710,15 @@ bool GameMode::handleEvents() {
 				for (int i = -1; i <= 1; i++) {
 					for (int j = -1; j <= 1; j++) {
 						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
-						ItemIterator itemItr = getItem(pos);
-						if (itemItr == itemsOnMap.end())
+						ItemSpr* pItem = getItemAt(pos);
+						if (!pItem)
 							continue;
-						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, itemItr->second.getPosition());
+						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
 						if (distToPlayer <= MIN_DIST_ITEM) {
 							// add item to inventory
-							inventory.addItem(getLootItem(itemItr->first), getLootAmount(itemItr->first));
+							inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
 
-							// remove item from map
-							removeItem(itemItr);
+							removeItem(pItem);
 						}
 					}
 				}
@@ -930,9 +1042,9 @@ bool GameMode::handleEvents() {
 			case sf::Mouse::Button::Right:
 				// RMB pressed
 				// 
-				// equip item
 				if (showInventory) {
 					//using switch to enable the usage of non-weapon items
+					sf::Vector2f pos;
 					switch (inventory.getItemAt(winMousePos.x, winMousePos.y)->itemType) {
 						case Item::type::medkit:
 							if (player.health == 100) {
@@ -960,7 +1072,23 @@ bool GameMode::handleEvents() {
 							}
 							inventory.removeItem(Item::type::health_pack, 1);
 							break;
+						case Item::type::walkie_talkie:
+							//call in ally
+							//spawn ally at random location, at least 450.f away from player, and on clear tile
+							allies.emplace_back(texAllyLeft);
+							for (;;) {
+								pos = { (float)(rand() % tileMap.mapWidth * TILE_SIZE), (float)(rand() % tileMap.mapHeight * TILE_SIZE) };
+								float dist = Utils::pointDistance(player.getPosition(), pos);
+								if (!tileMap.isOpaque(pos.x, pos.y) && dist > 450.f)
+									std::cout << "Walkie-talkie called in ally at position (" << pos.x << "," << pos.y << ")" << std::endl;
+									break;
+							}
+							allies.back().setPosition(pos);
+							allies.back().setMaskBounds({ 8, 0, 15, 32 });
+							inventory.removeItem(Item::type::walkie_talkie, 1);
+							break;
 						default:
+							// equip item
 							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
 							break;
 
@@ -1048,7 +1176,7 @@ void GameMode::render()
 
 	//draw the weapons
 	for (auto item : itemsOnMap) {
-		gwindow.draw(item.second);
+		gwindow.draw(item->spr);
 	}
 
 	// draw the player
@@ -1071,6 +1199,16 @@ void GameMode::render()
 
 	// draw effects
 	drawEffects();
+
+	// draw hidden areas
+	sf::RectangleShape areaShape;
+	areaShape.setFillColor(sf::Color::Black);
+	for (auto area : hiddenAreas) {
+		areaShape.setPosition(area.left, area.top);
+		areaShape.setSize({ area.width, area.height });
+		if (!player.getBounds().intersects(area))
+			gwindow.draw(areaShape);
+	}
 
 	// ========================= //
 	// =  v   GUI drawing   v  = //
@@ -1107,6 +1245,12 @@ void GameMode::render()
 	gwindow.draw(ammoCount);
 	gwindow.draw(grenadeIcon);
 	gwindow.draw(grenadesNum);
+	gwindow.draw(abilityIcon1);
+	gwindow.draw(abilityIcon2);
+	gwindow.draw(abilityIcon3);
+	gwindow.draw(abilityClock1);
+	gwindow.draw(abilityClock2);
+	gwindow.draw(abilityClock3);
 
 	if (showDialog) {
 		gwindow.draw(dialogBox1);
@@ -1275,7 +1419,8 @@ void GameMode::logic()
 
 void GameMode::updateProjectiles() {
 	bool breaking = false;
-	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
+	auto projItr = projectiles.begin();
+	while (projItr != projectiles.end()) {
 		// get movement of projectile for this frame
 		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
 		if (tileMap.areaClear(*projItr, moveVector)) {
@@ -1289,14 +1434,13 @@ void GameMode::updateProjectiles() {
 					tileMap.getTileBounds(projItr->getPosition().x + 2.5f * moveVector.x, projItr->getPosition().y + 2.5f * moveVector.y)
 				)
 			);
+
 			// destroy projectile
 			projItr = projectiles.erase(projItr);
-			if (projItr == projectiles.end())
-				break;
 			continue;
 		}
 
-		if (projItr->isGrenade == true) {
+		if (projItr->isGrenade) {
 			float maxRange = 250.f;
 			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
 
@@ -1321,10 +1465,14 @@ void GameMode::updateProjectiles() {
 							}
 							enemyItr = enemies.erase(enemyItr);
 							GameMode::spawnEnemies(1);
+							continue;
 						}
 					}
 				}
+
+				//  destroy projectile
 				projItr = projectiles.erase(projItr);
+				continue;
 			}
 		}
 		else {
@@ -1340,10 +1488,15 @@ void GameMode::updateProjectiles() {
 			// check for collision with enemies
 			// TODO - make enemies use a spatial hash so this algo's faster
 			// this algo is currently O(K*N) where K = bullets, N = enemies
-			for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+			bool collided = false;
+			auto enemyItr = enemies.begin();
+			while (enemyItr != enemies.end()) {
 				// ignore if enemy is not colliding with projectile
-				if (!enemyItr->isColliding(*projItr))
+				if (!enemyItr->isColliding(*projItr)) {
+					enemyItr++;
 					continue;
+				}
+
 				// deal damage to enemy
 				if (projItr->isMelee) {
 					meleeSound.setBuffer(meleeSoundBuffer);
@@ -1351,12 +1504,7 @@ void GameMode::updateProjectiles() {
 					meleeSound.play();
 				}
 				enemyItr->health -= projItr->damage;
-				std::cout << "DMG: " << projItr->damage << std::endl;
-
-				// destroy bullet
-				projItr = projectiles.erase(projItr);
-				if (projItr == projectiles.end())
-					breaking = true;
+				//std::cout << "DMG: " << projItr->damage << std::endl;
 
 				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
@@ -1372,46 +1520,62 @@ void GameMode::updateProjectiles() {
 					}
 					enemyItr = enemies.erase(enemyItr);
 					respawnEnemies();
-					if (enemyItr == enemies.end())
-						break;
+					continue;
 				}
 
-				// projectile is destroyed - no need to continue
-				if (breaking)
-					break;
-			}
-			// no projectiles left - no need to continue
-			if (breaking)
+				collided = true;
 				break;
+			}
+
+			// destroy bullet
+			if (collided) {
+				projItr = projectiles.erase(projItr);
+				continue;
+			}
 		}
+
+		// move on to next projectile
+		projItr++;
 	}
 }
 
 void GameMode::chooseClass(PlayerClass playerClass) {
 	switch (playerClass) {
 	case PlayerClass::MEDIC:
-		cooldown1 = 1; //in seconds
-		cooldown2 = 3;
-		cooldown3 = 5;
+		cooldown1 = 3; //in seconds
+		cooldown2 = 5;
+		cooldown3 = 10;
 		player.speed = 3;
+		abilityIcon1.setTexture(createTexture("res/ability_icons/health_pack.png"));
+		abilityIcon2.setTexture(createTexture("res/ability_icons/dash.png"));
+		abilityIcon3.setTexture(createTexture("res/ability_icons/guardian_angel.png"));
 		break;
 	case PlayerClass::ASSAULT:
 		cooldown1 = 5; 
 		cooldown2 = 10;
 		cooldown3 = 20;
 		player.speed = 3;
+		abilityIcon1.setTexture(createTexture("res/ability_icons/ammo.png"));
+		abilityIcon2.setTexture(createTexture("res/ability_icons/grenade.png"));
+		abilityIcon3.setTexture(createTexture("res/ability_icons/deadeye.png"));
 		break;
 	case PlayerClass::SLASHER:
 		cooldown1 = 1;
 		cooldown2 = 10;
 		cooldown3 = 15;
 		player.speed = 3;
+		abilityIcon1.setTexture(createTexture("res/ability_icons/smash.png"));
+		abilityIcon2.setTexture(createTexture("res/ability_icons/warcry.png"));
+		abilityIcon3.setTexture(createTexture("res/ability_icons/rage.png"));
 		break;
 	case PlayerClass::ENGINEER:
 		cooldown1 = 10; 
 		cooldown2 = 15;
 		cooldown3 = 20;
 		player.speed = 2;
+		abilityIcon1.setTexture(createTexture("res/ability_icons/decoy.png"));
+		abilityIcon2.setTexture(createTexture("res/ability_icons/barrel.png"));
+		abilityIcon3.setTexture(createTexture("res/ability_icons/shield.png"));
 		break;
 	default:
 		std::cout << "no class chosen" << std::endl;
@@ -1598,7 +1762,7 @@ void GameMode::spawnItems() {
 	//sf::Sprite& spr;
 	for (int i = 0; i < numItems; ++i) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 9;//randomly generate what item to spawn
+		int randomItem = 9;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1627,6 +1791,9 @@ void GameMode::spawnItems() {
 		case 8:
 			itemType = Item::type::baseball_bat;
 			break;
+		case 9:
+			itemType = Item::type::walkie_talkie;
+			break;
 		}
 		sf::Vector2f pos;
 		for (;;) {
@@ -1646,6 +1813,9 @@ void GameMode::medic_bandage() {
 
 	//cooldown timer starts
 	abilityTimer1.restart();
+
+	//change hud
+	abilityIcon1.setTexture(createTexture("res/ability_icons/health_pack_cd.png"));
 }
 
 void GameMode::medic_dash() {
@@ -1654,6 +1824,8 @@ void GameMode::medic_dash() {
 	player.speed = 20;
 
 	abilityTimer2.restart();
+
+	abilityIcon2.setTexture(createTexture("res/ability_icons/dash_cd.png"));
 }
 
 void GameMode::medic_heal() {
@@ -1672,6 +1844,8 @@ void GameMode::medic_heal() {
 	}
 
 	abilityTimer3.restart();
+
+	abilityIcon3.setTexture(createTexture("res/ability_icons/guardian_angel_cd.png"));
 }
 
 void GameMode::assault_ammo() {
@@ -1680,6 +1854,8 @@ void GameMode::assault_ammo() {
 	createItem(player.getPosition(), Item::type::ammo_crate);
 	
 	abilityTimer1.restart();
+
+	abilityIcon1.setTexture(createTexture("res/ability_icons/ammo_cd.png"));
 }
 
 void GameMode::assault_grenade() {
@@ -1703,6 +1879,8 @@ void GameMode::assault_grenade() {
 	shotSound.play();
 
 	abilityTimer2.restart();
+
+	abilityIcon2.setTexture(createTexture("res/ability_icons/grenade_cd.png"));
 }
 
 void GameMode::assault_deadeye() {
@@ -1712,6 +1890,8 @@ void GameMode::assault_deadeye() {
 	createEffect(deadEyeOpen, player.getPosition()+sf::Vector2f(10.f, -12.f));
 
 	abilityTimer3.restart();
+
+	abilityIcon3.setTexture(createTexture("res/ability_icons/deadeye_cd.png"));
 }
 
 void GameMode::slasher_smash() {
@@ -1738,6 +1918,8 @@ void GameMode::slasher_smash() {
 	}
 
 	abilityTimer1.restart();
+
+	abilityIcon1.setTexture(createTexture("res/ability_icons/smash_cd.png"));
 }
 
 void GameMode::slasher_warcry() {
@@ -1746,6 +1928,8 @@ void GameMode::slasher_warcry() {
 	player.isWarcry = true;
 
 	abilityTimer2.restart();
+
+	abilityIcon2.setTexture(createTexture("res/ability_icons/warcry_cd.png"));
 }
 
 void GameMode::slasher_rage() {
@@ -1755,6 +1939,8 @@ void GameMode::slasher_rage() {
 	player.speed = 5;
 
 	abilityTimer3.restart();
+
+	abilityIcon3.setTexture(createTexture("res/ability_icons/rage_cd.png"));
 }
 
 void GameMode::engineer_decoy() {
@@ -1772,6 +1958,8 @@ void GameMode::engineer_decoy() {
 	allies.back().isDummy = true;
 
 	abilityTimer1.restart();
+
+	abilityIcon1.setTexture(createTexture("res/ability_icons/decoy_cd.png"));
 }
 
 void GameMode::engineer_barrel() {
@@ -1780,6 +1968,8 @@ void GameMode::engineer_barrel() {
 	createItem(player.getPosition(), Item::type::barrel);
 
 	abilityTimer2.restart();
+
+	abilityIcon2.setTexture(createTexture("res/ability_icons/barrel_cd.png"));
 }
 
 void GameMode::engineer_shield() {
@@ -1797,6 +1987,8 @@ void GameMode::engineer_shield() {
 	allies.back().centerShield = (allies.back().getPosition() + sf::Vector2f({ +48.f, +48.f }));
 
 	abilityTimer3.restart();
+
+	abilityIcon3.setTexture(createTexture("res/ability_icons/shield_cd.png"));
 }
 
 void GameMode::spawnEnemies(int noOfEnemies) {
@@ -2019,6 +2211,10 @@ void GameMode::initGame()
 	}
 	delete this;
 	return;
+}
+
+void GameMode::addHiddenArea(const sf::FloatRect& rect) {
+	hiddenAreas.push_back(rect);
 }
 
 void GameMode::saveGame()

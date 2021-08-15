@@ -1,5 +1,7 @@
 #include "tilemap.hpp"
 #include "state.hpp"
+#include "gamemode.hpp"
+
 #include <time.h>
 #include <vector>
 
@@ -94,16 +96,15 @@ const tileType buildingsmall::array[w][h] =
 {13, 30, 14, 15},
 };
 
-TileMap::TileMap()
-	:mapWidth(0),
-	mapHeight(0)
-{
-}
-
-TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :	
+TileMap::TileMap(unsigned mapWidth, unsigned mapHeight):
 	mapWidth(mapWidth),
 	mapHeight(mapHeight)
-{
+{}
+
+void TileMap::generate(GameMode* gmode) {
+	// change state to a reference
+	GameMode& state = *gmode;
+
 	// load tile textures
 	int nTextures = 74; // TODO make this not a magic number
 	textures.resize(nTextures);
@@ -146,6 +147,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 						setTile(x + offset.x, y + offset.y, building1::array[y][x]);
 					}
 				}
+				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building1::w - 2) * 32.f, (building1::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -157,6 +159,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 						setTile(x + offset.x, y + offset.y, building2::array[y][x]);
 					}
 				}
+				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building2::w - 2) * 32.f, (building2::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -168,6 +171,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 						setTile(x + offset.x, y + offset.y, building3::array[y][x]);
 					}
 				}
+				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building3::w - 2) * 32.f, (building3::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -179,6 +183,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 						setTile(x + offset.x, y + offset.y, building4::array[y][x]);
 					}
 				}
+				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building4::w - 2) * 32.f, (building4::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -190,6 +195,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 						setTile(x + offset.x, y + offset.y, building5::array[y][x]);
 					}
 				}
+				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building5::w - 2) * 32.f, (building5::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -201,6 +207,7 @@ TileMap::TileMap(State& state, unsigned mapWidth, unsigned mapHeight) :
 						setTile(x + offset.x, y + offset.y, buildingsmall::array[y][x]);
 					}
 				}
+				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildingsmall::w - 2) * 32.f, (buildingsmall::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;

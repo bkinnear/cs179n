@@ -4,7 +4,8 @@
 #include "game.hpp"
 #include <vector>
 #include <string>
-#include <vector>
+
+class GameMode;
 
 #define TILE_SIZE 32
 
@@ -21,12 +22,13 @@ struct Tile {
 */
 class TileMap: public sf::Drawable {
 public:
-	
-	TileMap();
-	TileMap(State& state, unsigned mapWidth, unsigned mapHeight);
+	TileMap(unsigned mapWidth, unsigned mapHeight);
 
 	std::vector<std::vector<Tile>> getTileMap();
 	void setTileMap(std::vector<std::vector<Tile>>&);
+
+	// generates tile map
+	void generate(GameMode* gmode);
 
 	// sets tile at (x, y) to type specified
 	void setTile(unsigned x, unsigned y, tileType type);
