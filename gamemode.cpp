@@ -317,12 +317,12 @@ int GameMode::hashPos(const sf::Vector2f& pos) const {
 	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
 }
 
-ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
-	itemsOnMap.push_back(std::pair<Item::type, sf::Sprite>(type, sf::Sprite()));
-	sf::Sprite& spr = itemsOnMap.back().second;
+ItemSpr* GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
+	itemsOnMap.push_back(new ItemSpr({ type, sf::Sprite() }));
+	sf::Sprite& spr = itemsOnMap.back()->spr;
 	spr.setPosition(pos.x, pos.y);
 	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back()->type), { 48,48 }));
 	spr.setScale(.5, .5);
 
 	// hashkey organizes items in buckets that hold items in 1 tile space (32x32)
@@ -331,27 +331,29 @@ ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
 	if (itemList == itemHash.end()) {
 		itemHash[hashKey] = {};
 	}
-	itemHash[hashKey].push_back(std::prev(itemsOnMap.end()));
+	itemHash[hashKey].push_back(itemsOnMap.back());
 
-	return std::prev(itemsOnMap.end());
+	return itemsOnMap.back();
 }
 
-void GameMode::removeItem(ItemIterator itemItr) {
+void GameMode::removeItem(ItemSpr* pItem) {
 	// remove item from hash
-	itemHash.at(hashPos(itemItr->second.getPosition())).remove(itemItr);
+	itemHash.at(hashPos(pItem->spr.getPosition())).remove(pItem);
 	// remove item from item list
-	itemsOnMap.erase(itemItr);
+	itemsOnMap.remove(pItem);
+	// free item memory
+	delete pItem;
 }
 
-ItemIterator GameMode::getItem(const sf::Vector2f& pos) {
+ItemSpr* GameMode::getItemAt(const sf::Vector2f& pos) {
 	auto itemListItr = itemHash.find(hashPos(pos));
 	// see if hashmap has an entry
 	if (itemListItr == itemHash.end())
-		return itemsOnMap.end();
+		return nullptr;
 
 	// see if list is empty or not
 	if (itemListItr->second.empty())
-		return itemsOnMap.end();
+		return nullptr;
 
 	// return first item in hashmap entry list
 	return itemListItr->second.front();
@@ -541,16 +543,15 @@ bool GameMode::handleEvents() {
 				for (int i = -1; i <= 1; i++) {
 					for (int j = -1; j <= 1; j++) {
 						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
-						ItemIterator itemItr = getItem(pos);
-						if (itemItr == itemsOnMap.end())
+						ItemSpr* pItem = getItemAt(pos);
+						if (!pItem)
 							continue;
-						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, itemItr->second.getPosition());
+						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
 						if (distToPlayer <= MIN_DIST_ITEM) {
 							// add item to inventory
-							inventory.addItem(getLootItem(itemItr->first), getLootAmount(itemItr->first));
+							inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
 
-							// remove item from map
-							removeItem(itemItr);
+							removeItem(pItem);
 						}
 					}
 				}
@@ -1004,7 +1005,7 @@ void GameMode::render()
 
 	//draw the weapons
 	for (auto item : itemsOnMap) {
-		gwindow.draw(item.second);
+		gwindow.draw(item->spr);
 	}
 
 	// draw the player
