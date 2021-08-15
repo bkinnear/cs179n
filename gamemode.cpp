@@ -315,6 +315,29 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		endlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
 		endlessScoreCounter.setOutlineThickness(2.f);
 
+		maxEndlessScoreCounter.setPosition({ 5.f, 60.f });
+		maxEndlessScoreCounter.setFont(font);
+		maxEndlessScoreCounter.setCharacterSize(16);
+		maxEndlessScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		maxEndlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		maxEndlessScoreCounter.setOutlineThickness(2.f);
+	}
+	else if (type == 2)
+	{
+		survivalScoreCounter.setPosition({ 5.f, 30.f });
+		survivalScoreCounter.setFont(font);
+		survivalScoreCounter.setCharacterSize(16);
+		survivalScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		survivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		survivalScoreCounter.setOutlineThickness(2.f);
+
+		maxSurvivalScoreCounter.setPosition({ 5.f, 60.f });
+		maxSurvivalScoreCounter.setFont(font);
+		maxSurvivalScoreCounter.setCharacterSize(16);
+		maxSurvivalScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		maxSurvivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		maxSurvivalScoreCounter.setOutlineThickness(2.f);
+	}
 	if (isLoadCall)
 	{
 		if (type == 1)
@@ -326,6 +349,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			endlessScoreCounter.setString(str);
 			std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
 			maxEndlessScoreCounter.setString(maxStr);
+			player.health = gameLoadMeta.endlessMeta.playerHealth;
 		}
 		else if(type == 2)
 		{
@@ -340,6 +364,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			currentEnemySpawningCount = (currentLevel * 2) + 1;
 			currentEnemyPresent = currentEnemySpawningCount;
 			GameMode::spawnEnemies(currentEnemySpawningCount);
+			player.health = gameLoadMeta.survivalMeta.playerHealth;
 		}
 		maxEndlessScore = gameLoadMeta.endlessMeta.maxScore;
 		maxSurvivalScore = gameLoadMeta.survivalMeta.maxScore;
@@ -976,6 +1001,7 @@ bool GameMode::handleEvents() {
 					//gameMeta.endlessMeta.currentMap = tileMap.getTileMap();
 					gameMeta.endlessMeta.maxScore = maxEndlessScore;
 					gameMeta.endlessMeta.currentScore = currentEndlessScore;
+					gameMeta.endlessMeta.playerHealth = player.health;
 				}
 				else if (type == 2)//Survival Meta save
 				{
@@ -985,6 +1011,7 @@ bool GameMode::handleEvents() {
 					//gameMeta.survivalMeta.currentMap = tileMap.getTileMap();
 					gameMeta.survivalMeta.maxScore = maxSurvivalScore;
 					gameMeta.survivalMeta.currentScore = currentSurvivalScore;
+					gameMeta.survivalMeta.playerHealth = player.health;
 				}
 				saveGame();
 			}
@@ -2168,11 +2195,13 @@ void GameMode::loadGame(bool isLoadCall)
 		gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
 		gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
 		gameMeta.survivalMeta.maxScore = loadMeta.survivalMeta.maxScore;
+		gameMeta.survivalMeta.playerHealth = loadMeta.survivalMeta.playerHealth;
 		//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
 
 		gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
 		gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
 		gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
+		gameMeta.endlessMeta.playerHealth = loadMeta.endlessMeta.playerHealth;
 		//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
 
 		/*
@@ -2185,8 +2214,8 @@ void GameMode::loadGame(bool isLoadCall)
 			std::cout << "\n";
 		}
 		*/
-		std::cout << "Survival Level = Current Score = " << gameMeta.survivalMeta.currentScore << " and Max Score = " << gameMeta.survivalMeta.maxScore << "\n";
-		std::cout << "Endless Level = Current Score = " << gameMeta.endlessMeta.currentScore << " and Max Score = " << gameMeta.endlessMeta.maxScore << "\n";
+		std::cout << "Survival Level = "<< gameMeta.survivalMeta.playerHealth << "\n";
+		std::cout << "Endless Level = "<<  gameMeta.endlessMeta.playerHealth <<"\n";
 		
 		if (isLoadCall)
 		{
