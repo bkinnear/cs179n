@@ -10,7 +10,11 @@
 */
 struct Item {
 	// different types of items
-	enum class type { null, MP5, ammo_9mm, M4, ammo_556, medkit, health_pack, ammo_crate, barrel, dagger, baseball_bat, walkie_talkie, shield};
+	enum class type { null, MP5, ammo_9mm, M4, ammo_556,
+		medkit, health_pack, ammo_crate,
+		barrel, dagger, baseball_bat,
+		walkie_talkie, shield,
+		military_crate, medical_crate, empty_crate};
 
 	// type of item
 	type itemType = type::null;
@@ -43,6 +47,8 @@ struct Item {
 			return "Walkie-talkie";
 		case type::baseball_bat:
 			return "Baseball Bat";
+		case type::military_crate:
+			return "Military Crate";
 		default:
 			return "unknown item";
 		}
@@ -73,6 +79,8 @@ struct Item {
 			return "Walkie-talkie. Used to call in an ally.";
 		case type::baseball_bat:
 			return "Baseball Bat. Used to bash enemies.";
+		case type::military_crate:
+			return "JDF Supply Crate. Full of military supplies";
 		default:
 			return "unknown item desc";
 		}

@@ -68,7 +68,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	State(game),
 	type(type),
 	player(playerClass),
-	tileMap(*this, MAP_WIDTH, MAP_HEIGHT),
+	tileMap(MAP_WIDTH, MAP_HEIGHT),
 	texPlayerRight(createTexture("res/player_r_strip.png")),
 	texPlayerLeft(createTexture("res/player_l_strip.png")),
 	texPlayerRightMp5(createTexture("res/player_r_mp5_strip.png")),
@@ -95,6 +95,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	grenadeIcon(createTexture("res/grenade_icon.png")),
 	reticle(createTexture("res/reticle.png"))
 {
+	// generate tile map
+	tileMap.generate(this);
 
 	// set main view
 	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
@@ -331,18 +333,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 	}
 	
+	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
 	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
 }
 
-ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
-	itemsOnMap.push_back(std::pair<Item::type, sf::Sprite>(type, sf::Sprite()));
-	sf::Sprite& spr = itemsOnMap.back().second;
+ItemSpr* GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
+	itemsOnMap.push_back(new ItemSpr({ type, sf::Sprite() }));
+	sf::Sprite& spr = itemsOnMap.back()->spr;
 	spr.setPosition(pos.x, pos.y);
 	spr.setTexture(inventory.texItemTileset);
-	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back().first), { 48,48 }));
+	spr.setTextureRect(sf::IntRect(getItemTexOffset(itemsOnMap.back()->type), { 48,48 }));
 	spr.setScale(.5, .5);
 
 	// hashkey organizes items in buckets that hold items in 1 tile space (32x32)
@@ -351,27 +354,29 @@ ItemIterator GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
 	if (itemList == itemHash.end()) {
 		itemHash[hashKey] = {};
 	}
-	itemHash[hashKey].push_back(std::prev(itemsOnMap.end()));
+	itemHash[hashKey].push_back(itemsOnMap.back());
 
-	return std::prev(itemsOnMap.end());
+	return itemsOnMap.back();
 }
 
-void GameMode::removeItem(ItemIterator itemItr) {
+void GameMode::removeItem(ItemSpr* pItem) {
 	// remove item from hash
-	itemHash.at(hashPos(itemItr->second.getPosition())).remove(itemItr);
+	itemHash.at(hashPos(pItem->spr.getPosition())).remove(pItem);
 	// remove item from item list
-	itemsOnMap.erase(itemItr);
+	itemsOnMap.remove(pItem);
+	// free item memory
+	delete pItem;
 }
 
-ItemIterator GameMode::getItem(const sf::Vector2f& pos) {
+ItemSpr* GameMode::getItemAt(const sf::Vector2f& pos) {
 	auto itemListItr = itemHash.find(hashPos(pos));
 	// see if hashmap has an entry
 	if (itemListItr == itemHash.end())
-		return itemsOnMap.end();
+		return nullptr;
 
 	// see if list is empty or not
 	if (itemListItr->second.empty())
-		return itemsOnMap.end();
+		return nullptr;
 
 	// return first item in hashmap entry list
 	return itemListItr->second.front();
@@ -669,16 +674,15 @@ bool GameMode::handleEvents() {
 				for (int i = -1; i <= 1; i++) {
 					for (int j = -1; j <= 1; j++) {
 						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
-						ItemIterator itemItr = getItem(pos);
-						if (itemItr == itemsOnMap.end())
+						ItemSpr* pItem = getItemAt(pos);
+						if (!pItem)
 							continue;
-						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, itemItr->second.getPosition());
+						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
 						if (distToPlayer <= MIN_DIST_ITEM) {
 							// add item to inventory
-							inventory.addItem(getLootItem(itemItr->first), getLootAmount(itemItr->first));
+							inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
 
-							// remove item from map
-							removeItem(itemItr);
+							removeItem(pItem);
 						}
 					}
 				}
@@ -1132,7 +1136,7 @@ void GameMode::render()
 
 	//draw the weapons
 	for (auto item : itemsOnMap) {
-		gwindow.draw(item.second);
+		gwindow.draw(item->spr);
 	}
 
 	// draw the player
@@ -1155,6 +1159,16 @@ void GameMode::render()
 
 	// draw effects
 	drawEffects();
+
+	// draw hidden areas
+	sf::RectangleShape areaShape;
+	areaShape.setFillColor(sf::Color::Black);
+	for (auto area : hiddenAreas) {
+		areaShape.setPosition(area.left, area.top);
+		areaShape.setSize({ area.width, area.height });
+		if (!player.getBounds().intersects(area))
+			gwindow.draw(areaShape);
+	}
 
 	// ========================= //
 	// =  v   GUI drawing   v  = //
@@ -1337,7 +1351,8 @@ void GameMode::logic()
 
 void GameMode::updateProjectiles() {
 	bool breaking = false;
-	for (auto projItr = projectiles.begin(); projItr != projectiles.end(); projItr++) {
+	auto projItr = projectiles.begin();
+	while (projItr != projectiles.end()) {
 		// get movement of projectile for this frame
 		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
 		if (tileMap.areaClear(*projItr, moveVector)) {
@@ -1351,14 +1366,13 @@ void GameMode::updateProjectiles() {
 					tileMap.getTileBounds(projItr->getPosition().x + 2.5f * moveVector.x, projItr->getPosition().y + 2.5f * moveVector.y)
 				)
 			);
+
 			// destroy projectile
 			projItr = projectiles.erase(projItr);
-			if (projItr == projectiles.end())
-				break;
 			continue;
 		}
 
-		if (projItr->isGrenade == true) {
+		if (projItr->isGrenade) {
 			float maxRange = 250.f;
 			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
 
@@ -1373,10 +1387,14 @@ void GameMode::updateProjectiles() {
 						if (enemyItr->health <= 0) {
 							enemyItr = enemies.erase(enemyItr);
 							GameMode::spawnEnemies(1);
+							continue;
 						}
 					}
 				}
+
+				//  destroy projectile
 				projItr = projectiles.erase(projItr);
+				continue;
 			}
 		}
 		else {
@@ -1392,10 +1410,15 @@ void GameMode::updateProjectiles() {
 			// check for collision with enemies
 			// TODO - make enemies use a spatial hash so this algo's faster
 			// this algo is currently O(K*N) where K = bullets, N = enemies
-			for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+			bool collided = false;
+			auto enemyItr = enemies.begin();
+			while (enemyItr != enemies.end()) {
 				// ignore if enemy is not colliding with projectile
-				if (!enemyItr->isColliding(*projItr))
+				if (!enemyItr->isColliding(*projItr)) {
+					enemyItr++;
 					continue;
+				}
+
 				// deal damage to enemy
 				if (projItr->isMelee) {
 					meleeSound.setBuffer(meleeSoundBuffer);
@@ -1403,29 +1426,28 @@ void GameMode::updateProjectiles() {
 					meleeSound.play();
 				}
 				enemyItr->health -= projItr->damage;
-				std::cout << "DMG: " << projItr->damage << std::endl;
-
-				// destroy bullet
-				projItr = projectiles.erase(projItr);
-				if (projItr == projectiles.end())
-					breaking = true;
+				//std::cout << "DMG: " << projItr->damage << std::endl;
 
 				// destroy enemy if health below 0
 				if (enemyItr->health <= 0) {
 					enemyItr = enemies.erase(enemyItr);
 					respawnEnemies();
-					if (enemyItr == enemies.end())
-						break;
+					continue;
 				}
 
-				// projectile is destroyed - no need to continue
-				if (breaking)
-					break;
-			}
-			// no projectiles left - no need to continue
-			if (breaking)
+				collided = true;
 				break;
+			}
+
+			// destroy bullet
+			if (collided) {
+				projItr = projectiles.erase(projItr);
+				continue;
+			}
 		}
+
+		// move on to next projectile
+		projItr++;
 	}
 }
 
@@ -2082,6 +2104,10 @@ void GameMode::initGame()
 	}
 	delete this;
 	return;
+}
+
+void GameMode::addHiddenArea(const sf::FloatRect& rect) {
+	hiddenAreas.push_back(rect);
 }
 
 void GameMode::saveGame()
