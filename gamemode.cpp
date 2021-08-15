@@ -281,7 +281,38 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	grenadesNum.setColor(sf::Color::Black);
 	grenadesNum.setString("x" + std::to_string(gCount));
 	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
+	if (type == 1)
+	{
+		endlessScoreCounter.setPosition({ 5.f, 30.f });
+		endlessScoreCounter.setFont(font);
+		endlessScoreCounter.setCharacterSize(16);
+		endlessScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		endlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		endlessScoreCounter.setOutlineThickness(2.f);
 
+		maxEndlessScoreCounter.setPosition({ 5.f, 60.f });
+		maxEndlessScoreCounter.setFont(font);
+		maxEndlessScoreCounter.setCharacterSize(16);
+		maxEndlessScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		maxEndlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		maxEndlessScoreCounter.setOutlineThickness(2.f);
+	}
+	else if (type == 2)
+	{
+		survivalScoreCounter.setPosition({ 5.f, 30.f });
+		survivalScoreCounter.setFont(font);
+		survivalScoreCounter.setCharacterSize(16);
+		survivalScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		survivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		survivalScoreCounter.setOutlineThickness(2.f);
+
+		maxSurvivalScoreCounter.setPosition({ 5.f, 60.f });
+		maxSurvivalScoreCounter.setFont(font);
+		maxSurvivalScoreCounter.setCharacterSize(16);
+		maxSurvivalScoreCounter.setFillColor(sf::Color(0x00EE00FF));
+		maxSurvivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
+		maxSurvivalScoreCounter.setOutlineThickness(2.f);
+	}
 	if (isLoadCall)
 	{
 		if (type == 1)
@@ -289,11 +320,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			player.setPosition(gameLoadMeta.endlessMeta.playerPosX, gameLoadMeta.endlessMeta.playerPosY);
 			//tileMap.setTileMap(gameLoadMeta.endlessMeta.currentMap);
 			currentEndlessScore = gameLoadMeta.endlessMeta.currentScore;
+			std::string str = "Score: " + std::to_string(currentEndlessScore);
+			endlessScoreCounter.setString(str);
+			std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
+			maxEndlessScoreCounter.setString(maxStr);
 		}
 		else if(type == 2)
 		{
 			player.setPosition(gameLoadMeta.survivalMeta.playerPosX, gameLoadMeta.survivalMeta.playerPosY);
 			currentSurvivalScore = gameLoadMeta.survivalMeta.currentScore;
+			std::string str = "Score: " + std::to_string(currentSurvivalScore);
+			survivalScoreCounter.setString("Score: " + str);
+			std::string maxStr = "Max Score: " + std::to_string(maxSurvivalScore);
+			maxSurvivalScoreCounter.setString(maxStr);
 			//tileMap.setTileMap(gameLoadMeta.survivalMeta.currentMap);
 			currentLevel = gameLoadMeta.survivalMeta.currentLevel;
 			currentEnemySpawningCount = (currentLevel * 2) + 1;
@@ -305,14 +344,27 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	}
 	else
 	{
-		// TODO delegate to children classes
-		if (type == 1)
-			GameMode::spawnEnemies(defaultEnemySpawningCount);
-		else if (type == 2)
-			GameMode::spawnEnemies(currentEnemySpawningCount);
+
 		loadGame(false);
 		maxEndlessScore = gameMeta.endlessMeta.maxScore;
 		maxSurvivalScore = gameMeta.survivalMeta.maxScore;
+		// TODO delegate to children classes
+		if (type == 1)
+		{
+			std::string str = "Score: " + std::to_string(currentEndlessScore);
+			endlessScoreCounter.setString(str);
+			std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
+			maxEndlessScoreCounter.setString(maxStr);
+			GameMode::spawnEnemies(defaultEnemySpawningCount);
+		}
+		else if (type == 2)
+		{
+			std::string str = "Score: " + std::to_string(currentSurvivalScore);
+			survivalScoreCounter.setString(str);
+			std::string maxStr = "Max Score: " + std::to_string(maxSurvivalScore);
+			maxSurvivalScoreCounter.setString(maxStr);
+			GameMode::spawnEnemies(currentEnemySpawningCount);
+		}
 	}
 	
 }
@@ -1027,6 +1079,16 @@ void GameMode::render()
 	// set view to draw guis
 	gwindow.setView(guiView);
 
+	if (type == 1)
+	{
+		gwindow.draw(endlessScoreCounter);
+		gwindow.draw(maxEndlessScoreCounter);
+	}
+	else if (type == 2)
+	{
+		gwindow.draw(survivalScoreCounter);
+		gwindow.draw(maxSurvivalScoreCounter);
+	}
 	// draw the inventory
 	if (showInventory)
 		gwindow.draw(inventory);
@@ -1054,6 +1116,7 @@ void GameMode::render()
 	}
 
 	gwindow.draw(fpsCounter);
+
 
 	// update window
 	gwindow.display();
@@ -1189,8 +1252,25 @@ void GameMode::logic()
 		fpsClock.restart();
 		fpsTick = 0;
 	}
-
+	
 	inventory.tick();
+
+
+	if (type == 1)
+	{
+		std::string str = "Score: " + std::to_string(currentEndlessScore);
+		endlessScoreCounter.setString(str);
+		std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
+		maxEndlessScoreCounter.setString(maxStr);
+
+	}
+	else if (type == 2)
+	{
+		std::string str = "Score: " + std::to_string(currentSurvivalScore);
+		survivalScoreCounter.setString(str);
+		std::string maxStr = "Max Score: " + std::to_string(maxSurvivalScore);
+		maxSurvivalScoreCounter.setString(maxStr);
+	}
 }
 
 void GameMode::updateProjectiles() {
@@ -1232,10 +1312,12 @@ void GameMode::updateProjectiles() {
 							if (type == 1)
 							{
 								currentEndlessScore += 1;
+								maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
 							}
 							else if (type == 2)
 							{
 								currentSurvivalScore += 1;
+								maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
 							}
 							enemyItr = enemies.erase(enemyItr);
 							GameMode::spawnEnemies(1);
@@ -1281,10 +1363,12 @@ void GameMode::updateProjectiles() {
 					if (type == 1)
 					{
 						currentEndlessScore += 1;
+						maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
 					}
 					else if (type == 2)
 					{
 						currentSurvivalScore += 1;
+						maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
 					}
 					enemyItr = enemies.erase(enemyItr);
 					respawnEnemies();
@@ -1646,6 +1730,7 @@ void GameMode::slasher_smash() {
 			enemyItr->health -= 25;
 			if (enemyItr->health <= 0) {
 				currentEndlessScore += 1;
+				maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
 				enemyItr = enemies.erase(enemyItr);
 				spawnEnemies(1);
 			}
@@ -1891,13 +1976,11 @@ void GameMode::loadGame(bool isLoadCall)
 		gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
 		gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
 		gameMeta.survivalMeta.maxScore = loadMeta.survivalMeta.maxScore;
-		gameMeta.survivalMeta.currentScore = loadMeta.survivalMeta.currentScore;
 		//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
 
 		gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
 		gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
 		gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
-		gameMeta.endlessMeta.currentScore = loadMeta.endlessMeta.currentScore;
 		//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
 
 		/*
@@ -1915,6 +1998,8 @@ void GameMode::loadGame(bool isLoadCall)
 		
 		if (isLoadCall)
 		{
+			gameMeta.endlessMeta.currentScore = loadMeta.endlessMeta.currentScore;
+			gameMeta.survivalMeta.currentScore = loadMeta.survivalMeta.currentScore;
 			initGame();
 		}
 	}

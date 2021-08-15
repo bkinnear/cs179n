@@ -220,6 +220,7 @@ protected:
 			//std::vector<std::vector<Tile>> currentMap;
 			int maxScore = 0;
 			int currentScore = 0;
+			int playerHealth = 100;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -230,6 +231,7 @@ protected:
 			//std::vector<std::vector<Tile>> currentMap;
 			int maxScore = 0;
 			int currentScore = 0;
+			int playerHealth = 100;
 		}survivalMeta;
 	}gameMeta;
 
@@ -245,6 +247,10 @@ protected:
 		int currentSurvivalScore = 0;
 		int maxEndlessScore = 0;
 		int maxSurvivalScore = 0;
+		sf::Text endlessScoreCounter;
+		sf::Text survivalScoreCounter;
+		sf::Text maxEndlessScoreCounter;
+		sf::Text maxSurvivalScoreCounter;
 
 public:
 
