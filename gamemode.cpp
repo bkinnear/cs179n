@@ -1712,13 +1712,9 @@ void GameMode::updateEnemies(int type) {
 }
 
 void GameMode::spawnItems() {
-
-	//initialize weapon list
-	int numItems = 20; //set to 5 for testing purposes, otherwise set to rand()%3;
-	//sf::Sprite& spr;
-	for (int i = 0; i < numItems; ++i) {
+	for (const sf::Vector2f& pos: lootSpawnPoints) {
 		Item::type itemType = Item::type::null;
-		int randomItem = 9;//randomly generate what item to spawn
+		int randomItem = rand() % 9;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1751,12 +1747,7 @@ void GameMode::spawnItems() {
 			itemType = Item::type::walkie_talkie;
 			break;
 		}
-		sf::Vector2f pos;
-		for (;;) {
-			pos = { (float)(rand() % tileMap.mapWidth * TILE_SIZE), (float)(rand() % tileMap.mapHeight * TILE_SIZE) };
-			if (!tileMap.isOpaque(pos.x, pos.y))
-				break;
-		}
+
 		createItem(pos, itemType);
 	}
 }
@@ -2170,6 +2161,10 @@ void GameMode::initGame()
 
 void GameMode::addHiddenArea(const sf::FloatRect& rect) {
 	hiddenAreas.push_back(rect);
+}
+
+void GameMode::addLootSpawn(const sf::Vector2f& pos) {
+	lootSpawnPoints.push_back(pos);
 }
 
 void GameMode::saveGame()

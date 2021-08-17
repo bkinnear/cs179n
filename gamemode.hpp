@@ -278,5 +278,6 @@ public:
 	virtual void render();
 
 	void addHiddenArea(const sf::FloatRect&);
+	void addLootSpawn(const sf::Vector2f& pos);
 };
 #endif
