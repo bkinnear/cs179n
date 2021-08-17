@@ -57,11 +57,13 @@ protected:
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
 	sf::Texture& texWeaponMP5;
+	sf::Texture& texHealAnimation;
 	sf::Texture& texExplosionSmall;
 	sf::Texture& texExplosionLarge;
 	sf::Texture& texDeadEyeOpen;
 	sf::Texture& texDeadEyeClose;
 	sf::Texture& playerDeath;
+	sf::Texture& texGuardianAngel;
 
 	// Music
 	sf::Music music;
@@ -100,10 +102,12 @@ protected:
 	sf::Font font;
 
 	// effects
+	EffectID healingFX;
 	EffectID explosionSmall;
 	EffectID explosionLarge;
 	EffectID deadEyeOpen;
 	EffectID deadEyeClose;
+	EffectID guardianAngelFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;

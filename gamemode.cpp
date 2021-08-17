@@ -84,6 +84,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
 	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
+	texHealAnimation(createTexture("res/heal_animation.png")),
 	texWeaponMP5(createTexture("res/mp5.png")),
 	texExplosionSmall(createTexture("res/explosion_small_strip.png")),
 	texExplosionLarge(createTexture("res/explosion_large.png")),
@@ -93,7 +94,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
 	grenadeIcon(createTexture("res/grenade_icon.png")),
-	reticle(createTexture("res/reticle.png"))
+	reticle(createTexture("res/reticle.png")),
+	texGuardianAngel(createTexture("res/guardian_angel_animation.png"))
 {
 	// generate tile map
 	tileMap.generate(this);
@@ -237,10 +239,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	chooseClass(playerClass);
 
 	// load effects
+	healingFX = loadEffect(texHealAnimation, { 0,0,38,39 }, 20, 20);
 	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
 	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,16,16 }, 6, 12);
 	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,16,16 }, 6, 12);
+	guardianAngelFX = loadEffect(texGuardianAngel, { 0,0,38,39 }, 20, 20);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -1018,6 +1022,7 @@ bool GameMode::handleEvents() {
 								player.health = 100;
 							}
 							inventory.removeItem(Item::type::medkit, 1);
+							createEffect(healingFX, player.getPosition());
 							break;
 						case Item::type::health_pack:
 							if (player.health == 100) {
@@ -1031,6 +1036,7 @@ bool GameMode::handleEvents() {
 								player.health = 100;
 							}
 							inventory.removeItem(Item::type::health_pack, 1);
+							createEffect(healingFX, player.getPosition());
 							break;
 						case Item::type::walkie_talkie:
 							//call in ally
@@ -1664,7 +1670,7 @@ void GameMode::spawnItems() {
 	//sf::Sprite& spr;
 	for (int i = 0; i < numItems; ++i) {
 		Item::type itemType = Item::type::null;
-		int randomItem = 9;//randomly generate what item to spawn
+		int randomItem = rand() % 10;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -1744,6 +1750,8 @@ void GameMode::medic_heal() {
 			}
 		}
 	}
+
+	createEffect(guardianAngelFX, player.getPosition());
 
 	abilityTimer3.restart();
 
