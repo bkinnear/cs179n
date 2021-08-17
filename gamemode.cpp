@@ -1130,7 +1130,9 @@ bool GameMode::handleEvents() {
 				if (showInventory) {
 					//using switch to enable the usage of non-weapon items
 					sf::Vector2f pos;
-					switch (inventory.getItemAt(winMousePos.x, winMousePos.y)->itemType) {
+					const Item* item = inventory.getItemAt(winMousePos.x, winMousePos.y);
+					Item::type type = item->itemType;
+					switch (type) {
 						case Item::type::medkit:
 							if (player.health == 100) {
 								std::cout << "Player already at max health." << std::endl;
@@ -1176,7 +1178,6 @@ bool GameMode::handleEvents() {
 							// equip item
 							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
 							break;
-
 					}
 				}
 
