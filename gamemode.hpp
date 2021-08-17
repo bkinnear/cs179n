@@ -102,10 +102,10 @@ protected:
 	sf::Font font;
 
 	// effects
-	Effect* explosionSmall;
-	Effect* explosionLarge;
-	Effect* deadEyeOpen;
-	Effect* deadEyeClose;
+	EffectID explosionSmall;
+	EffectID explosionLarge;
+	EffectID deadEyeOpen;
+	EffectID deadEyeClose;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
@@ -142,6 +142,12 @@ protected:
 	sf::Sprite grenadeIcon;
 	sf::Text grenadesNum;
 	sf::Sprite reticle;
+	sf::Sprite abilityIcon1;
+	sf::Sprite abilityIcon2;
+	sf::Sprite abilityIcon3;
+	sf::Text abilityClock1;
+	sf::Text abilityClock2;
+	sf::Text abilityClock3;
 
 	// inventory
 	Inventory inventory;
@@ -242,11 +248,26 @@ protected:
 
 	bool gamestateChange = false;
 	std::string metaFileName = "thelastwar.dat";
+	
 	void loadGame();
 	void saveGame();
 	void initGame();
-	private:
-		int type; //1 - Endless, 2 - Survival
+
+	void spawnEnemies(int);
+	void respawnEnemies();
+	void spawnItems();
+	void updateEnemies(int);
+	void renderEnemies();
+	bool handleEvents();
+	void updateProjectiles();
+	void renderAllies();
+	void updateAllies();
+
+	std::list<sf::FloatRect> hiddenAreas;
+	std::list<sf::Vector2f> lootSpawnPoints; // TODO create loot spawn points in TileMap::generate that determine where items spawns / what items
+
+private:
+	int type; //1 - Endless, 2 - Survival
 
 public:
 
@@ -256,19 +277,6 @@ public:
 	virtual void logic();
 	virtual void render();
 
-	void spawnEnemies(int);
-	void respawnEnemies();
-	void spawnItems();
-	void updateEnemies(int);
-	void renderEnemies();
-
-	bool handleEvents();
-
-	void updateProjectiles();
-
-
-
-	void renderAllies();
-	void updateAllies();
+	void addHiddenArea(const sf::FloatRect&);
 };
 #endif
