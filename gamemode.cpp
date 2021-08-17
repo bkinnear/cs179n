@@ -1463,31 +1463,35 @@ void GameMode::updateProjectiles() {
 					continue;
 				}
         
-                collided = true;
-                    break;
+				collided = true;
+				break;
             }
-
-            if (!collided) {
-                ItemSpr* itemSpr = getItemAt(projItr->getPosition());
-                if (!itemSpr)
-                    continue;
-                else if (itemSpr->type == Item::type::barrel) {
-                    explosionLarge->setScale(3, 3);
-                    createEffect(explosionLarge, itemSpr->spr.getPosition() + sf::Vector2f({ -72.f,-64.f }));
-                    projItr = projectiles.erase(projItr);
-                    removeItem(itemSpr);
-                    for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-                        float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
-                        if (distToProj <= 300) {
-                            enemyItr->health -= 160;
-                            if (enemyItr->health <= 0) {
-                                enemyItr = enemies.erase(enemyItr);
-                                GameMode::spawnEnemies(1);
-                            }
-                        }
-                    }
-                }
-            }
+			/*
+			if (!collided) {
+				ItemSpr* itemSpr = getItemAt(projItr->getPosition());
+				if (!itemSpr)
+					continue;
+				else if (itemSpr->type == Item::type::barrel) {
+					getEffectSprite(explosionLarge).setScale(3, 3);
+					createEffect(explosionLarge, itemSpr->spr.getPosition() + sf::Vector2f({ -72.f,-64.f }));
+					projItr = projectiles.erase(projItr);
+					removeItem(itemSpr);
+					auto enemyItr = enemies.begin();
+					while (enemyItr != enemies.end()) {
+						float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
+						if (distToProj <= 300) {
+							enemyItr->health -= 160;
+							if (enemyItr->health <= 0) {
+								enemyItr = enemies.erase(enemyItr);
+								GameMode::spawnEnemies(1);
+								continue;
+							}
+						}
+						enemyItr++;
+					}
+					collided = true;
+				}
+			}*/
 
 			// destroy bullet
 			if (collided) {

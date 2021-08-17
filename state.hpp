@@ -59,6 +59,10 @@ public:
 	*/
 	EffectID loadEffect(const sf::Texture& texture, const sf::IntRect& subRect, unsigned nSubsprites, unsigned animationSpeed, float animationTime = 0.f);
 
+	/* returns reference to effect sprite
+	*/
+	AnimSprite& getEffectSprite(EffectID);
+
 	/* creates effect in world using given effect pointer
 	*/
 	void createEffect(EffectID effect, const sf::Vector2f& pos);
