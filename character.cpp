@@ -95,8 +95,17 @@ void Character::updatePath() {
     if (pathRetrieved)
         return;
 
+    bool futureIsValid = false;
+    try {
+        futureIsValid = nextPathHead.valid();
+    }
+    catch (std::exception e) {
+        std::cout << "future valid error" << std::endl;
+        return;
+    }
+
     // check if new path available
-    if (nextPathHead.valid()) {
+    if (futureIsValid) {
         if (nextPathHead.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
             // new path is available
             isPathing = false;
