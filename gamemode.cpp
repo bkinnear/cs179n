@@ -89,6 +89,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texExplosionLarge(createTexture("res/explosion_large.png")),
 	texDeadEyeOpen(createTexture("res/deadeye_open.png")),
 	texDeadEyeClose(createTexture("res/deadeye_close.png")),
+	texDeadEye(createTexture("res/deadeye.png")),
 	playerIcon(createTexture("res/Player1_display.png")),
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
@@ -129,6 +130,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		std::cout << "error loading gunshot noises" << std::endl;
 	}
 	if (!mp5ReloadBuffer.loadFromFile("res/mp5-reload.wav")) {
+		std::cout << "error loading mp5-reload noises" << std::endl;
+	}
+	if (!m4ReloadBuffer.loadFromFile("res/m4-reload.wav")) {
 		std::cout << "error loading mp5-reload noises" << std::endl;
 	}
 
@@ -177,8 +181,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	if (!mechNoise.loadFromFile("res/mechanical_noise.wav")) {
 		std::cout << "error loading mechanical noises" << std::endl;
 	}
-	if (!het_hon.loadFromFile("res/het_hon.wav")) {
+	if (!het_hon.loadFromFile("res/shield_noise.wav")) {
 		std::cout << "error loading shield noises" << std::endl;
+	}
+	if (!metalBox.loadFromFile("res/metal-box.wav")) {
+		std::cout << "error loading ammo can noises" << std::endl;
+	}
+	if (!barrelBuffer.loadFromFile("res/barrel.wav")) {
+		std::cout << "error loading barrel noises" << std::endl;
+	}
+
+	//timed powerup
+	if (!powerupBuffer.loadFromFile("res/power-up.wav")) {
+		std::cout << "error loading mechanical noises" << std::endl;
 	}
 
 	// load font
@@ -239,8 +254,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
-	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,16,16 }, 6, 12);
-	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,16,16 }, 6, 12);
+	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
+	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,32,32 }, 6, 12);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -506,7 +521,9 @@ void GameMode::updateCooldowns() {
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 10) { //increase damage for 10 seconds
 					player.isDeadEye = false; // turn off deadeye after 10 seconds
+					player.setColor(sf::Color::White);
 				}
+				
 			}
 			else {
 				onCoolDown3 = false;
@@ -748,8 +765,19 @@ bool GameMode::handleEvents() {
 			break;
 			case sf::Keyboard::R: // reload weapon
 				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() || !inventory.useWielded()) {
-					reloadSound.setBuffer(mp5ReloadBuffer);
-					reloadSound.play();
+					Item::type weaponType = inventory.getWielded().itemType;
+					switch (weaponType) {
+					case Item::type::MP5:
+						reloadSound.setBuffer(mp5ReloadBuffer);
+						reloadSound.play();
+						break;
+					case Item::type::M4:
+						reloadSound.setBuffer(m4ReloadBuffer);
+						reloadSound.play();
+						break;
+					default:
+						break;
+					}
 				}
 				inventory.reloadWielded();
 				break;
@@ -1434,10 +1462,32 @@ void GameMode::updateProjectiles() {
 					respawnEnemies();
 					continue;
 				}
+        
+                collided = true;
+                    break;
+            }
 
-				collided = true;
-				break;
-			}
+            if (!collided) {
+                ItemSpr* itemSpr = getItemAt(projItr->getPosition());
+                if (!itemSpr)
+                    continue;
+                else if (itemSpr->type == Item::type::barrel) {
+                    explosionLarge->setScale(3, 3);
+                    createEffect(explosionLarge, itemSpr->spr.getPosition() + sf::Vector2f({ -72.f,-64.f }));
+                    projItr = projectiles.erase(projItr);
+                    removeItem(itemSpr);
+                    for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
+                        float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
+                        if (distToProj <= 300) {
+                            enemyItr->health -= 160;
+                            if (enemyItr->health <= 0) {
+                                enemyItr = enemies.erase(enemyItr);
+                                GameMode::spawnEnemies(1);
+                            }
+                        }
+                    }
+                }
+            }
 
 			// destroy bullet
 			if (collided) {
@@ -1754,6 +1804,8 @@ void GameMode::assault_ammo() {
 	onCoolDown1 = true;
 
 	createItem(player.getPosition(), Item::type::ammo_crate);
+	dropTech.setBuffer(metalBox);
+	dropTech.play();
 	
 	abilityTimer1.restart();
 
@@ -1768,8 +1820,8 @@ void GameMode::assault_grenade() {
 	Projectile& proj = projectiles.back();
 	proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
 	proj.setTexture(texProjectile);
-	// set mask bounds to just the sprite bounds (default)
 	proj.setMaskBounds(proj.getLocalBounds());
+	proj.setScale(2,2);
 	proj.shotFrom = player.getPosition();
 	proj.isGrenade = true;
 	proj.speed = 4;
@@ -1789,7 +1841,10 @@ void GameMode::assault_deadeye() {
 	onCoolDown3 = true;
 
 	player.isDeadEye = true;
-	createEffect(deadEyeOpen, player.getPosition()+sf::Vector2f(10.f, -12.f));
+	createEffect(deadEyeOpen, player.getPosition());
+	powerUp.setBuffer(powerupBuffer);
+	powerUp.play();
+	player.setColor(sf::Color::Red);
 
 	abilityTimer3.restart();
 
@@ -1866,6 +1921,8 @@ void GameMode::engineer_barrel() {
 	onCoolDown2 = true;
 
 	createItem(player.getPosition(), Item::type::barrel);
+	dropTech.setBuffer(barrelBuffer);
+	dropTech.play();
 
 	abilityTimer2.restart();
 
@@ -2003,6 +2060,7 @@ void GameMode::updateAllies() {
 				projectiles.emplace_back();
 				shotSound.setBuffer(gunShotBuffer);
 				shotSound.setVolume(25);
+				shotSound.setPitch(1);
 				shotSound.play();
 				Projectile& proj = projectiles.back();
 				proj.setPosition(ally.getPosition().x + 16, ally.getPosition().y + 16);

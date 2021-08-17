@@ -90,7 +90,7 @@ struct Item {
 	int getDamage() const {
 		switch (itemType) {
 		case type::MP5:
-			return 25;
+			return 15;
 		case type::M4:
 			return 35;
 		case type::dagger:
@@ -142,7 +142,7 @@ struct Item {
 	int getDelayTime() const {
 		switch (itemType) {
 		case type::MP5:
-			return 5;
+			return 3;
 		case type::M4:
 			return 4;
 		default:
@@ -264,6 +264,7 @@ private:
 
 	// ticks until mag is loaded
 	int weaponReloadTick = 0;
+
 
 };
 

@@ -61,6 +61,7 @@ protected:
 	sf::Texture& texExplosionLarge;
 	sf::Texture& texDeadEyeOpen;
 	sf::Texture& texDeadEyeClose;
+	sf::Texture& texDeadEye;
 	sf::Texture& playerDeath;
 
 	// Music
@@ -72,6 +73,7 @@ protected:
 	sf::SoundBuffer gunShotBuffer;
 	sf::SoundBuffer emptyGunBuffer;
 	sf::SoundBuffer mp5ReloadBuffer;
+	sf::SoundBuffer m4ReloadBuffer;
 	sf::SoundBuffer grenadeShotBuffer;
 	sf::SoundBuffer grenadeExplodeBuffer;
 	sf::SoundBuffer meleeSoundBuffer;
@@ -113,7 +115,13 @@ protected:
 	// engineer sounds
 	sf::SoundBuffer mechNoise;
 	sf::SoundBuffer het_hon;
+	sf::SoundBuffer metalBox;
+	sf::SoundBuffer barrelBuffer;
 	sf::Sound dropTech;
+
+	// powerup sound
+	sf::SoundBuffer powerupBuffer;
+	sf::Sound powerUp;
 
 	// dialog GUI
 	int dialogTreeIndex = 0;
