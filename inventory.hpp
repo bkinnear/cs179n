@@ -94,7 +94,7 @@ struct Item {
 	int getMagCapacity() const {
 		switch (itemType) {
 		case type::MP5:
-			return 45;
+			return 30;
 		case type::M4:
 			return 30;
 		default:
@@ -132,7 +132,7 @@ struct Item {
 		case type::MP5:
 			return 3;
 		case type::M4:
-			return 5;
+			return 4;
 		default:
 			return -1;
 		}
