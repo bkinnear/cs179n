@@ -57,12 +57,16 @@ protected:
 	sf::Texture& texEnemyRight;
 	sf::Texture& texEnemyLeft;
 	sf::Texture& texWeaponMP5;
+	sf::Texture& texHealAnimation;
 	sf::Texture& texExplosionSmall;
 	sf::Texture& texExplosionLarge;
 	sf::Texture& texDeadEyeOpen;
 	sf::Texture& texDeadEyeClose;
 	sf::Texture& texDeadEye;
 	sf::Texture& playerDeath;
+	sf::Texture& texGuardianAngel;
+	sf::Texture& texGuardianWings;
+	sf::Texture& texRage;
 
 	// Music
 	sf::Music music;
@@ -106,6 +110,10 @@ protected:
 	EffectID explosionLarge;
 	EffectID deadEyeOpen;
 	EffectID deadEyeClose;
+	AnimSprite rageFX;
+	AnimSprite healingFX;
+	AnimSprite guardianAngelFX;
+	AnimSprite guardianWingsFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
@@ -200,7 +208,22 @@ protected:
 	bool onCoolDown3 = false;
 	int cooldown3;
 
+	// animation timers
+	sf::Time healElapsed;
+	sf::Clock healTimer;
+	bool healPlaying = false;
 
+	sf::Time guardianElapsed;
+	sf::Clock guardianTimer;
+	sf::Time wingsElapsed;
+	sf::Clock wingsTimer;
+	bool guardianPlaying = false;
+	
+	// animation timer durations
+	int healDuration = 1;
+	int guardianDuration = 1;
+
+	// class utiity functions
 	void chooseClass(PlayerClass);
 	void updateCooldowns();
 
