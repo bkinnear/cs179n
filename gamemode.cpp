@@ -2036,16 +2036,19 @@ void GameMode::respawnEnemies() {
 }
 
 void GameMode::updateAllies() {
-	for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
+	auto allyItr = allies.begin();
+	while (allyItr != allies.end()) {
 		NPC& ally = *allyItr;
 
 		// if ally dead, do nothing
 		float playerToShieldCenter = Utils::pointDistance(player.getPosition(), ally.centerShield);
 		if (!ally.alive) {
 			allyItr = allies.erase(allyItr);
+			continue;
 		}
 		else if (ally.isShield && playerToShieldCenter > 80.f) {
 			allyItr = allies.erase(allyItr);
+			continue;
 		}
 		else if (ally.isDummy) {
 			continue;
@@ -2116,6 +2119,8 @@ void GameMode::updateAllies() {
 				proj.damage = 25;
 			}
 		}
+
+		allyItr++;
 	}
 }
 
