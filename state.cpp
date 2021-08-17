@@ -89,6 +89,10 @@ EffectID State::loadEffect(const sf::Texture& texture, const sf::IntRect& subRec
 	return effectID;
 }
 
+AnimSprite& State::getEffectSprite(EffectID effectID) {
+	return effects[effectID].effectSprite;
+}
+
 void State::createEffect(EffectID effectID, const sf::Vector2f& pos) {
 	// add new effect data to effects
 	effects.at(effectID).effectList.push_back({ effectClock.getElapsedTime().asSeconds(), 0, pos });

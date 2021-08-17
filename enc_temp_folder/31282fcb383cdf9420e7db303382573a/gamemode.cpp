@@ -114,7 +114,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	inventory(createTexture("res/inventory.png"), createTexture("res/item_strip.png")),
 	texEnemyRight(createTexture("res/enemy_r_strip.png")),
 	texEnemyLeft(createTexture("res/enemy_l_strip.png")),
-	texHealAnimation(createTexture("res/heal_animation.png")),
 	texWeaponMP5(createTexture("res/mp5.png")),
 	texExplosionSmall(createTexture("res/explosion_small_strip.png")),
 	texExplosionLarge(createTexture("res/explosion_large.png")),
@@ -125,10 +124,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	playerDeath(createTexture("res/player_death.png")),
 	ammoIcon(createTexture("res/ammo_icon.png")),
 	grenadeIcon(createTexture("res/grenade_icon.png")),
-	reticle(createTexture("res/reticle.png")),
-	texGuardianAngel(createTexture("res/guardian_angel_animation.png")),
-	texRage(createTexture("res/rage_animation.png")),
-	texGuardianWings(createTexture("res/guardian_wings.png"))
+	reticle(createTexture("res/reticle.png"))
 {
 	// generate tile map
 	tileMap.generate(this);
@@ -290,19 +286,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
 	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
 	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,32,32 }, 6, 12);
-
-	//create animations
-	rageFX.create(texRage, { 0, 0, 38, 39 }, 20);
-	rageFX.setAnimSpeed(20);
-
-	healingFX.create(texHealAnimation, { 0, 0, 38, 39 }, 20);
-	healingFX.setAnimSpeed(20);
-
-	guardianAngelFX.create(texGuardianAngel, { 0, 0, 38,39 }, 20);
-	guardianAngelFX.setAnimSpeed(20);
-	guardianWingsFX.create(texGuardianWings, { 0,0,100, 100 }, 18);
-	guardianWingsFX.setAnimSpeed(18);
-	guardianWingsFX.setScale(0.5, 0.5);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -747,9 +730,8 @@ void GameMode::updateCooldowns() {
 				}
 				abilityClock3.setString(std::to_string((cooldown3 - int(elapsed3.asSeconds()))));
 				elapsed3 = abilityTimer3.getElapsedTime();
-				if (elapsed3.asSeconds() > 5) { //dash for 5 seconds
+				if (elapsed2.asMilliseconds() > 5000) { //dash for 5 seconds
 					player.speed = 3; //set back to default
-					player.isRage = false;
 				}
 			}
 			else {
@@ -1149,8 +1131,6 @@ bool GameMode::handleEvents() {
 					//using switch to enable the usage of non-weapon items
 					sf::Vector2f pos;
 					const Item* item = inventory.getItemAt(winMousePos.x, winMousePos.y);
-					if (!item)
-						break;
 					Item::type type = item->itemType;
 					switch (type) {
 						case Item::type::medkit:
@@ -1165,13 +1145,6 @@ bool GameMode::handleEvents() {
 								player.health = 100;
 							}
 							inventory.removeItem(Item::type::medkit, 1);
-
-							//healing animation
-							healingFX.setIndex(0);
-							healElapsed = sf::seconds(0);
-							healTimer.restart();
-							healPlaying = true;
-
 							break;
 						case Item::type::health_pack:
 							if (player.health == 100) {
@@ -1185,12 +1158,6 @@ bool GameMode::handleEvents() {
 								player.health = 100;
 							}
 							inventory.removeItem(Item::type::health_pack, 1);
-
-							healingFX.setIndex(0);
-							healElapsed = sf::seconds(0);
-							healTimer.restart();
-							healPlaying = true;
-
 							break;
 						case Item::type::walkie_talkie:
 							//call in ally
@@ -1296,45 +1263,6 @@ void GameMode::render()
 	//draw the weapons
 	for (auto item : itemsOnMap) {
 		gwindow.draw(item->spr);
-	}
-
-	//draw ability/item animations
-	if (player.isRage) {
-		rageFX.setPosition(player.getPosition());
-		rageFX.animateFrame();
-		gwindow.draw(rageFX);
-	}
-
-	if (healPlaying) {
-		healElapsed = healTimer.getElapsedTime();
-		if (healElapsed.asSeconds() < healDuration) {
-			healingFX.setPosition(player.getPosition());
-			healingFX.animateFrame();
-			gwindow.draw(healingFX);
-		}
-		else {
-			healPlaying = false;
-		}
-	}
-
-	if (guardianPlaying) {
-		guardianElapsed = guardianTimer.getElapsedTime();
-		if (guardianElapsed.asSeconds() < guardianDuration) {
-			guardianAngelFX.setPosition(player.getPosition());
-			guardianAngelFX.animateFrame();
-			guardianWingsFX.animateFrame();
-			
-			guardianWingsFX.setPosition(player.getPosition().x-9, player.getPosition().y-20);
-			gwindow.draw(guardianWingsFX);
-			for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
-				NPC& ally = *allyItr;
-				guardianAngelFX.setPosition(ally.getPosition());
-				gwindow.draw(guardianAngelFX);
-			}
-		}
-		else {
-			guardianPlaying = false;
-		}
 	}
 
 	// draw the player
@@ -1942,7 +1870,7 @@ void GameMode::updateEnemies(int type) {
 void GameMode::spawnItems() {
 	for (const sf::Vector2f& pos: lootSpawnPoints) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 10;//randomly generate what item to spawn
+		int randomItem = rand() % 9;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -2035,11 +1963,6 @@ void GameMode::medic_heal() {
 			}
 		}
 	}
-
-	guardianTimer.restart();
-	guardianElapsed = sf::seconds(0);
-	guardianAngelFX.setIndex(0);
-	guardianPlaying = true;
 
 	abilityTimer3.restart();
 
@@ -2140,8 +2063,6 @@ void GameMode::slasher_rage() {
 
 	player.isRage = true;
 	player.speed = 5;
-
-	rageFX.setIndex(0);
 
 	abilityTimer3.restart();
 

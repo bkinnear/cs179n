@@ -56,7 +56,7 @@ public:
 
 private:
 	std::future<Node*> nextPathHead;
-	bool pathRetrieved = false;
+	bool pathRetrieved = false, isPathing = false;
 
 	// non-blocking function to check to see if new path is available
 	void updatePath();

@@ -62,6 +62,7 @@ protected:
 	sf::Texture& texExplosionLarge;
 	sf::Texture& texDeadEyeOpen;
 	sf::Texture& texDeadEyeClose;
+	sf::Texture& texDeadEye;
 	sf::Texture& playerDeath;
 	sf::Texture& texGuardianAngel;
 	sf::Texture& texGuardianWings;
@@ -76,6 +77,7 @@ protected:
 	sf::SoundBuffer gunShotBuffer;
 	sf::SoundBuffer emptyGunBuffer;
 	sf::SoundBuffer mp5ReloadBuffer;
+	sf::SoundBuffer m4ReloadBuffer;
 	sf::SoundBuffer grenadeShotBuffer;
 	sf::SoundBuffer grenadeExplodeBuffer;
 	sf::SoundBuffer meleeSoundBuffer;
@@ -121,7 +123,13 @@ protected:
 	// engineer sounds
 	sf::SoundBuffer mechNoise;
 	sf::SoundBuffer het_hon;
+	sf::SoundBuffer metalBox;
+	sf::SoundBuffer barrelBuffer;
 	sf::Sound dropTech;
+
+	// powerup sound
+	sf::SoundBuffer powerupBuffer;
+	sf::Sound powerUp;
 
 	// dialog GUI
 	int dialogTreeIndex = 0;
@@ -250,6 +258,9 @@ protected:
 			int playerPosX = 0;
 			int playerPosY = 0;
 			//std::vector<std::vector<Tile>> currentMap;
+			int maxScore = 0;
+			int currentScore = 0;
+			int playerHealth = 100;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -258,13 +269,15 @@ protected:
 			int playerPosX = 0;
 			int playerPosY = 0;
 			//std::vector<std::vector<Tile>> currentMap;
+			int maxScore = 0;
+			int currentScore = 0;
+			int playerHealth = 100;
 		}survivalMeta;
 	}gameMeta;
 
 	bool gamestateChange = false;
 	std::string metaFileName = "thelastwar.dat";
-	
-	void loadGame();
+	void loadGame(bool);
 	void saveGame();
 	void initGame();
 
@@ -279,10 +292,20 @@ protected:
 	void updateAllies();
 
 	std::list<sf::FloatRect> hiddenAreas;
-	std::list<sf::Vector2f> lootSpawnPoints; // TODO create loot spawn points in TileMap::generate that determine where items spawns / what items
+	std::list<sf::Vector2f> crateSpawnPoints;
+	std::list<sf::Vector2f> lootSpawnPoints;
 
 private:
 	int type; //1 - Endless, 2 - Survival
+
+		int currentEndlessScore = 0;
+		int currentSurvivalScore = 0;
+		int maxEndlessScore = 0;
+		int maxSurvivalScore = 0;
+		sf::Text endlessScoreCounter;
+		sf::Text survivalScoreCounter;
+		sf::Text maxEndlessScoreCounter;
+		sf::Text maxSurvivalScoreCounter;
 
 public:
 
@@ -293,5 +316,7 @@ public:
 	virtual void render();
 
 	void addHiddenArea(const sf::FloatRect&);
+	void addLootSpawn(const sf::Vector2f& pos);
+	void addCrateSpawn(const sf::Vector2f& pos);
 };
 #endif
