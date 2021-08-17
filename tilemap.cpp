@@ -164,7 +164,7 @@ void TileMap::generate(GameMode* gmode) {
 						setLootSpawn(state, x + offset.x, y + offset.y, building1::array[y][x]);
 					}
 				}
-				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building1::w - 2) * 32.f, (building1::h - 2) * 32.f + 20.f });
+				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building1::w - 2) * 32.f, (building1::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -177,7 +177,7 @@ void TileMap::generate(GameMode* gmode) {
 						setLootSpawn(state, x + offset.x, y + offset.y, building2::array[y][x]);
 					}
 				}
-				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building2::w - 2) * 32.f, (building2::h - 2) * 32.f + 20.f });
+				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building2::w - 2) * 32.f, (building2::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -190,7 +190,7 @@ void TileMap::generate(GameMode* gmode) {
 						setLootSpawn(state, x + offset.x, y + offset.y, building3::array[y][x]);
 					}
 				}
-				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building3::w - 2) * 32.f, (building3::h - 2) * 32.f + 20.f });
+				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building3::w - 2) * 32.f, (building3::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -203,7 +203,7 @@ void TileMap::generate(GameMode* gmode) {
 						setLootSpawn(state, x + offset.x, y + offset.y, building4::array[y][x]);
 					}
 				}
-				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building4::w - 2) * 32.f, (building4::h - 2) * 32.f + 20.f });
+				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building4::w - 2) * 32.f, (building4::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -216,7 +216,7 @@ void TileMap::generate(GameMode* gmode) {
 						setLootSpawn(state, x + offset.x, y + offset.y, building5::array[y][x]);
 					}
 				}
-				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building5::w - 2) * 32.f, (building5::h - 2) * 32.f + 20.f });
+				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building5::w - 2) * 32.f, (building5::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
@@ -229,12 +229,24 @@ void TileMap::generate(GameMode* gmode) {
 						setLootSpawn(state, x + offset.x, y + offset.y, buildingsmall::array[y][x]);
 					}
 				}
-				gmode->addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildingsmall::w - 2) * 32.f, (buildingsmall::h - 2) * 32.f + 20.f });
+				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildingsmall::w - 2) * 32.f, (buildingsmall::h - 2) * 32.f + 20.f });
 			}
 			else {
 				break;
 			}
 		}
+	}
+
+	// find and place crate spawn points
+	int numCrates = (mapWidth * mapHeight)/100;
+	for (int i = 0; i < numCrates; i++) {
+		// find free spot for crate
+		int x, y;
+		do {
+			x = rand() % mapWidth;
+			y = rand() % mapHeight;
+		} while (isOpaque(x, y));
+		state.addCrateSpawn({ x * 32.f, y * 32.f });
 	}
 };
 

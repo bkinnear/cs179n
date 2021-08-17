@@ -33,13 +33,19 @@ int getLootAmount(Item::type type) {
 	case Item::type::M4:
 		return 1;
 	case Item::type::ammo_crate:
-		return 15 + rand() % 15;
+		return 10 + rand() % 10;
 	case Item::type::health_pack:
 		return 1;
 	case Item::type::medkit:
 		return 1;
 	case Item::type::barrel:
 		return 1;
+	case Item::type::military_crate:
+		return 60;
+	case Item::type::medical_crate:
+		return 3;
+	case Item::type::empty_crate:
+		return 0;
 	}
 
 	return 1;
@@ -50,16 +56,40 @@ Item::type getLootItem(Item::type type) {
 	switch (type) {
 	case Item::type::ammo_crate:
 		// ammo crates yield a random ammo type
-	{
-		int r = rand() % 2;
-		switch (r) {
-		case 0:
-			return Item::type::ammo_9mm;
-		case 1:
-			return Item::type::ammo_556;
+		{
+			int r = rand() % 2;
+			switch (r) {
+			case 0:
+				return Item::type::ammo_9mm;
+			case 1:
+				return Item::type::ammo_556;
+			}
 		}
-	}
-	break;
+		break;
+	case Item::type::military_crate:
+		// military crates yield ammo
+		{
+			int r = rand() % 2;
+			switch (r) {
+			case 0:
+				return Item::type::ammo_9mm;
+			case 1:
+				return Item::type::ammo_556;
+			}
+		}
+		break;
+	case Item::type::medical_crate:
+		// medical create yields medical supplies
+		{
+			int r = rand() % 2;
+			switch (r) {
+			case 0:
+				return Item::type::medkit;
+			case 1:
+				return Item::type::health_pack;
+			}
+		}
+		break;
 	}
 	return type;
 }
@@ -1750,6 +1780,24 @@ void GameMode::spawnItems() {
 
 		createItem(pos, itemType);
 	}
+
+	for (const sf::Vector2f& pos : crateSpawnPoints) {
+		Item::type itemType = Item::type::null;
+		int randomItem = rand() % 3;//randomly generate what item to spawn
+		switch (randomItem) {//selects item type to spawn
+		case 0:
+			itemType = Item::type::empty_crate;
+			break;
+		case 1:
+			itemType = Item::type::military_crate;
+			break;
+		case 2:
+			itemType = Item::type::medical_crate;
+			break;
+		}
+
+		createItem(pos, itemType);
+	}
 }
 
 void GameMode::medic_bandage() {
@@ -2165,6 +2213,10 @@ void GameMode::addHiddenArea(const sf::FloatRect& rect) {
 
 void GameMode::addLootSpawn(const sf::Vector2f& pos) {
 	lootSpawnPoints.push_back(pos);
+}
+
+void GameMode::addCrateSpawn(const sf::Vector2f& pos) {
+	crateSpawnPoints.push_back(pos);
 }
 
 void GameMode::saveGame()

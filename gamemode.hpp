@@ -264,7 +264,8 @@ protected:
 	void updateAllies();
 
 	std::list<sf::FloatRect> hiddenAreas;
-	std::list<sf::Vector2f> lootSpawnPoints; // TODO create loot spawn points in TileMap::generate that determine where items spawns / what items
+	std::list<sf::Vector2f> crateSpawnPoints;
+	std::list<sf::Vector2f> lootSpawnPoints;
 
 private:
 	int type; //1 - Endless, 2 - Survival
@@ -279,5 +280,6 @@ public:
 
 	void addHiddenArea(const sf::FloatRect&);
 	void addLootSpawn(const sf::Vector2f& pos);
+	void addCrateSpawn(const sf::Vector2f& pos);
 };
 #endif
