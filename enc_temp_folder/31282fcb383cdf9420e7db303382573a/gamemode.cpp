@@ -1131,8 +1131,6 @@ bool GameMode::handleEvents() {
 					//using switch to enable the usage of non-weapon items
 					sf::Vector2f pos;
 					const Item* item = inventory.getItemAt(winMousePos.x, winMousePos.y);
-					if (!item)
-						break;
 					Item::type type = item->itemType;
 					switch (type) {
 						case Item::type::medkit:
