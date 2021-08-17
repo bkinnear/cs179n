@@ -107,7 +107,7 @@ void setLootSpawn(GameMode& gmode, int x, int y, tileType tile) {
 	case 50:
 	case 54:
 	case 55:
-		gmode.addLootSpawn({ x * 32.f, y * 32.f });
+		gmode.addLootSpawn({ x * 32.f + 4.f, y * 32.f + 4.f});
 		break;
 	}
 }
