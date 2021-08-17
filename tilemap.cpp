@@ -238,7 +238,7 @@ void TileMap::generate(GameMode* gmode) {
 	}
 
 	// find and place crate spawn points
-	int numCrates = (mapWidth * mapHeight)/100;
+	int numCrates = mapHeight/4; // set num of crates to 1/4 the map hiehgt for sparse crate distribution
 	for (int i = 0; i < numCrates; i++) {
 		// find free spot for crate
 		int x, y;
