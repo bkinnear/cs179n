@@ -99,6 +99,7 @@ void Character::updatePath() {
     if (nextPathHead.valid()) {
         if (nextPathHead.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
             // new path is available
+            isPathing = false;
             
             // reset path
             while (pathHead != nullptr) {
@@ -123,11 +124,13 @@ void Character::updatePath() {
 }
 
 void Character::findPath(const TileMap& tileMap, sf::Vector2i target) {    
-    if (pathRetrieved)
+    pathRetrieved = false;
+
+    if (isPathing)
         return;
 
     if (!nextPathHead.valid()) {
-        // we are not currently finding new path or storing old path result
+        isPathing = true;
 
         // get the start position of charcter
         sf::Vector2i start = Utils::snapToTile(getPosition() + sf::Vector2f({ 16.f, 16.f }));
