@@ -35,6 +35,10 @@ Inventory::Inventory(sf::Texture& inventoryTexture, sf::Texture& itemTileset):
 }
 
 void Inventory::addItem(Item::type type, unsigned num) {
+	// ignore if adding nothing
+	if (num == 0)
+		return;
+
 	// search for first item
 	// store first empty position in case we need new slot
 	unsigned openX = 0, openY = 0;
