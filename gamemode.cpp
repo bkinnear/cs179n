@@ -1465,16 +1465,16 @@ void GameMode::updateProjectiles() {
         
 				collided = true;
 				break;
-            }
-			/*
+			}
+			
 			if (!collided) {
-				ItemSpr* itemSpr = getItemAt(projItr->getPosition());
-				if (!itemSpr)
-					continue;
+				ItemSpr* itemSpr = getItemAt(projItr->getPosition());			
+				if (!itemSpr) {
+					collided = false;
+				}
 				else if (itemSpr->type == Item::type::barrel) {
 					getEffectSprite(explosionLarge).setScale(3, 3);
 					createEffect(explosionLarge, itemSpr->spr.getPosition() + sf::Vector2f({ -72.f,-64.f }));
-					projItr = projectiles.erase(projItr);
 					removeItem(itemSpr);
 					auto enemyItr = enemies.begin();
 					while (enemyItr != enemies.end()) {
@@ -1491,7 +1491,7 @@ void GameMode::updateProjectiles() {
 					}
 					collided = true;
 				}
-			}*/
+			}
 
 			// destroy bullet
 			if (collided) {
