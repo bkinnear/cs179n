@@ -1103,6 +1103,21 @@ bool GameMode::handleEvents() {
 				if (inventory.useWieldedMelee()) {
 					meleeSwing.setBuffer(meleeSwingBuffer);
 					meleeSwing.setVolume(225);
+					switch (inventory.getWielded().itemType) {
+						case Item::type::dagger:
+							meleeSwing.setPitch(5);
+							break;
+						case Item::type::baseball_bat:
+							meleeSwing.setPitch(3);
+							break;
+						case Item::type::MP5:
+							meleeSwing.setPitch(2);
+							break;
+						case Item::type::M4:
+							meleeSwing.setPitch(1);
+							break;
+					}
+
 					meleeSwing.play();
 					// TODO - check to make sure weapon is ranged
 					projectiles.emplace_back();
@@ -1243,9 +1258,15 @@ bool GameMode::handleEvents() {
 				meleeSwing.setVolume(225);
 				switch (inventory.getWielded().itemType) {
 					case Item::type::dagger:
-						meleeSwing.setPitch(3);
+						meleeSwing.setPitch(5);
 						break;
 					case Item::type::baseball_bat:
+						meleeSwing.setPitch(3);
+						break;
+					case Item::type::MP5:
+						meleeSwing.setPitch(2);
+						break;
+					case Item::type::M4:
 						meleeSwing.setPitch(1);
 						break;
 				}

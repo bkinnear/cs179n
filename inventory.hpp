@@ -152,7 +152,7 @@ struct Item {
 		case type::MP5:
 			return 50;
 		case type::M4:
-			return 80;
+			return 60;
 		case type::dagger:
 			return 20;
 		case type::baseball_bat:
@@ -232,6 +232,9 @@ public:
 
 	// item texture set
 	sf::Texture& texItemTileset;
+
+	//sets sound according to wielded item
+	void changePitch(sf::Sound sound);
 
 protected:
 
