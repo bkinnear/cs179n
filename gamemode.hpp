@@ -66,7 +66,9 @@ protected:
 	sf::Texture& playerDeath;
 	sf::Texture& texGuardianAngel;
 	sf::Texture& texGuardianWings;
+	sf::Texture& texWarcry;
 	sf::Texture& texRage;
+	sf::Texture& texDash;
 
 	// Music
 	sf::Music music;
@@ -110,11 +112,13 @@ protected:
 	EffectID explosionLarge;
 	EffectID deadEyeOpen;
 	EffectID deadEyeClose;
+	AnimSprite warcryFX;
 	AnimSprite rageFX;
 	AnimSprite healingFX;
 	AnimSprite guardianAngelFX;
 	AnimSprite guardianWingsFX;
 	AnimSprite deadEyeFX;
+	AnimSprite dashFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;

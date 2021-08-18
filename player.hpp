@@ -13,6 +13,7 @@ public:
 	bool isDeadEye = false;
 	bool isRage = false;
 	bool isWarcry = false;
+	bool isDash = false;
 
 	const PlayerClass playerClass;
 };

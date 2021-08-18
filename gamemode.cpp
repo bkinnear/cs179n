@@ -127,8 +127,10 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	grenadeIcon(createTexture("res/grenade_icon.png")),
 	reticle(createTexture("res/reticle.png")),
 	texGuardianAngel(createTexture("res/guardian_angel_animation.png")),
+	texWarcry(createTexture("res/warcry_animation.png")),
+	texGuardianWings(createTexture("res/guardian_wings.png")),
 	texRage(createTexture("res/rage_animation.png")),
-	texGuardianWings(createTexture("res/guardian_wings.png"))
+	texDash(createTexture("res/dash_animation.png"))
 {
 	// generate tile map
 	tileMap.generate(this);
@@ -292,18 +294,27 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
 
 	//create animations
-	rageFX.create(texRage, { 0, 0, 38, 39 }, 20);
-	rageFX.setAnimSpeed(20);
+	//slasher
+	warcryFX.create(texWarcry, { 0, 0, 38, 39 }, 20);
+	warcryFX.setAnimSpeed(20);
+	rageFX.create(texRage, { 0,0, 100, 100 }, 56);
+	rageFX.setAnimSpeed(56);
+	rageFX.setScale(0.75, 0.75);
 
+	//healing items
 	healingFX.create(texHealAnimation, { 0, 0, 38, 39 }, 20);
 	healingFX.setAnimSpeed(20);
 
+	//medic
 	guardianAngelFX.create(texGuardianAngel, { 0, 0, 38,39 }, 20);
 	guardianAngelFX.setAnimSpeed(20);
 	guardianWingsFX.create(texGuardianWings, { 0,0,100, 100 }, 18);
 	guardianWingsFX.setAnimSpeed(18);
 	guardianWingsFX.setScale(0.5, 0.5);
+	dashFX.create(texDash, { 0, 0, 38, 39 }, 20);
+	dashFX.setAnimSpeed(20);
 
+	//assault
 	deadEyeFX.create(texDeadEyeOpen, { 0,0,32,32 }, 6);
 	deadEyeFX.setAnimSpeed(12);
 	deadEyeFX.setScale(0.75, 0.75);
@@ -554,7 +565,8 @@ void GameMode::updateCooldowns() {
 				}
 				abilityClock2.setString(std::to_string((cooldown2 - int(elapsed2.asSeconds()))));
 				elapsed2 = abilityTimer2.getElapsedTime();
-				if (elapsed2.asMilliseconds() > 25) { //dash for 25 milliseconds
+				if (elapsed2.asMilliseconds() > 100) { //dash for 100 milliseconds
+					player.isDash = false;
 					player.speed = 3; //set back to default
 				}
 			}
@@ -1356,8 +1368,14 @@ void GameMode::render()
 	}
 
 	//draw ability/item animations
+	if (player.isWarcry) {
+		warcryFX.setPosition(player.getPosition());
+		warcryFX.animateFrame();
+		gwindow.draw(warcryFX);
+	}
+
 	if (player.isRage) {
-		rageFX.setPosition(player.getPosition());
+		rageFX.setPosition(player.getPosition().x-23, player.getPosition().y-40);
 		rageFX.animateFrame();
 		gwindow.draw(rageFX);
 	}
@@ -1366,6 +1384,12 @@ void GameMode::render()
 		deadEyeFX.setPosition(player.getPosition().x+5, player.getPosition().y-20);
 		deadEyeFX.animateFrame();
 		gwindow.draw(deadEyeFX);
+	}
+
+	if (player.isDash) {
+		dashFX.setPosition(player.getPosition());
+		dashFX.animateFrame();
+		gwindow.draw(dashFX);
 	}
 
 	if (healPlaying) {
@@ -2077,7 +2101,10 @@ void GameMode::medic_bandage() {
 void GameMode::medic_dash() {
 	onCoolDown2 = true;
 
-	player.speed = 20;
+	player.isDash = true;
+	player.speed = 10;
+
+	dashFX.setIndex(0);
 
 	abilityTimer2.restart();
 
@@ -2193,6 +2220,8 @@ void GameMode::slasher_warcry() {
 	onCoolDown2 = true;
 
 	player.isWarcry = true;
+
+	warcryFX.setIndex(0);
 
 	abilityTimer2.restart();
 
