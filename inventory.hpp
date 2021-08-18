@@ -150,13 +150,13 @@ struct Item {
 	int getMeleeDelayTime() const {
 		switch (itemType) {
 		case type::MP5:
-			return 75;
-		case type::M4:
-			return 150;
-		case type::dagger:
-			return 30;
-		case type::baseball_bat:
 			return 50;
+		case type::M4:
+			return 80;
+		case type::dagger:
+			return 20;
+		case type::baseball_bat:
+			return 30;
 		default:
 			return -1;
 		}

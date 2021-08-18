@@ -114,6 +114,7 @@ protected:
 	AnimSprite healingFX;
 	AnimSprite guardianAngelFX;
 	AnimSprite guardianWingsFX;
+	AnimSprite deadEyeFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;

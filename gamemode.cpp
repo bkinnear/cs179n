@@ -288,8 +288,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
-	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
 	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,32,32 }, 6, 12);
+	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
 
 	//create animations
 	rageFX.create(texRage, { 0, 0, 38, 39 }, 20);
@@ -303,6 +303,10 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	guardianWingsFX.create(texGuardianWings, { 0,0,100, 100 }, 18);
 	guardianWingsFX.setAnimSpeed(18);
 	guardianWingsFX.setScale(0.5, 0.5);
+
+	deadEyeFX.create(texDeadEyeOpen, { 0,0,32,32 }, 6);
+	deadEyeFX.setAnimSpeed(12);
+	deadEyeFX.setScale(0.75, 0.75);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -629,7 +633,9 @@ void GameMode::updateCooldowns() {
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 10) { //increase damage for 10 seconds
 					player.isDeadEye = false; // turn off deadeye after 10 seconds
-					player.setColor(sf::Color::White);
+					if (player.alive) {
+						player.setColor(sf::Color::White);
+					}
 				}
 				
 			}
@@ -1231,33 +1237,63 @@ bool GameMode::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
 		// try to use weapon
-		if (inventory.useWielded()) {
-			shotSound.setBuffer(gunShotBuffer);
-			shotSound.setVolume(50);
-			if (inventory.getWielded().itemType == Item::type::MP5) {
-				shotSound.setPitch(3);
+		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat) { //check if weapon wielded is melee
+			if (inventory.useWieldedMelee()) {
+				meleeSwing.setBuffer(meleeSwingBuffer);
+				meleeSwing.setVolume(225);
+				switch (inventory.getWielded().itemType) {
+					case Item::type::dagger:
+						meleeSwing.setPitch(3);
+						break;
+					case Item::type::baseball_bat:
+						meleeSwing.setPitch(1);
+						break;
+				}
+				meleeSwing.play();
+				// TODO - check to make sure weapon is ranged
+				projectiles.emplace_back();
+				Projectile& proj = projectiles.back();
+				proj.isMelee = true;
+				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+				proj.setTexture(texProjectile);
+				// set mask bounds to just the sprite bounds (default)
+				proj.setMaskBounds(proj.getLocalBounds());
+				proj.speed = 25;
+				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+				proj.setRotation(proj.direction);
+				proj.damage = inventory.getWielded().getDamage() * 1.5f;
 			}
-			if (inventory.getWielded().itemType == Item::type::M4) {
-				shotSound.setPitch(1);
-			}
-			shotSound.play();
-			// TODO - check to make sure weapon is ranged
-			projectiles.emplace_back();
-			Projectile& proj = projectiles.back();
-			proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-			proj.setTexture(texProjectile);
-			// set mask bounds to just the sprite bounds (default)
-			proj.setMaskBounds(proj.getLocalBounds());
-			proj.speed = 12;
-			proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
-			proj.setRotation(proj.direction);
-			proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
 		}
-		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
-			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
-				shotSound.setBuffer(emptyGunBuffer);
-				shotSound.setVolume(25);
+		else { //weapon wielded is ranged
+			if (inventory.useWielded()) {
+				shotSound.setBuffer(gunShotBuffer);
+				shotSound.setVolume(50);
+				switch (inventory.getWielded().itemType) {
+					case Item::type::MP5:
+						shotSound.setPitch(3);
+						break;
+					case Item::type::M4:
+						shotSound.setPitch(1);
+				}
 				shotSound.play();
+				// TODO - check to make sure weapon is ranged
+				projectiles.emplace_back();
+				Projectile& proj = projectiles.back();
+				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+				proj.setTexture(texProjectile);
+				// set mask bounds to just the sprite bounds (default)
+				proj.setMaskBounds(proj.getLocalBounds());
+				proj.speed = 12;
+				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+				proj.setRotation(proj.direction);
+				proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
+			}
+			else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
+				if (shotSound.getStatus() != sf::Sound::Status::Playing) {
+					shotSound.setBuffer(emptyGunBuffer);
+					shotSound.setVolume(25);
+					shotSound.play();
+				}
 			}
 		}
 	}
@@ -1303,6 +1339,12 @@ void GameMode::render()
 		rageFX.setPosition(player.getPosition());
 		rageFX.animateFrame();
 		gwindow.draw(rageFX);
+	}
+
+	if (player.isDeadEye) {
+		deadEyeFX.setPosition(player.getPosition().x+5, player.getPosition().y-20);
+		deadEyeFX.animateFrame();
+		gwindow.draw(deadEyeFX);
 	}
 
 	if (healPlaying) {
@@ -2087,10 +2129,11 @@ void GameMode::assault_deadeye() {
 	onCoolDown3 = true;
 
 	player.isDeadEye = true;
-	createEffect(deadEyeOpen, player.getPosition());
 	powerUp.setBuffer(powerupBuffer);
 	powerUp.play();
 	player.setColor(sf::Color::Red);
+
+	deadEyeFX.setIndex(0);
 
 	abilityTimer3.restart();
 
