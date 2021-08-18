@@ -1237,33 +1237,63 @@ bool GameMode::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
 		// try to use weapon
-		if (inventory.useWielded()) {
-			shotSound.setBuffer(gunShotBuffer);
-			shotSound.setVolume(50);
-			if (inventory.getWielded().itemType == Item::type::MP5) {
-				shotSound.setPitch(3);
+		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat) { //check if weapon wielded is melee
+			if (inventory.useWieldedMelee()) {
+				meleeSwing.setBuffer(meleeSwingBuffer);
+				meleeSwing.setVolume(225);
+				switch (inventory.getWielded().itemType) {
+					case Item::type::dagger:
+						meleeSwing.setPitch(3);
+						break;
+					case Item::type::baseball_bat:
+						meleeSwing.setPitch(1);
+						break;
+				}
+				meleeSwing.play();
+				// TODO - check to make sure weapon is ranged
+				projectiles.emplace_back();
+				Projectile& proj = projectiles.back();
+				proj.isMelee = true;
+				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+				proj.setTexture(texProjectile);
+				// set mask bounds to just the sprite bounds (default)
+				proj.setMaskBounds(proj.getLocalBounds());
+				proj.speed = 25;
+				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+				proj.setRotation(proj.direction);
+				proj.damage = inventory.getWielded().getDamage() * 1.5f;
 			}
-			if (inventory.getWielded().itemType == Item::type::M4) {
-				shotSound.setPitch(1);
-			}
-			shotSound.play();
-			// TODO - check to make sure weapon is ranged
-			projectiles.emplace_back();
-			Projectile& proj = projectiles.back();
-			proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-			proj.setTexture(texProjectile);
-			// set mask bounds to just the sprite bounds (default)
-			proj.setMaskBounds(proj.getLocalBounds());
-			proj.speed = 12;
-			proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
-			proj.setRotation(proj.direction);
-			proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
 		}
-		else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
-			if (shotSound.getStatus() != sf::Sound::Status::Playing) {
-				shotSound.setBuffer(emptyGunBuffer);
-				shotSound.setVolume(25);
+		else { //weapon wielded is ranged
+			if (inventory.useWielded()) {
+				shotSound.setBuffer(gunShotBuffer);
+				shotSound.setVolume(50);
+				switch (inventory.getWielded().itemType) {
+					case Item::type::MP5:
+						shotSound.setPitch(3);
+						break;
+					case Item::type::M4:
+						shotSound.setPitch(1);
+				}
 				shotSound.play();
+				// TODO - check to make sure weapon is ranged
+				projectiles.emplace_back();
+				Projectile& proj = projectiles.back();
+				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+				proj.setTexture(texProjectile);
+				// set mask bounds to just the sprite bounds (default)
+				proj.setMaskBounds(proj.getLocalBounds());
+				proj.speed = 12;
+				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+				proj.setRotation(proj.direction);
+				proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
+			}
+			else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
+				if (shotSound.getStatus() != sf::Sound::Status::Playing) {
+					shotSound.setBuffer(emptyGunBuffer);
+					shotSound.setVolume(25);
+					shotSound.play();
+				}
 			}
 		}
 	}

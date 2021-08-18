@@ -209,6 +209,19 @@ int Inventory::getRoundsLeft() const {
 bool Inventory::useWielded() {
 	switch (wielded.itemType) {
 	case Item::type::MP5:
+		if (weaponReady) {
+			if (roundsLeft == 0) {
+				reloadWielded();
+				return false;
+			}
+			roundsLeft--;
+			weaponReady = false;
+			weaponWaitTick = wielded.getDelayTime();
+			return true;
+		}
+		else
+			return false;
+		break;
 	case Item::type::M4:
 		if (weaponReady) {
 			if (roundsLeft == 0) {
@@ -222,6 +235,7 @@ bool Inventory::useWielded() {
 		}
 		else
 			return false;
+		break;
 	default:
 		return false; // Return false, not wielding an item that can be used
 	}
