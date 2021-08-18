@@ -288,8 +288,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
-	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
 	deadEyeClose = loadEffect(texDeadEyeClose, { 0,0,32,32 }, 6, 12);
+	deadEyeOpen = loadEffect(texDeadEyeOpen, { 0,0,32,32 }, 6, 12);
 
 	//create animations
 	rageFX.create(texRage, { 0, 0, 38, 39 }, 20);
@@ -303,6 +303,10 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	guardianWingsFX.create(texGuardianWings, { 0,0,100, 100 }, 18);
 	guardianWingsFX.setAnimSpeed(18);
 	guardianWingsFX.setScale(0.5, 0.5);
+
+	deadEyeFX.create(texDeadEyeOpen, { 0,0,32,32 }, 6);
+	deadEyeFX.setAnimSpeed(12);
+	deadEyeFX.setScale(0.75, 0.75);
 
 	// add some stuff to the inventory
 	inventory.addItem(Item::type::MP5, 1);
@@ -629,7 +633,9 @@ void GameMode::updateCooldowns() {
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 10) { //increase damage for 10 seconds
 					player.isDeadEye = false; // turn off deadeye after 10 seconds
-					player.setColor(sf::Color::White);
+					if (player.alive) {
+						player.setColor(sf::Color::White);
+					}
 				}
 				
 			}
@@ -1303,6 +1309,12 @@ void GameMode::render()
 		rageFX.setPosition(player.getPosition());
 		rageFX.animateFrame();
 		gwindow.draw(rageFX);
+	}
+
+	if (player.isDeadEye) {
+		deadEyeFX.setPosition(player.getPosition().x+5, player.getPosition().y-20);
+		deadEyeFX.animateFrame();
+		gwindow.draw(deadEyeFX);
 	}
 
 	if (healPlaying) {
@@ -2087,10 +2099,11 @@ void GameMode::assault_deadeye() {
 	onCoolDown3 = true;
 
 	player.isDeadEye = true;
-	createEffect(deadEyeOpen, player.getPosition());
 	powerUp.setBuffer(powerupBuffer);
 	powerUp.play();
 	player.setColor(sf::Color::Red);
+
+	deadEyeFX.setIndex(0);
 
 	abilityTimer3.restart();
 
