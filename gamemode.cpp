@@ -130,7 +130,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texWarcry(createTexture("res/warcry_animation.png")),
 	texGuardianWings(createTexture("res/guardian_wings.png")),
 	texRage(createTexture("res/rage_animation.png")),
-	texDash(createTexture("res/dash_animation.png"))
+	texDash(createTexture("res/dash_animation.png")),
+	texBloodSplatter1(createTexture("res/blood_splatter1.png")),
+	texBloodSplatter2(createTexture("res/blood_splatter2.png")),
+	texBloodSplatter3(createTexture("res/blood_splatter3.png")),
+	texBloodSplatter4(createTexture("res/blood_splatter4.png")),
+	texBloodSplatter5(createTexture("res/blood_splatter5.png"))
 {
 	// generate tile map
 	tileMap.generate(this);
@@ -1132,8 +1137,11 @@ bool GameMode::handleEvents() {
 						case Item::type::M4:
 							meleeSwing.setPitch(1);
 							break;
-						default:
+						case Item::type::null:
 							meleeSwing.setPitch(5);
+							break;
+						default:
+							meleeSwing.setPitch(4);
 							break;
 					}
 
@@ -1271,7 +1279,7 @@ bool GameMode::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
 		// try to use weapon
-		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat) { //check if weapon wielded is melee
+		if (inventory.getWielded().itemType != Item::type::MP5 && inventory.getWielded().itemType != Item::type::M4) { //check if weapon wielded is melee
 			if (inventory.useWieldedMelee()) {
 				meleeSwing.setBuffer(meleeSwingBuffer);
 				meleeSwing.setVolume(225);
@@ -1287,6 +1295,11 @@ bool GameMode::handleEvents() {
 						break;
 					case Item::type::M4:
 						meleeSwing.setPitch(1);
+						break;
+					case Item::type::null:
+						meleeSwing.setPitch(5);
+					default:
+						meleeSwing.setPitch(4);
 						break;
 				}
 				meleeSwing.play();
@@ -1750,9 +1763,32 @@ void GameMode::updateProjectiles() {
 				}
 
 				// deal damage to enemy
-				if (projItr->isMelee) {
+				if (projItr->isMelee) { //melee sound
 					meleeSound.play();
 				}
+
+				//deal damage and create blood splatter effect
+				bloodEffect = rand()%5 + 1;
+				switch (bloodEffect) {
+				case 1:
+					bloodSplatter = loadEffect(texBloodSplatter1, { 0,0,100,100 }, 23, 60);
+					break;
+				case 2:
+					bloodSplatter = loadEffect(texBloodSplatter2, { 0,0,100,100 }, 22, 60);
+					break;
+				case 3:
+					bloodSplatter = loadEffect(texBloodSplatter3, { 0,0,100,100 }, 23, 60);
+					break;
+				case 4:
+					bloodSplatter = loadEffect(texBloodSplatter4, { 0,0,100,100 }, 14, 60);
+					break;
+				case 5:
+					bloodSplatter = loadEffect(texBloodSplatter5, { 0,0,100,100 }, 30, 60);
+					break;
+				}
+				getEffectSprite(bloodSplatter).setScale(0.45, 0.45);
+				createEffect(bloodSplatter, enemyItr->getPosition());
+
 				enemyItr->health -= projItr->damage;
 				//std::cout << "DMG: " << projItr->damage << std::endl;
 
