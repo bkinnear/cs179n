@@ -1137,11 +1137,8 @@ bool GameMode::handleEvents() {
 						case Item::type::M4:
 							meleeSwing.setPitch(1);
 							break;
-						case Item::type::null:
-							meleeSwing.setPitch(5);
-							break;
 						default:
-							meleeSwing.setPitch(4);
+							meleeSwing.setPitch(5);
 							break;
 					}
 
@@ -1278,12 +1275,13 @@ bool GameMode::handleEvents() {
 	// check mouse state for holding (enabling auto fire)
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
-		// try to use weapon
-		if (inventory.getWielded().itemType != Item::type::MP5 && inventory.getWielded().itemType != Item::type::M4) { //check if weapon wielded is melee
-			if (inventory.useWieldedMelee()) {
-				meleeSwing.setBuffer(meleeSwingBuffer);
-				meleeSwing.setVolume(225);
-				switch (inventory.getWielded().itemType) {
+		if (player.alive) {
+			// try to use weapon
+			if (inventory.getWielded().itemType != Item::type::MP5 && inventory.getWielded().itemType != Item::type::M4) { //check if weapon wielded is melee
+				if (inventory.useWieldedMelee()) {
+					meleeSwing.setBuffer(meleeSwingBuffer);
+					meleeSwing.setVolume(225);
+					switch (inventory.getWielded().itemType) {
 					case Item::type::dagger:
 						meleeSwing.setPitch(5);
 						break;
@@ -1296,56 +1294,55 @@ bool GameMode::handleEvents() {
 					case Item::type::M4:
 						meleeSwing.setPitch(1);
 						break;
-					case Item::type::null:
-						meleeSwing.setPitch(5);
 					default:
-						meleeSwing.setPitch(4);
+						meleeSwing.setPitch(5);
 						break;
+					}
+					meleeSwing.play();
+					// TODO - check to make sure weapon is ranged
+					projectiles.emplace_back();
+					Projectile& proj = projectiles.back();
+					proj.isMelee = true;
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					// set mask bounds to just the sprite bounds (default)
+					proj.setMaskBounds(proj.getLocalBounds());
+					proj.speed = 25;
+					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					proj.setRotation(proj.direction);
+					proj.damage = inventory.getWielded().getDamage() * 1.5f;
 				}
-				meleeSwing.play();
-				// TODO - check to make sure weapon is ranged
-				projectiles.emplace_back();
-				Projectile& proj = projectiles.back();
-				proj.isMelee = true;
-				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-				proj.setTexture(texProjectile);
-				// set mask bounds to just the sprite bounds (default)
-				proj.setMaskBounds(proj.getLocalBounds());
-				proj.speed = 25;
-				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
-				proj.setRotation(proj.direction);
-				proj.damage = inventory.getWielded().getDamage() * 1.5f;
 			}
-		}
-		else { //weapon wielded is ranged
-			if (inventory.useWielded()) {
-				shotSound.setBuffer(gunShotBuffer);
-				shotSound.setVolume(50);
-				switch (inventory.getWielded().itemType) {
+			else { //weapon wielded is ranged
+				if (inventory.useWielded()) {
+					shotSound.setBuffer(gunShotBuffer);
+					shotSound.setVolume(50);
+					switch (inventory.getWielded().itemType) {
 					case Item::type::MP5:
 						shotSound.setPitch(3);
 						break;
 					case Item::type::M4:
 						shotSound.setPitch(1);
-				}
-				shotSound.play();
-				// TODO - check to make sure weapon is ranged
-				projectiles.emplace_back();
-				Projectile& proj = projectiles.back();
-				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-				proj.setTexture(texProjectile);
-				// set mask bounds to just the sprite bounds (default)
-				proj.setMaskBounds(proj.getLocalBounds());
-				proj.speed = 12;
-				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
-				proj.setRotation(proj.direction);
-				proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
-			}
-			else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
-				if (shotSound.getStatus() != sf::Sound::Status::Playing) {
-					shotSound.setBuffer(emptyGunBuffer);
-					shotSound.setVolume(25);
+					}
 					shotSound.play();
+					// TODO - check to make sure weapon is ranged
+					projectiles.emplace_back();
+					Projectile& proj = projectiles.back();
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					// set mask bounds to just the sprite bounds (default)
+					proj.setMaskBounds(proj.getLocalBounds());
+					proj.speed = 12;
+					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					proj.setRotation(proj.direction);
+					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
+				}
+				else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
+					if (shotSound.getStatus() != sf::Sound::Status::Playing) {
+						shotSound.setBuffer(emptyGunBuffer);
+						shotSound.setVolume(25);
+						shotSound.play();
+					}
 				}
 			}
 		}
@@ -1956,7 +1953,7 @@ void GameMode::updateEnemies(int type) {
 			
 		// check player
 		float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
-		if (dist < minDist) {
+		if (dist < minDist && player.alive) {
 			minDist = dist;
 			nearestTarget = &player;
 		}
@@ -2038,13 +2035,23 @@ void GameMode::updateEnemies(int type) {
 		{
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
-			if (!enemy.attack) {
+			if (!enemy.attack && nearestTarget->alive) {
 				if (player.isWarcry) {
-					nearestTarget->health -= enemy.hitRate * 0.25;
-					std::cout << "Reduced damage due to Warcry!" << std::endl;
+					if ((nearestTarget->health - enemy.hitRate * 0.25) > 0) {
+						nearestTarget->health -= enemy.hitRate * 0.25;
+						std::cout << "Reduced damage due to Warcry!" << std::endl;
+					}
+					else {
+						nearestTarget->health = 0;
+					}
 				}
 				else {
-					nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+					if ((nearestTarget->health - enemy.hitRate) > 0) {
+						nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+					}
+					else {
+						nearestTarget->health = 0;
+					}
 				}
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
@@ -2059,7 +2066,8 @@ void GameMode::updateEnemies(int type) {
 						std::cout << " Score = " << currentSurvivalScore << " AND Max Survival Score = " << maxSurvivalScore << "\n";
 					}
 					nearestTarget->alive = false;
-					nearestTarget->setColor(sf::Color(255, 0, 0, 255));
+					nearestTarget->setTexture(playerDeath);
+					nearestTarget->setColor(sf::Color::Red);
 					std::cout << "target has died" << std::endl;
 				}
 			}

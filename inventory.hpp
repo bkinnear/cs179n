@@ -94,8 +94,6 @@ struct Item {
 			return 40;
 		case type::baseball_bat:
 			return 50;
-		case type::null:
-			return 10;
 		default:
 			return 10;
 		}
@@ -112,8 +110,6 @@ struct Item {
 			return 40;
 		case type::baseball_bat:
 			return 50;
-		case type::null:
-			return 10;
 		default:
 			return 10;
 		}
