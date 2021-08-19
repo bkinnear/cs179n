@@ -1953,7 +1953,7 @@ void GameMode::updateEnemies(int type) {
 			
 		// check player
 		float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
-		if (dist < minDist) {
+		if (dist < minDist && player.alive) {
 			minDist = dist;
 			nearestTarget = &player;
 		}
@@ -2035,13 +2035,23 @@ void GameMode::updateEnemies(int type) {
 		{
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
-			if (!enemy.attack) {
+			if (!enemy.attack && nearestTarget->alive) {
 				if (player.isWarcry) {
-					nearestTarget->health -= enemy.hitRate * 0.25;
-					std::cout << "Reduced damage due to Warcry!" << std::endl;
+					if ((nearestTarget->health - enemy.hitRate * 0.25) > 0) {
+						nearestTarget->health -= enemy.hitRate * 0.25;
+						std::cout << "Reduced damage due to Warcry!" << std::endl;
+					}
+					else {
+						nearestTarget->health = 0;
+					}
 				}
 				else {
-					nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+					if ((nearestTarget->health - enemy.hitRate) > 0) {
+						nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
+					}
+					else {
+						nearestTarget->health = 0;
+					}
 				}
 				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
 				if (nearestTarget->health <= 0) {
@@ -2056,7 +2066,8 @@ void GameMode::updateEnemies(int type) {
 						std::cout << " Score = " << currentSurvivalScore << " AND Max Survival Score = " << maxSurvivalScore << "\n";
 					}
 					nearestTarget->alive = false;
-					nearestTarget->setColor(sf::Color(255, 0, 0, 255));
+					nearestTarget->setTexture(playerDeath);
+					nearestTarget->setColor(sf::Color::Red);
 					std::cout << "target has died" << std::endl;
 				}
 			}
