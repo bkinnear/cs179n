@@ -287,6 +287,10 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	// set player class vars
 	chooseClass(playerClass);
 
+	//set sound buffer
+	meleeSound.setBuffer(meleeSoundBuffer);
+	meleeSound.setVolume(50);
+
 	// load effects
 	explosionSmall = loadEffect(texExplosionSmall, { 0, 0, 8, 8 }, 6, 20);
 	explosionLarge = loadEffect(texExplosionLarge, { 0,0,64,64 }, 6, 20);
@@ -1128,6 +1132,9 @@ bool GameMode::handleEvents() {
 						case Item::type::M4:
 							meleeSwing.setPitch(1);
 							break;
+						default:
+							meleeSwing.setPitch(5);
+							break;
 					}
 
 					meleeSwing.play();
@@ -1142,7 +1149,7 @@ bool GameMode::handleEvents() {
 					proj.speed = 25;
 					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 					proj.setRotation(proj.direction);
-					proj.damage = inventory.getWielded().getDamage() * 1.5f;
+					proj.damage = inventory.getWielded().getMeleeDamage() * 1.5f;
 				}
 				break;
 			}
@@ -1744,8 +1751,6 @@ void GameMode::updateProjectiles() {
 
 				// deal damage to enemy
 				if (projItr->isMelee) {
-					meleeSound.setBuffer(meleeSoundBuffer);
-					meleeSound.setVolume(50);
 					meleeSound.play();
 				}
 				enemyItr->health -= projItr->damage;

@@ -110,6 +110,7 @@ protected:
 	// effects
 	EffectID explosionSmall;
 	EffectID explosionLarge;
+	EffectID bloodSplatter;
 	EffectID deadEyeOpen;
 	EffectID deadEyeClose;
 	AnimSprite warcryFX;

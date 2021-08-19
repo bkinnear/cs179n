@@ -99,6 +99,22 @@ struct Item {
 		}
 	}
 
+	// returns the melee damage dealt by a wielded item
+	int getMeleeDamage() const {
+		switch (itemType) {
+		case type::MP5:
+			return 25;
+		case type::M4:
+			return 30;
+		case type::dagger:
+			return 40;
+		case type::baseball_bat:
+			return 50;
+		default:
+			return 10;
+		}
+	}
+
 	// returns the magazine capacity held by a wielded item
 	int getMagCapacity() const {
 		switch (itemType) {
@@ -158,7 +174,7 @@ struct Item {
 		case type::baseball_bat:
 			return 30;
 		default:
-			return -1;
+			return 20;
 		}
 	}
 };

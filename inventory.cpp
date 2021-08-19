@@ -276,7 +276,14 @@ bool Inventory::useWieldedMelee() {
 		else
 			return false;
 	default:
-		return false; // Return false, not wielding an item that can be used
+		if (weaponReady) {
+			weaponReady = false;
+			weaponWaitTick = wielded.getMeleeDelayTime();
+			return true; // Return true, not wielding an item that can be used, but will instead punch with hands
+		}
+		else {
+			return false;
+		}
 	}
 }
 
