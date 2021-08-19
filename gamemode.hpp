@@ -69,6 +69,11 @@ protected:
 	sf::Texture& texWarcry;
 	sf::Texture& texRage;
 	sf::Texture& texDash;
+	sf::Texture& texBloodSplatter1;
+	sf::Texture& texBloodSplatter2;
+	sf::Texture& texBloodSplatter3;
+	sf::Texture& texBloodSplatter4;
+	sf::Texture& texBloodSplatter5;
 
 	// Music
 	sf::Music music;
@@ -110,6 +115,9 @@ protected:
 	// effects
 	EffectID explosionSmall;
 	EffectID explosionLarge;
+	EffectID bloodSplatter;
+	int bloodEffect;
+	sf::Vector2f bloodLocation;
 	EffectID deadEyeOpen;
 	EffectID deadEyeClose;
 	AnimSprite warcryFX;
