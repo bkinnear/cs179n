@@ -295,17 +295,24 @@ protected:
 	void initGame();
 
 	void spawnEnemies(int);
+	Enemy& createEnemy(const sf::Vector2f&);
 	void respawnEnemies();
 	void spawnItems();
 	void updateEnemies(int);
 	void renderEnemies();
-	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator& enemyItr);
+	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator&);
 	bool handleEvents();
 	void updateProjectiles();
 	void renderAllies();
 	void updateAllies();
 
-	std::list<sf::FloatRect> hiddenAreas;
+	struct Area : sf::FloatRect {
+		Area(const sf::FloatRect& rect) : sf::FloatRect(rect) {};
+		unsigned numEnemies = 1;
+		unsigned numItems = 2;
+	};
+
+	std::list<Area> hiddenAreas;
 	std::list<sf::Vector2f> crateSpawnPoints;
 	std::list<sf::Vector2f> lootSpawnPoints;
 
