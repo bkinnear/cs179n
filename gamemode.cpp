@@ -1709,26 +1709,10 @@ void GameMode::updateProjectiles() {
 				createEffect(explosionLarge, projItr->getPosition());
 				grenadeSound.setBuffer(grenadeExplodeBuffer);
 				grenadeSound.play();
-				for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); enemyItr++) {
-					float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
-					if (distToProj <= 150) {
-						enemyItr->health -= 120;
-						if (enemyItr->health <= 0) {
-							if (type == 1)
-							{
-								currentEndlessScore += 1;
-								maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
-							}
-							else if (type == 2)
-							{
-								currentSurvivalScore += 1;
-								maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
-							}
-							enemyItr = enemies.erase(enemyItr);
-							GameMode::spawnEnemies(1);
-							continue;
-						}
-					}
+				for (Enemy& enemy : enemies) {
+					float distToProj = Utils::pointDistance(enemy.getPosition(), enemy.getPosition());
+					if (distToProj <= 150)
+						enemy.health -= 120;
 				}
 
 				//  destroy projectile
@@ -1749,14 +1733,11 @@ void GameMode::updateProjectiles() {
 			// check for collision with enemies
 			// TODO - make enemies use a spatial hash so this algo's faster
 			// this algo is currently O(K*N) where K = bullets, N = enemies
-			bool collided = false;
-			auto enemyItr = enemies.begin();
-			while (enemyItr != enemies.end()) {
+			bool hasCollided = false;
+			for (Enemy& enemy: enemies) {
 				// ignore if enemy is not colliding with projectile
-				if (!enemyItr->isColliding(*projItr)) {
-					enemyItr++;
+				if (!enemy.isColliding(*projItr))
 					continue;
-				}
 
 				// deal damage to enemy
 				if (projItr->isMelee) { //melee sound
@@ -1783,60 +1764,30 @@ void GameMode::updateProjectiles() {
 					break;
 				}
 				getEffectSprite(bloodSplatter).setScale(0.45, 0.45);
-				createEffect(bloodSplatter, enemyItr->getPosition());
+				createEffect(bloodSplatter, enemy.getPosition());
 
-				enemyItr->health -= projItr->damage;
-				//std::cout << "DMG: " << projItr->damage << std::endl;
-
-				// destroy enemy if health below 0
-				if (enemyItr->health <= 0) {
-					if (type == 1)
-					{
-						currentEndlessScore += 1;
-						maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
-					}
-					else if (type == 2)
-					{
-						currentSurvivalScore += 1;
-						maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
-					}
-					enemyItr = enemies.erase(enemyItr);
-					respawnEnemies();
-					continue;
-				}
-        
-				collided = true;
+				enemy.health -= projItr->damage;
+				hasCollided = true;
 				break;
 			}
 			
-			if (!collided) {
+			if (!hasCollided) {
 				ItemSpr* itemSpr = getItemAt(projItr->getPosition());			
-				if (!itemSpr) {
-					collided = false;
-				}
-				else if (itemSpr->type == Item::type::barrel) {
+				if (itemSpr && itemSpr->type == Item::type::barrel) {
 					getEffectSprite(explosionLarge).setScale(3, 3);
 					createEffect(explosionLarge, itemSpr->spr.getPosition() + sf::Vector2f({ -72.f,-64.f }));
 					removeItem(itemSpr);
-					auto enemyItr = enemies.begin();
-					while (enemyItr != enemies.end()) {
-						float distToProj = Utils::pointDistance(enemyItr->getPosition(), projItr->getPosition());
-						if (distToProj <= 300) {
-							enemyItr->health -= 160;
-							if (enemyItr->health <= 0) {
-								enemyItr = enemies.erase(enemyItr);
-								GameMode::spawnEnemies(1);
-								continue;
-							}
-						}
-						enemyItr++;
+					for (Enemy& enemy : enemies) {
+						float distToProj = Utils::pointDistance(enemy.getPosition(), projItr->getPosition());
+						if (distToProj <= 300)
+							enemy.health -= 160;
 					}
-					collided = true;
+					hasCollided = true;
 				}
 			}
 
 			// destroy bullet
-			if (collided) {
+			if (hasCollided) {
 				projItr = projectiles.erase(projItr);
 				continue;
 			}
@@ -1936,20 +1887,45 @@ void GameMode::renderEnemies()
 
 	}
 }
+
+std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& enemyItr) {
+	if (type == 1)
+	{
+		currentEndlessScore += 1;
+		maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
+	}
+	else if (type == 2)
+	{
+		currentSurvivalScore += 1;
+		maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
+	}
+
+	auto newItr = enemies.erase(enemyItr);
+
+	respawnEnemies();
+
+	return newItr;
+}
+
 void GameMode::updateEnemies(int type) {
 	// For Enemy Movement
-	std::list<Enemy>::iterator enemyItr;
-	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
-	{
+	std::list<Enemy>::iterator enemyItr = enemies.begin();
+	while (enemyItr != enemies.end()) {
 		Enemy& enemy = *enemyItr;
 		
+		// check enemy hp
+		if (enemyItr->health <= 0) {
+			enemyItr = deleteEnemy(enemyItr);
+			spawnEnemies(1);
+			continue;
+		}
+
 		// nearest target
 		Character* nearestTarget = nullptr;
 
 		// this is set to the max range of enemy targetting
 		float minDist = 4096.f; // TODO set this constant somewhere (or make it based on enemy idk)
 		
-			
 		// check player
 		float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
 		if (dist < minDist && player.alive) {
@@ -1979,6 +1955,7 @@ void GameMode::updateEnemies(int type) {
 		// if no target for enemy to attack or move towards, do nothing
 		if (!nearestTarget) {
 			enemy.attackTarget = nullptr;
+			enemyItr++;
 			continue;
 		}
 
@@ -2071,6 +2048,8 @@ void GameMode::updateEnemies(int type) {
 				}
 			}
 		}
+
+		enemyItr++;
 	}
 }
 
@@ -2241,22 +2220,14 @@ void GameMode::slasher_smash() {
 
 	sf::Vector2f playerPos = player.getPosition();
 	sf::Vector2f enemyPos;
-	std::list<Enemy>::iterator enemyItr;
 
-	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
-		enemyPos = enemyItr->getPosition();
+	for (Enemy& enemy: enemies) {
+		enemyPos = enemy.getPosition();
 		sf::Vector2f difference = playerPos - enemyPos;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
-		if (length < 100) {
-			enemyItr->health -= 25;
-			if (enemyItr->health <= 0) {
-				currentEndlessScore += 1;
-				maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
-				enemyItr = enemies.erase(enemyItr);
-				spawnEnemies(1);
-			}
-		}
+		if (length < 100)
+			enemy.health -= 25;
 	}
 
 	abilityTimer1.restart();

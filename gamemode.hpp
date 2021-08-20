@@ -299,6 +299,7 @@ protected:
 	void spawnItems();
 	void updateEnemies(int);
 	void renderEnemies();
+	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator& enemyItr);
 	bool handleEvents();
 	void updateProjectiles();
 	void renderAllies();
