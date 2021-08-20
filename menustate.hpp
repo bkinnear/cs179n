@@ -19,6 +19,7 @@ private:
 	sf::View view;
 
 	// place any vars we need in this state in here
+	sf::Sprite sprTitle;
 	AnimSprite sprEndlessButton;
 	AnimSprite sprSurvivalButton;
 	AnimSprite sprOptionsButton;
