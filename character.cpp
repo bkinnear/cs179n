@@ -44,7 +44,7 @@ void Character::moveOnPath(const TileMap& tileMap) {
     // find delta between next path node and current position
     sf::Vector2f delta = sf::Vector2f(head->pos) - getPosition();
     float len = sqrt(powf(delta.x, 2) + powf(delta.y, 2));
-    sf::Vector2f moveVector = sf::Vector2f(delta.x / len, delta.y / len);
+    sf::Vector2f moveVector = (float)speed * sf::Vector2f(delta.x / len, delta.y / len);
 
     setAnimSpeed(12);
 
@@ -71,7 +71,7 @@ void Character::moveTowards(const TileMap& tileMap, sf::Vector2f target) {
     // find delta between next path node and current position
     sf::Vector2f delta = target - getPosition();
     float len = sqrt(powf(delta.x, 2) + powf(delta.y, 2));
-    sf::Vector2f moveVector = sf::Vector2f(delta.x / len, delta.y / len);
+    sf::Vector2f moveVector = (float)speed * sf::Vector2f(delta.x / len, delta.y / len);
 
     setAnimSpeed(12);
 

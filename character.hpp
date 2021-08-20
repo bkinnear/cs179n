@@ -30,11 +30,8 @@ public:
 	// updates to latest path and returns if path exists
 	bool isOnPath();
 
-	// character health
-	int health = 100;
-
-	// whether character is alive
-	bool alive = true;
+	// 0 => left, 1 => right
+	int direction = 0;
 
 	// check wether NPC is a dummy or shield
 	bool isDummy = false;
@@ -43,16 +40,50 @@ public:
 	// position of center shield
 	sf::Vector2f centerShield;
 
-	// sprite movement speed in px per frame
-	int speed = 3;
-
-	// 0 => left, 1 => right
-	int direction = 0;
-
 	// timer to see if path needs to be recalced
 	sf::Clock pathClock;
 
 	Node* pathHead = nullptr; // TODO MAKE THIS PRIVATE WHEN NO LOGNER NEEDED FOR DEBUG
+
+	void setSpeed(float spd) {
+		speed = spd;
+	}
+
+	void setArmor(int arm) {
+		armor = arm;
+	}
+
+	void setHealth(int hp) {
+		health = hp;
+	}
+
+	void heal(int hp) {
+		health = std::min(health + hp, 100);
+	}
+
+	void damage(int dmg) {
+		health -= dmg - armor;
+		if (health <= 0) {
+			health = 0;
+			alive = false;
+		}
+	}
+
+	bool isAlive() const {
+		return alive;
+	}
+	
+	float getSpeed() const {
+		return speed;
+	}
+
+	int getArmor() const {
+		return armor;
+	}
+
+	int getHealth() const {
+		return health;
+	}
 
 private:
 	std::future<Node*> nextPathHead;
@@ -60,6 +91,18 @@ private:
 
 	// non-blocking function to check to see if new path is available
 	void updatePath();
+
+	// character health
+	int health = 100;
+
+	// whether character is alive
+	bool alive = true;
+
+	// reduces damage by flat amount
+	int armor = 0;
+
+	// sprite movement speed multiplier
+	float speed = 1.f;
 };
 
 // node for use in path finding // TODO move to character.cpp

@@ -18,6 +18,9 @@
 #define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
 // minimum distance to pick up items
 #define MIN_DIST_ITEM 48.f
+// player default speed
+#define PLAYER_SPEED 3.f
+
 
 #define gwindow game.window
 
@@ -287,7 +290,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
 	player.setMaskBounds({ 6, 2, 18, 27 });
-	player.speed = 2;
+	player.setSpeed(PLAYER_SPEED);
 	
 	// set player class vars
 	chooseClass(playerClass);
@@ -435,7 +438,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			endlessScoreCounter.setString(str);
 			std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
 			maxEndlessScoreCounter.setString(maxStr);
-			player.health = gameLoadMeta.endlessMeta.playerHealth;
+			player.setHealth(gameLoadMeta.endlessMeta.playerHealth);
 		}
 		else if(type == 2)
 		{
@@ -450,7 +453,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			currentEnemySpawningCount = (currentLevel * 2) + 1;
 			currentEnemyPresent = currentEnemySpawningCount;
 			GameMode::spawnEnemies(currentEnemySpawningCount);
-			player.health = gameLoadMeta.survivalMeta.playerHealth;
+			player.setHealth(gameLoadMeta.survivalMeta.playerHealth);
 		}
 		maxEndlessScore = gameLoadMeta.endlessMeta.maxScore;
 		maxSurvivalScore = gameLoadMeta.survivalMeta.maxScore;
@@ -576,7 +579,7 @@ void GameMode::updateCooldowns() {
 				elapsed2 = abilityTimer2.getElapsedTime();
 				if (elapsed2.asMilliseconds() > 100) { //dash for 100 milliseconds
 					player.isDash = false;
-					player.speed = 3; //set back to default
+					player.setSpeed(PLAYER_SPEED); //set back to default
 				}
 			}
 			else {
@@ -654,7 +657,7 @@ void GameMode::updateCooldowns() {
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 10) { //increase damage for 10 seconds
 					player.isDeadEye = false; // turn off deadeye after 10 seconds
-					if (player.alive) {
+					if (player.isAlive()) {
 						player.setColor(sf::Color::White);
 					}
 				}
@@ -775,7 +778,7 @@ void GameMode::updateCooldowns() {
 				abilityClock3.setString(std::to_string((cooldown3 - int(elapsed3.asSeconds()))));
 				elapsed3 = abilityTimer3.getElapsedTime();
 				if (elapsed3.asSeconds() > 5) { //dash for 5 seconds
-					player.speed = 3; //set back to default
+					player.setSpeed(PLAYER_SPEED); //set back to default
 					player.isRage = false;
 				}
 			}
@@ -1104,7 +1107,7 @@ bool GameMode::handleEvents() {
 					//gameMeta.endlessMeta.currentMap = tileMap.getTileMap();
 					gameMeta.endlessMeta.maxScore = maxEndlessScore;
 					gameMeta.endlessMeta.currentScore = currentEndlessScore;
-					gameMeta.endlessMeta.playerHealth = player.health;
+					gameMeta.endlessMeta.playerHealth = player.getHealth();
 				}
 				else if (type == 2)//Survival Meta save
 				{
@@ -1114,7 +1117,7 @@ bool GameMode::handleEvents() {
 					//gameMeta.survivalMeta.currentMap = tileMap.getTileMap();
 					gameMeta.survivalMeta.maxScore = maxSurvivalScore;
 					gameMeta.survivalMeta.currentScore = currentSurvivalScore;
-					gameMeta.survivalMeta.playerHealth = player.health;
+					gameMeta.survivalMeta.playerHealth = player.getHealth();
 				}
 				saveGame();
 			}
@@ -1199,16 +1202,7 @@ bool GameMode::handleEvents() {
 					Item::type type = item->itemType;
 					switch (type) {
 						case Item::type::medkit:
-							if (player.health == 100) {
-								std::cout << "Player already at max health." << std::endl;
-								break;
-							}
-							else if (player.health < 50) {
-								player.health += 50;
-							}
-							else {
-								player.health = 100;
-							}
+							player.heal(50);
 							inventory.removeItem(Item::type::medkit, 1);
 
 							//healing animation
@@ -1219,16 +1213,7 @@ bool GameMode::handleEvents() {
 
 							break;
 						case Item::type::health_pack:
-							if (player.health == 100) {
-								std::cout << "Player already at max health." << std::endl;
-								break;
-							}
-							else if (player.health < 80) {
-								player.health += 20;
-							}
-							else {
-								player.health = 100;
-							}
+							player.heal(20);
 							inventory.removeItem(Item::type::health_pack, 1);
 
 							healingFX.setIndex(0);
@@ -1275,7 +1260,7 @@ bool GameMode::handleEvents() {
 	// check mouse state for holding (enabling auto fire)
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
-		if (player.alive) {
+		if (player.isAlive()) {
 			// try to use weapon
 			if (inventory.getWielded().itemType != Item::type::MP5 && inventory.getWielded().itemType != Item::type::M4) { //check if weapon wielded is melee
 				if (inventory.useWieldedMelee()) {
@@ -1464,11 +1449,10 @@ void GameMode::render()
 	// draw hidden areas
 	sf::RectangleShape areaShape;
 	areaShape.setFillColor(sf::Color::Black);
-	for (auto area : hiddenAreas) {
+	for (sf::FloatRect& area : hiddenAreas) {
 		areaShape.setPosition(area.left, area.top);
 		areaShape.setSize({ area.width, area.height });
-		if (!player.getBounds().intersects(area))
-			gwindow.draw(areaShape);
+		gwindow.draw(areaShape);
 	}
 
 	// ========================= //
@@ -1563,7 +1547,7 @@ void GameMode::logic()
 	}
 
 	// update player sprite
-	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.alive) {
+	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.isAlive()) {
 		Item::type weaponType = inventory.getWielded().itemType;
 		if (player.getAnimSpeed() == -1)
 			player.setAnimSpeed(12);
@@ -1600,19 +1584,19 @@ void GameMode::logic()
 	}
 
 	// player movement
-	if (player.alive) {
+	if (player.isAlive()) {
 		if (player.movingLeft)
-			if (tileMap.areaClear(player, -player.speed, 0))
-				player.move(-player.speed, 0);
+			if (tileMap.areaClear(player, -player.getSpeed(), 0))
+				player.move(-player.getSpeed(), 0);
 		if (player.movingUp)
-			if (tileMap.areaClear(player, 0, -player.speed))
-				player.move(0, -player.speed);
+			if (tileMap.areaClear(player, 0, -player.getSpeed()))
+				player.move(0, -player.getSpeed());
 		if (player.movingRight)
-			if (tileMap.areaClear(player, player.speed, 0))
-				player.move(player.speed, 0);
+			if (tileMap.areaClear(player, player.getSpeed(), 0))
+				player.move(player.getSpeed(), 0);
 		if (player.movingDown)
-			if (tileMap.areaClear(player, 0, player.speed))
-				player.move(0, player.speed);
+			if (tileMap.areaClear(player, 0, player.getSpeed()))
+				player.move(0, player.getSpeed());
 	}
 
 	// update projectiles
@@ -1635,11 +1619,11 @@ void GameMode::logic()
 	}
 
 
-	playerHPBar.setSize({ playerHPBack.getSize().x * (player.health / 100.f), playerHPBack.getSize().y });
-	if (player.health > 75) {
+	playerHPBar.setSize({ playerHPBack.getSize().x * (player.getHealth() / 100.f), playerHPBack.getSize().y });
+	if (player.getHealth() > 75) {
 		playerHPBar.setFillColor(sf::Color::Green);
 	}
-	else if (player.health > 25) {
+	else if (player.getHealth() > 25) {
 		playerHPBar.setFillColor(sf::Color::Yellow);
 	}
 	else {
@@ -1675,6 +1659,42 @@ void GameMode::logic()
 		survivalScoreCounter.setString(str);
 		std::string maxStr = "Max Score: " + std::to_string(maxSurvivalScore);
 		maxSurvivalScoreCounter.setString(maxStr);
+	}
+
+	// update areas
+	auto areaItr = hiddenAreas.begin();
+	while (areaItr != hiddenAreas.end()) {
+		if (player.getBounds().intersects(*areaItr)) {
+
+			// spawn hidden enemies (default is 1)
+			for (unsigned i = 0; i < areaItr->numEnemies; i++) {
+				Enemy& enemy = createEnemy({ 0.0f, 0.0f });
+				do {
+					float x = areaItr->left + rand() % (int)areaItr->width;
+					float y = areaItr->top + rand() % (int)areaItr->height;
+					enemy.setPosition(x, y);
+				} while (!tileMap.areaClear(enemy));
+				enemy.setColor(sf::Color(0xFF8888FF));
+				enemy.setSpeed(2);
+				enemy.setArmor(10);
+			}
+
+			// spawn hidden items (default is 2)
+			for (unsigned i = 0; i < areaItr->numItems; i++) {
+				Item::type item = Item::type::null;
+				int r = rand()%2;
+				if (r == 0)
+					item = Item::type::ammo_crate;
+				else if (r == 1)
+					item = Item::type::health_pack;
+				createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
+			}
+
+			areaItr = hiddenAreas.erase(areaItr);
+			continue;
+		}
+
+		areaItr++;
 	}
 }
 
@@ -1712,7 +1732,7 @@ void GameMode::updateProjectiles() {
 				for (Enemy& enemy : enemies) {
 					float distToProj = Utils::pointDistance(projItr->getPosition(), enemy.getPosition());
 					if (distToProj <= 150)
-						enemy.health -= 120;
+						enemy.damage(120);
 				}
 
 				//  destroy projectile
@@ -1766,7 +1786,7 @@ void GameMode::updateProjectiles() {
 				getEffectSprite(bloodSplatter).setScale(0.45, 0.45);
 				createEffect(bloodSplatter, enemy.getPosition());
 
-				enemy.health -= projItr->damage;
+				enemy.damage(projItr->damage);
 				hasCollided = true;
 				break;
 			}
@@ -1780,7 +1800,7 @@ void GameMode::updateProjectiles() {
 					for (Enemy& enemy : enemies) {
 						float distToProj = Utils::pointDistance(enemy.getPosition(), projItr->getPosition());
 						if (distToProj <= 300)
-							enemy.health -= 160;
+							enemy.damage(160);
 					}
 					hasCollided = true;
 				}
@@ -1804,7 +1824,7 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		cooldown1 = 3; //in seconds
 		cooldown2 = 5;
 		cooldown3 = 10;
-		player.speed = 3;
+		player.setSpeed(PLAYER_SPEED);
 		abilityIcon1.setTexture(createTexture("res/ability_icons/health_pack.png"));
 		abilityIcon2.setTexture(createTexture("res/ability_icons/dash.png"));
 		abilityIcon3.setTexture(createTexture("res/ability_icons/guardian_angel.png"));
@@ -1813,7 +1833,7 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		cooldown1 = 5; 
 		cooldown2 = 10;
 		cooldown3 = 20;
-		player.speed = 3;
+		player.setSpeed(PLAYER_SPEED);
 		abilityIcon1.setTexture(createTexture("res/ability_icons/ammo.png"));
 		abilityIcon2.setTexture(createTexture("res/ability_icons/grenade.png"));
 		abilityIcon3.setTexture(createTexture("res/ability_icons/deadeye.png"));
@@ -1822,7 +1842,7 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		cooldown1 = 1;
 		cooldown2 = 10;
 		cooldown3 = 15;
-		player.speed = 3;
+		player.setSpeed(PLAYER_SPEED);
 		abilityIcon1.setTexture(createTexture("res/ability_icons/smash.png"));
 		abilityIcon2.setTexture(createTexture("res/ability_icons/warcry.png"));
 		abilityIcon3.setTexture(createTexture("res/ability_icons/rage.png"));
@@ -1831,7 +1851,7 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 		cooldown1 = 10; 
 		cooldown2 = 15;
 		cooldown3 = 20;
-		player.speed = 2;
+		player.setSpeed(PLAYER_SPEED);
 		abilityIcon1.setTexture(createTexture("res/ability_icons/decoy.png"));
 		abilityIcon2.setTexture(createTexture("res/ability_icons/barrel.png"));
 		abilityIcon3.setTexture(createTexture("res/ability_icons/shield.png"));
@@ -1879,7 +1899,7 @@ void GameMode::renderEnemies()
 		sf::RectangleShape bar1({ 26.f, 6.f });
 		bar1.setFillColor(sf::Color::Black);
 		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (enemy.health / 100.f), 4.f });
+		sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
 		bar2.setFillColor(sf::Color::Red);
 		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
 		gwindow.draw(bar1);
@@ -1902,17 +1922,11 @@ std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& ene
 
 	// spawn loot for enemy
 	Item::type item = Item::type::null;
-	int r = rand() % 4;
-	switch (r) {
-	case 0:
-	case 1:
-	case 2:
-		item = Item::type::ammo_crate;
-		break;
-	case 3:
+	int r = rand() % 10;
+	if (r < 2)
 		item = Item::type::health_pack;
-		break;
-	}
+	else if (r < 10)
+		item = Item::type::ammo_crate;
 	createItem(enemyItr->getCenter(), item);
 
 	// remove enemy, store next iterator
@@ -1932,7 +1946,7 @@ void GameMode::updateEnemies(int type) {
 		Enemy& enemy = *enemyItr;
 		
 		// check enemy hp
-		if (enemyItr->health <= 0) {
+		if (!enemyItr->isAlive()) {
 			enemyItr = deleteEnemy(enemyItr);
 			continue;
 		}
@@ -1945,7 +1959,7 @@ void GameMode::updateEnemies(int type) {
 		
 		// check player
 		float dist = Utils::pointDistance(enemy.getPosition(), player.getPosition());
-		if (dist < minDist && player.alive) {
+		if (dist < minDist && player.isAlive()) {
 			minDist = dist;
 			nearestTarget = &player;
 		}
@@ -1956,7 +1970,7 @@ void GameMode::updateEnemies(int type) {
 			// find the nearest target for the enemy to attack (allies and player)
 			for (NPC& ally : allies) {
 				// ignore dead allies
-				if (!ally.alive)
+				if (!ally.isAlive())
 					continue;
 
 				float dist = Utils::pointDistance(enemy.getPosition(), ally.getPosition());
@@ -2028,26 +2042,15 @@ void GameMode::updateEnemies(int type) {
 		{
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
-			if (!enemy.attack && nearestTarget->alive) {
+			if (!enemy.attack && nearestTarget->isAlive()) {
 				if (player.isWarcry) {
-					if ((nearestTarget->health - enemy.hitRate * 0.25) > 0) {
-						nearestTarget->health -= enemy.hitRate * 0.25;
-						std::cout << "Reduced damage due to Warcry!" << std::endl;
-					}
-					else {
-						nearestTarget->health = 0;
-					}
+					std::cout << "Reduced damage due to Warcry!" << std::endl;
+					nearestTarget->damage(enemy.hitRate * .25);
 				}
 				else {
-					if ((nearestTarget->health - enemy.hitRate) > 0) {
-						nearestTarget->health -= enemy.hitRate; // deal amount of damage to player
-					}
-					else {
-						nearestTarget->health = 0;
-					}
+					nearestTarget->damage(enemy.hitRate);
 				}
-				std::cout << "target is taking damage, new health: " << nearestTarget->health << std::endl;
-				if (nearestTarget->health <= 0) {
+				if (!nearestTarget->isAlive()) {
 					if (type == 1)
 					{
 						maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
@@ -2058,10 +2061,8 @@ void GameMode::updateEnemies(int type) {
 						maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
 						std::cout << " Score = " << currentSurvivalScore << " AND Max Survival Score = " << maxSurvivalScore << "\n";
 					}
-					nearestTarget->alive = false;
 					nearestTarget->setTexture(playerDeath);
 					nearestTarget->setColor(sf::Color::Red);
-					std::cout << "target has died" << std::endl;
 				}
 			}
 		}
@@ -2146,7 +2147,7 @@ void GameMode::medic_dash() {
 	onCoolDown2 = true;
 
 	player.isDash = true;
-	player.speed = 10;
+	player.setSpeed(10);
 
 	dashFX.setIndex(0);
 
@@ -2160,13 +2161,8 @@ void GameMode::medic_heal() {
 
 	for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
 		NPC& ally = *allyItr;
-		if (ally.alive) {
-			if (ally.health >= 50) {
-				ally.health = 100;
-			}
-			else {
-				ally.health += 50;
-			}
+		if (ally.isAlive()) {
+			ally.heal(50);
 		}
 	}
 
@@ -2244,7 +2240,7 @@ void GameMode::slasher_smash() {
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
 		if (length < 100)
-			enemy.health -= 25;
+			enemy.damage(30);
 	}
 
 	abilityTimer1.restart();
@@ -2268,7 +2264,7 @@ void GameMode::slasher_rage() {
 	onCoolDown3 = true;
 
 	player.isRage = true;
-	player.speed = 5;
+	player.setSpeed(5);
 
 	rageFX.setIndex(0);
 
@@ -2319,7 +2315,7 @@ void GameMode::engineer_shield() {
 	allies.back().setTextureRect({ 0,0,126,126 });
 	allies.back().isDummy = true;
 	allies.back().isShield = true;
-	allies.back().health = 250;
+	allies.back().setHealth(250);
 	allies.back().centerShield = (allies.back().getPosition() + sf::Vector2f({ +48.f, +48.f }));
 
 	abilityTimer3.restart();
@@ -2331,25 +2327,29 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 
 	for (int i = 0;i < noOfEnemies;i++)
 	{
-		enemies.push_back(Enemy());
-		Enemy& enemy = enemies.back();
-		enemy.hitRate = 15;
-		enemy.speed = 3;
-		enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
-		enemy.setMaskBounds({ 4, 2, 17, 27 });
-		for (;;) {
+		Enemy& enemy = createEnemy({ 0.0f, 0.0f });
+		do {
 			int randWidth = rand() % tileMap.mapWidth * TILE_SIZE;
 			int randHeight = rand() % tileMap.mapHeight * TILE_SIZE;
 			enemy.setPosition(randWidth, randHeight);
-			if (tileMap.areaClear(enemy, 0, 0))
-				break;
-		}
+		} while (!tileMap.areaClear(enemy));
 	}
+}
+
+Enemy& GameMode::createEnemy(const sf::Vector2f& pos) {
+	enemies.push_back(Enemy());
+	Enemy& enemy = enemies.back();
+	enemy.setPosition(pos);
+	enemy.hitRate = 15;
+	enemy.setSpeed(1.f);
+	enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
+	enemy.setMaskBounds({ 4, 2, 17, 27 });
+	return enemy;
 }
 
 void GameMode::respawnEnemies() {
 	if (type == 1)
-		spawnEnemies(rand() % 2 + 1);
+		spawnEnemies(1);
 	else if (type == 2) {
 		currentEnemyPresent = currentEnemyPresent - 1;
 		if (currentEnemyPresent == 0) {
@@ -2378,7 +2378,7 @@ void GameMode::updateAllies() {
 
 		// if ally dead, do nothing
 		float playerToShieldCenter = Utils::pointDistance(player.getPosition(), ally.centerShield);
-		if (!ally.alive) {
+		if (!ally.isAlive()) {
 			allyItr = allies.erase(allyItr);
 			continue;
 		}
@@ -2472,7 +2472,7 @@ void GameMode::renderAllies() {
 			bar1.setFillColor(sf::Color::Black);
 			bar1.setPosition(ally.getPosition().x+32, ally.getPosition().y - 10);
 			gwindow.draw(bar1);
-			sf::RectangleShape bar2({ 24.f * (ally.health / 100.f), 4.f });
+			sf::RectangleShape bar2({ 24.f * (ally.getHealth() / 100.f), 4.f });
 			bar2.setFillColor(sf::Color::Red);
 			bar2.setPosition(ally.getPosition().x + 33, ally.getPosition().y - 9);
 			gwindow.draw(bar2);
@@ -2482,7 +2482,7 @@ void GameMode::renderAllies() {
 			bar1.setFillColor(sf::Color::Black);
 			bar1.setPosition(ally.getPosition().x, ally.getPosition().y - 10);
 			gwindow.draw(bar1);
-			sf::RectangleShape bar2({ 24.f * (ally.health / 100.f), 4.f });
+			sf::RectangleShape bar2({ 24.f * (ally.getHealth() / 100.f), 4.f });
 			bar2.setFillColor(sf::Color::Red);
 			bar2.setPosition(ally.getPosition().x + 1, ally.getPosition().y - 9);
 			gwindow.draw(bar2);
@@ -2558,7 +2558,7 @@ void GameMode::initGame()
 }
 
 void GameMode::addHiddenArea(const sf::FloatRect& rect) {
-	hiddenAreas.push_back(rect);
+	hiddenAreas.emplace_back(rect);
 }
 
 void GameMode::addLootSpawn(const sf::Vector2f& pos) {
