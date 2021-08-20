@@ -1299,18 +1299,17 @@ bool GameMode::handleEvents() {
 						break;
 					}
 					meleeSwing.play();
-					// TODO - check to make sure weapon is ranged
+
 					projectiles.emplace_back();
 					Projectile& proj = projectiles.back();
 					proj.isMelee = true;
 					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
 					proj.setTexture(texProjectile);
-					// set mask bounds to just the sprite bounds (default)
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 25;
 					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 					proj.setRotation(proj.direction);
-					proj.damage = inventory.getWielded().getDamage() * 1.5f;
+					proj.damage = inventory.getWielded().getMeleeDamage() * 1.5f;
 				}
 			}
 			else { //weapon wielded is ranged
