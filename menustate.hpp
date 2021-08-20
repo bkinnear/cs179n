@@ -23,6 +23,8 @@ private:
 	AnimSprite sprEndlessButton;
 	AnimSprite sprSurvivalButton;
 	AnimSprite sprOptionsButton;
+
+	sf::Sprite sprBackground;
 };
 
 #endif MENUSTATE_H_

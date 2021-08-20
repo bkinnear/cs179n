@@ -27,6 +27,11 @@ MenuState::MenuState(Game& game):
 	// we're not going to store the texture anywhere (because we don't need to modify)
 	// so we just just use the createTexture() return to set the sprite texture
 
+	sprBackground.setTexture(createTexture("res/background.png"));
+	sprBackground.setPosition(-180.f, 0.f);
+	sprBackground.setScale(1.15, 1.15);
+
+
 	sprTitle.setTexture(createTexture("res/Title.png"));
 	sprTitle.setPosition(375.f, 0.f);
 
@@ -119,6 +124,7 @@ void MenuState::render() {
 	gwindow.clear();
 
 	// draw the menu button
+	gwindow.draw(sprBackground);
 	gwindow.draw(sprTitle);
 	gwindow.draw(sprEndlessButton);
 	gwindow.draw(sprSurvivalButton);
