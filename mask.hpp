@@ -46,6 +46,10 @@ public:
 		return getBounds().contains(point);
 	}
 
+	sf::Vector2f getCenter() {
+		return { maskBounds.left + maskBounds.width/2, maskBounds.top + maskBounds.height/2 };
+	}
+
 protected:
 	sf::FloatRect maskBounds;
 };
