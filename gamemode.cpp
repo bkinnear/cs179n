@@ -1710,7 +1710,7 @@ void GameMode::updateProjectiles() {
 				grenadeSound.setBuffer(grenadeExplodeBuffer);
 				grenadeSound.play();
 				for (Enemy& enemy : enemies) {
-					float distToProj = Utils::pointDistance(enemy.getPosition(), enemy.getPosition());
+					float distToProj = Utils::pointDistance(projItr->getPosition(), enemy.getPosition());
 					if (distToProj <= 150)
 						enemy.health -= 120;
 				}
