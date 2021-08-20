@@ -1900,10 +1900,28 @@ std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& ene
 		maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
 	}
 
+	// spawn loot for enemy
+	Item::type item = Item::type::null;
+	int r = rand() % 4;
+	switch (r) {
+	case 0:
+	case 1:
+	case 2:
+		item = Item::type::ammo_crate;
+		break;
+	case 3:
+		item = Item::type::health_pack;
+		break;
+	}
+	createItem(enemyItr->getCenter(), item);
+
+	// remove enemy, store next iterator
 	auto newItr = enemies.erase(enemyItr);
 
+	// respawn enemy
 	respawnEnemies();
 
+	// return next iterator
 	return newItr;
 }
 
@@ -1916,7 +1934,6 @@ void GameMode::updateEnemies(int type) {
 		// check enemy hp
 		if (enemyItr->health <= 0) {
 			enemyItr = deleteEnemy(enemyItr);
-			spawnEnemies(1);
 			continue;
 		}
 
@@ -2332,7 +2349,7 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 
 void GameMode::respawnEnemies() {
 	if (type == 1)
-		spawnEnemies(1);
+		spawnEnemies(rand() % 2 + 1);
 	else if (type == 2) {
 		currentEnemyPresent = currentEnemyPresent - 1;
 		if (currentEnemyPresent == 0) {
