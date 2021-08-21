@@ -8,303 +8,320 @@
 #include <iostream>
 
 /* Hard coded building presets */
-struct building1 {
-	static const int w = 7, h = 7;
-	static const tileType array[w][h];
+
+struct Building {
+	Building::Building(const std::vector<std::vector<Tile>>& tiles) : tiles(tiles) {};
+	std::vector<std::vector<Tile>> tiles;
+
+	int getHeight() const {
+		return tiles.size();
+	};
+
+	int getWidth() const {
+		return tiles.at(0).size();
+	};
 };
 
-struct building2 {
-	static const int w = 5, h = 5;
-	static const tileType array[w][h];
-};
-
-struct building3 {
-	static const int w = 6, h = 6;
-	static const tileType array[w][h];
-};
-
-struct building4 {
-	static const int w = 6, h = 6;
-	static const tileType array[w][h];
-};
-
-struct building5 {
-	static const int w = 6, h = 6;
-	static const tileType array[w][h];
-};
-
-struct buildingsmall {
-	static const int w = 4, h = 4;
-	static const tileType array[w][h];
-};
-
-const tileType building1::array[w][h] =
+Building building1(
 {
-{1, 14, 14, 30, 14, 26, 3},
-{8, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 41, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 9, 10},
-{13, 14, 14, 30, 14, 14, 15}
-};
+{8, 9, 9, 42, 9, 9, 10},
+{16, 17, 17, 17, 17, 51, 18},
+{16, 17, 17, 65, 17, 17, 18},
+{16, 17, 17, 55, 17, 17, 18},
+{16, 17, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 17, 18},
+{24, 25, 25, 42, 25, 25, 26}
+});
 
-const tileType building2::array[w][h] =
+Building building2(
 {
-{1, 2, 37, 37, 3},
 {8, 9, 9, 9, 10},
-{8, 9, 9, 9, 10},
-{8, 9, 9, 9, 10},
-{13, 30, 14, 14, 15}
-};
+{16, 55, 53, 17, 18},
+{16, 17, 17, 17, 18},
+{16, 17, 17, 17, 18},
+{24, 42, 25, 25, 26}
+});
 
-const tileType building3::array[w][h] =
+Building building3(
 {
-{1, 30, 2, 2, 26,  3},
-{8, 9, 51, 51, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{13, 14, 30, 14, 14, 15}
-};
+{8, 42, 9, 9, 39,  10},
+{16, 17, 57, 48, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{24, 25, 42, 25, 25, 26}
+});
 
-const tileType building4::array[w][h] =
+Building building4(
 {
-{1, 26, 2, 2, 30, 3},
-{8, 51, 51, 51, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{13, 14, 30, 14, 14, 15}
-};
+{8, 39, 9, 9, 42, 10},
+{16, 49, 51, 52, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{24, 25, 42, 25, 25, 26}
+});
 
-const tileType building5::array[w][h] =
+Building building5(
 {
-{1, 30, 2, 2, 2, 3},
-{8, 9, 9, 37, 38, 10},
-{8, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{8, 9, 9, 9, 9, 10},
-{13, 14, 14, 30, 14, 15}
-};
+{8, 42, 9, 9, 9, 10},
+{16, 17, 17, 51, 52, 18},
+{16, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{16, 17, 17, 17, 17, 18},
+{24, 25, 25, 42, 25, 26}
+});
 
-const tileType buildingsmall::array[w][h] =
+Building buildingsmall(
 {
-{1, 2, 2, 3},
 {8, 9, 9, 10},
-{8, 9, 9, 10},
-{13, 30, 14, 15},
-};
+{16, 17, 17, 18},
+{16, 17, 17, 18},
+{24, 42, 25, 26},
+});
 
-void setLootSpawn(GameMode& gmode, int x, int y, tileType tile) {
+void setLootSpawn(GameMode& gmode, int x, int y, Tile tile) {
 	// add item spawnpoint for certain tiles that should spawn loot
 	switch (tile) {
-	case 37:
-	case 38:
-	case 40:
-	case 41:
-	case 49:
-	case 50:
+	case 51:
+	case 52:
 	case 54:
 	case 55:
+	case 57:
+	case 63:
+	case 64:
 		gmode.addLootSpawn({ x * 32.f + 4.f, y * 32.f + 4.f});
 		break;
 	}
 }
 
+// returns if tile can be passed through
+bool isOpaque(Tile tile) {
+	switch (tile) {
+	case 0:
+	case 15:
+	case 17:
+	case 22:
+	case 23:
+	case 43:
+	case 77:
+	case 78:
+		return false;
+		break;
+	default:
+		return true;
+	}
+}
+
+// returns if tile can be shot through
+bool isOpen(Tile tile) {
+	switch (tile) {
+	case 0:
+	case 15:
+	case 17:
+	case 22:
+	case 23:
+	case 31:
+	case 43:
+	case 47:
+	case 48:
+	case 49:
+	case 50:
+	case 51:
+	case 52:
+	case 53:
+	case 54:
+	case 55:
+	case 57:
+	case 58:
+	case 65:
+	case 66:
+	case 67:
+	case 77:
+	case 78:
+		return true;
+		break;
+	default:
+		return false;
+	}
+}
+
 TileMap::TileMap(unsigned mapWidth, unsigned mapHeight):
-	mapWidth(mapWidth),
-	mapHeight(mapHeight)
+	width(mapWidth),
+	height(mapHeight)
 {}
+
+void TileMap::loadTextures(GameMode* gmode) {
+	// load tile textures
+	int nTextures = 80; // TODO make this not a magic number
+	textures.resize(nTextures);
+	for (int i = 0; i < nTextures; i++) {
+		// create new texture for tile of type i
+		textures[i] = &gmode->createTexture(
+			"res/tileset.png", // TODO make this not a magic string (maybe doesnt matter)
+			sf::IntRect(getTileTexOffset(i), { TILE_SIZE, TILE_SIZE }
+		));
+	}
+}
 
 void TileMap::generate(GameMode* gmode) {
 	// change state to a reference
 	GameMode& state = *gmode;
 
-	// load tile textures
-	int nTextures = 74; // TODO make this not a magic number
-	textures.resize(nTextures);
-	for (int i = 1; i < nTextures; i++) {
-		// create new texture for tile of type i
-		textures[i] = &state.createTexture(
-			"res/big_32x32_tileset.png", // TODO make this not a magic string (maybe doesnt matter)
-			sf::IntRect(getTileTexOffset(i), { TILE_SIZE,TILE_SIZE }
-		));
-	}
+	loadTextures(gmode);
 
 	// initialize map
-	map.resize(mapHeight);
-	for (unsigned y = 0; y < mapHeight; y++) {
-		map[y].resize(mapWidth);
-		for (unsigned x = 0; x < mapWidth; x++) {
+	map.resize(height);
+	for (unsigned y = 0; y < height; y++) {
+		map[y].resize(width);
+		for (unsigned x = 0; x < width; x++) {
 			// goes over every tile
 			// set all tiles to empty (0)
 			setTile(x, y, 0);
 		}
 	}
 
+	// populate building list
+	std::vector<Building> buildings;
+	buildings.push_back(building1);
+	buildings.push_back(building2);
+	buildings.push_back(building3);
+	buildings.push_back(building4);
+	buildings.push_back(building5);
+	buildings.push_back(buildingsmall);
+
 	// place example building
 	srand(time(NULL));
 	int num_bldg = 50;
 	
 	for (int i = 1; i <= num_bldg; i++) {
-		int bldg_num = rand() % 6 + 1;		//randomly selects one of the building presets
-		int x_offset = rand() % (mapWidth-12) + 2;		//generates a random number to determine the x offset
-		int y_offset = rand() % (mapHeight-12) + 2;		//generates a random number to determine the y offset
+		int bldg_num = rand() % buildings.size();		//randomly selects one of the building presets
+		int x_offset = rand() % (width-12) + 2;		//generates a random number to determine the x offset
+		int y_offset = rand() % (height-12) + 2;		//generates a random number to determine the y offset
 		bool empty;
 
 		sf::Vector2i offset = {y_offset,x_offset};
 
-		switch (bldg_num) {
-		case 1:
-			if (tileClear(building1::h, building1::w, offset.y, offset.x)) {
-				for (unsigned y = 0; y < building1::h; y++) {
-					for (unsigned x = 0; x < building1::w; x++) {
-						setTile(x + offset.x, y + offset.y, building1::array[y][x]);
-						setLootSpawn(state, x + offset.x, y + offset.y, building1::array[y][x]);
-					}
+		if (tileClear(buildings[bldg_num].getHeight(), buildings[bldg_num].getWidth(), offset.y, offset.x)) {
+			for (unsigned y = 0; y < buildings[bldg_num].getHeight(); y++) {
+				for (unsigned x = 0; x < buildings[bldg_num].getWidth(); x++) {
+					setTile(x + offset.x, y + offset.y, buildings[bldg_num].tiles[y][x]);
+					setLootSpawn(state, x + offset.x, y + offset.y, buildings[bldg_num].tiles[y][x]);
 				}
-				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building1::w - 2) * 32.f, (building1::h - 2) * 32.f + 20.f });
 			}
-			else {
-				break;
-			}
-		case 2:
-			if (tileClear(building2::h, building2::w, offset.y, offset.x)) {
-				for (unsigned y = 0; y < building2::h; y++) {
-					for (unsigned x = 0; x < building2::w; x++) {
-						setTile(x + offset.x, y + offset.y, building2::array[y][x]);
-						setLootSpawn(state, x + offset.x, y + offset.y, building2::array[y][x]);
-					}
-				}
-				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building2::w - 2) * 32.f, (building2::h - 2) * 32.f + 20.f });
-			}
-			else {
-				break;
-			}
-		case 3:
-			if (tileClear(building3::h, building3::w, offset.y, offset.x)) {
-				for (unsigned y = 0; y < building3::h; y++) {
-					for (unsigned x = 0; x < building3::w; x++) {
-						setTile(x + offset.x, y + offset.y, building3::array[y][x]);
-						setLootSpawn(state, x + offset.x, y + offset.y, building3::array[y][x]);
-					}
-				}
-				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building3::w - 2) * 32.f, (building3::h - 2) * 32.f + 20.f });
-			}
-			else {
-				break;
-			}
-		case 4:
-			if (tileClear(building4::h, building4::w, offset.y, offset.x)) {
-				for (unsigned y = 0; y < building4::h; y++) {
-					for (unsigned x = 0; x < building4::w; x++) {
-						setTile(x + offset.x, y + offset.y, building4::array[y][x]);
-						setLootSpawn(state, x + offset.x, y + offset.y, building4::array[y][x]);
-					}
-				}
-				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building4::w - 2) * 32.f, (building4::h - 2) * 32.f + 20.f });
-			}
-			else {
-				break;
-			}
-		case 5:
-			if (tileClear(building5::h, building5::w, offset.y, offset.x)) {
-				for (unsigned y = 0; y < building5::h; y++) {
-					for (unsigned x = 0; x < building5::w; x++) {
-						setTile(x + offset.x, y + offset.y, building5::array[y][x]);
-						setLootSpawn(state, x + offset.x, y + offset.y, building5::array[y][x]);
-					}
-				}
-				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (building5::w - 2) * 32.f, (building5::h - 2) * 32.f + 20.f });
-			}
-			else {
-				break;
-			}
-		case 6:
-			if (tileClear(buildingsmall::h, buildingsmall::w, offset.y, offset.x)) {
-				for (unsigned y = 0; y < buildingsmall::h; y++) {
-					for (unsigned x = 0; x < buildingsmall::w; x++) {
-						setTile(x + offset.x, y + offset.y, buildingsmall::array[y][x]);
-						setLootSpawn(state, x + offset.x, y + offset.y, buildingsmall::array[y][x]);
-					}
-				}
-				state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildingsmall::w - 2) * 32.f, (buildingsmall::h - 2) * 32.f + 20.f });
-			}
-			else {
-				break;
-			}
+			state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildings[bldg_num].getWidth() - 2) * 32.f, (buildings[bldg_num].getHeight() - 2) * 32.f + 20.f });
 		}
 	}
 
 	// find and place crate spawn points
-	int numCrates = mapHeight/4; // set num of crates to 1/4 the map hiehgt for sparse crate distribution
+	int numCrates = height/4; // set num of crates to 1/4 the map hiehgt for sparse crate distribution
 	for (int i = 0; i < numCrates; i++) {
 		// find free spot for crate
 		int x, y;
 		do {
-			x = rand() % mapWidth;
-			y = rand() % mapHeight;
-		} while (isOpaque(x, y));
+			x = rand() % width;
+			y = rand() % height;
+		} while (isOpaqueAt(x, y));
 		state.addCrateSpawn({ x * 32.f, y * 32.f });
 	}
 };
 
-void TileMap::setTile(unsigned x, unsigned y, tileType type) {
-	if (x >= mapWidth || y >= mapHeight)
+void TileMap::loadMap(GameMode* gmode, const std::string& fname)
+{
+	loadTextures(gmode);
+
+	std::ifstream input(fname.c_str());
+	std::string line;
+	std::vector<std::vector<unsigned>> parsedMap;
+	while (std::getline(input, line))
+	{
+		std::stringstream lineStream(line);
+		std::string tile;
+		std::vector<unsigned> parsedRow;
+		while (std::getline(lineStream, tile, ','))
+		{
+			parsedRow.push_back((unsigned)std::stoi(tile));
+		}
+
+		parsedMap.push_back(parsedRow);
+	}
+
+	// return if empty map loaded
+	if (parsedMap.size() == 0)
+		throw std::runtime_error("map csv has invalid size 0");
+	else if (parsedMap.at(0).size() == 0)
+		throw std::runtime_error("map csv has invalid size 0");
+
+	// set map width and height
+	width = parsedMap.at(0).size();
+	height = parsedMap.size();
+	std::cout << "Loaded map of size " << width << 'x' << height << std::endl;
+
+	// initialize map
+	map.resize(height);
+	for (unsigned y = 0; y < height; y++) {
+		map[y].resize(width);
+		for (unsigned x = 0; x < width; x++) {
+			// set all tiles to value from csv
+			setTile(x, y, (Tile)parsedMap.at(y).at(x));
+		}
+	}
+	std::cout << "done loading level" << std::endl;
+};
+
+void TileMap::setTile(unsigned x, unsigned y, Tile tile) {
+	if (x >= width || y >= height)
 		return;
 
-	map[y][x].type = type;
-
-	switch (type) {
-	case 0:
-	case 9:
-	case 31:
-	case 33:
-		map[y][x].opaque = false;
-		break;
-	default:
-		map[y][x].opaque = true;
-	}
+	map[y][x] = tile;
 }
 
-bool TileMap::isOpaque(float x, float y) const {
+bool TileMap::isOpaqueAt(float x, float y) const {
 	// convert from world to map coordinates
 	unsigned tileX = int(x / TILE_SIZE);
 	unsigned tileY = int(y / TILE_SIZE);
 
-	if (tileX >= 0 && tileX < mapWidth && tileY >=0 && tileY < mapHeight)
-		return map[tileY][tileX].opaque;
+	if (tileX >= 0 && tileX < width && tileY >=0 && tileY < height)
+		return isOpaque(map[tileY][tileX]);
 
 	return true;
 }
-tileType TileMap::getTileType(unsigned x, unsigned y) const {
+
+bool TileMap::isOpenAt(float x, float y) const {
+	// convert from world to map coordinates
+	unsigned tileX = int(x / TILE_SIZE);
+	unsigned tileY = int(y / TILE_SIZE);
+
+	if (tileX >= 0 && tileX < width && tileY >= 0 && tileY < height)
+		return isOpen(map[tileY][tileX]);
+
+	return true;
+}
+
+Tile TileMap::getTile(unsigned x, unsigned y) const {
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	if (x >= 0 && x < width && y >= 0 && y < height)
 	{
-		return map[y][x].type;
+		return map[y][x];
 	}
 	return -1;
 }
+
 bool TileMap::isDoor(unsigned x, unsigned y) const {
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	if (x >= 0 && x < width && y >= 0 && y < height)
 	{
-		switch (map[y][x].type)
+		switch (map[y][x])
 		{
-			case 30:
-			case 31:
-			case 32:
-			case 33:
+			case TILE_DOOR_CLOSED:
+			case TILE_DOOR_OPEN:
 				return true;
-				break;
 			default:
 				return false;
-				break;
 		}
 	}
 	return false;
@@ -313,17 +330,14 @@ bool TileMap::isDoorOpen(unsigned x, unsigned y) const {
 	x = int(x / TILE_SIZE);
 	y = int(y / TILE_SIZE);
 
-	if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight)
+	if (x >= 0 && x < width && y >= 0 && y < height)
 	{
-		switch (map[y][x].type)
+		switch (map[y][x])
 		{
-		case 31:
-		case 33:
+		case TILE_DOOR_OPEN:
 			return true;
-			break;
 		default:
 			return false;
-			break;
 		}
 	}
 	return false;
@@ -332,62 +346,62 @@ bool TileMap::tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off)
 {
 	for (unsigned y = 0; y < h; y++) {
 		for (unsigned x = 0; x < w; x++) {
-			if (x + x_off > mapWidth || y + y_off > mapHeight)
+			if (x + x_off > width || y + y_off > height)
 				break;
-			if (map[y + y_off][x + x_off].type == 0) {
+			if (map[y + y_off][x + x_off] == 0) {
 				if (y == 0 && x == 0) {
-					if (map[y + y_off - 2][x + x_off - 2].type != 0 ||
-						map[y + y_off - 2][x + x_off - 1].type != 0 ||
-						map[y + y_off - 1][x + x_off - 2].type != 0 ||
-						map[y + y_off - 1][x + x_off - 1].type != 0) {
+					if (map[y + y_off - 2][x + x_off - 2] != 0 ||
+						map[y + y_off - 2][x + x_off - 1] != 0 ||
+						map[y + y_off - 1][x + x_off - 2] != 0 ||
+						map[y + y_off - 1][x + x_off - 1] != 0) {
 						return false;
 					}
 				}
 				if (y == h - 1 && x == w - 1) {
-					if (map[y + y_off + 2][x + x_off + 2].type != 0 ||
-						map[y + y_off + 2][x + x_off + 1].type != 0 ||
-						map[y + y_off + 1][x + x_off + 2].type != 0 ||
-						map[y + y_off + 1][x + x_off + 1].type != 0) {
+					if (map[y + y_off + 2][x + x_off + 2] != 0 ||
+						map[y + y_off + 2][x + x_off + 1] != 0 ||
+						map[y + y_off + 1][x + x_off + 2] != 0 ||
+						map[y + y_off + 1][x + x_off + 1] != 0) {
 						return false;
 					}
 				}
 				if (y == 0 && x == w - 1) {
-					if (map[y + y_off - 2][x + x_off + 2].type != 0 ||
-						map[y + y_off - 2][x + x_off + 1].type != 0 ||
-						map[y + y_off - 1][x + x_off + 2].type != 0 ||
-						map[y + y_off - 1][x + x_off + 1].type != 0) {
+					if (map[y + y_off - 2][x + x_off + 2] != 0 ||
+						map[y + y_off - 2][x + x_off + 1] != 0 ||
+						map[y + y_off - 1][x + x_off + 2] != 0 ||
+						map[y + y_off - 1][x + x_off + 1] != 0) {
 						return false;
 					}
 				}
 				if (y == h - 1 && x == 0) {
-					if (map[y + y_off + 2][x + x_off - 2].type != 0 ||
-						map[y + y_off + 2][x + x_off - 1].type != 0 ||
-						map[y + y_off + 1][x + x_off - 2].type != 0 ||
-						map[y + y_off + 1][x + x_off - 1].type != 0) {
+					if (map[y + y_off + 2][x + x_off - 2] != 0 ||
+						map[y + y_off + 2][x + x_off - 1] != 0 ||
+						map[y + y_off + 1][x + x_off - 2] != 0 ||
+						map[y + y_off + 1][x + x_off - 1] != 0) {
 						return false;
 					}
 				}
 				if (y == 0) {
-					if (map[y + y_off - 2][x + x_off].type != 0 ||
-						map[y + y_off - 1][x + x_off].type != 0) {
+					if (map[y + y_off - 2][x + x_off] != 0 ||
+						map[y + y_off - 1][x + x_off] != 0) {
 						return false;
 					}
 				}
 				if (x == 0) {
-					if (map[y + y_off][x + x_off - 2].type != 0 ||
-						map[y + y_off][x + x_off - 1].type != 0) {
+					if (map[y + y_off][x + x_off - 2] != 0 ||
+						map[y + y_off][x + x_off - 1] != 0) {
 						return false;
 					}
 				}
 				if (y == h - 1) {
-					if (map[y + y_off + 2][x + x_off].type != 0 ||
-						map[y + y_off + 1][x + x_off].type != 0) {
+					if (map[y + y_off + 2][x + x_off] != 0 ||
+						map[y + y_off + 1][x + x_off] != 0) {
 						return false;
 					}
 				}
 				if (x == w - 1) {
-					if (map[y + y_off][x + x_off + 2].type != 0 ||
-						map[y + y_off][x + x_off + 1].type != 0) {
+					if (map[y + y_off][x + x_off + 2] != 0 ||
+						map[y + y_off][x + x_off + 1] != 0) {
 						return false;
 					}
 				}
@@ -400,31 +414,10 @@ bool TileMap::tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off)
 	return true;
 }
 
-sf::Vector2i TileMap::getTileTexOffset(tileType type) {
-	int i = type;
-	if (i <= 7)
-		return { (i - 1) * 32, 576 };
-	if (i <= 11)
-		return { (i - 8) * 32, 608 };
-	if (i == 12)
-		return { 160, 608 };
-	if (i <= 19)
-		return { (i - 13) * 32, 640 };
-	if (i <= 27)
-		return { (i - 20) * 32, 672 };
-	if (i <= 33)
-		return { (i - 28) * 32, 704 };
-	if (i <= 41)
-		return { (i - 34) * 32, 736 };
-	if (i <= 49)
-		return { (i - 42) * 32, 768 };
-	if (i <= 57)
-		return { (i - 50) * 32, 800 };
-	if (i <= 63)
-		return { (i - 58) * 32, 832 };
+sf::Vector2i TileMap::getTileTexOffset(Tile type) {
+	int i = (int)type;
 
-	// default set to red rug
-	return { 224, 832 };
+	return { (i * 32) % 256, ((i * 32) / 256) * 32 };
 }
 
 void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -436,20 +429,13 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
 	int left = std::max(viewBounds.left / TILE_SIZE, 0);
 	int top = std::max(viewBounds.top / TILE_SIZE, 0);
-	int right = std::min((viewBounds.left + viewBounds.width) / TILE_SIZE + 1, mapWidth);
-	int bottom = std::min((viewBounds.top + viewBounds.height) / TILE_SIZE + 1, mapHeight);
+	int right = std::min((viewBounds.left + viewBounds.width) / TILE_SIZE + 1, (int)width);
+	int bottom = std::min((viewBounds.top + viewBounds.height) / TILE_SIZE + 1, (int)height);
 
 	for (unsigned x = left; x < right; x++) {
 		for (unsigned y = top; y < bottom; y++) {
 			const Tile& tile = map[y][x];
-			// no tile - draw grass (63)
-			if (tile.type == 0) {
-				sprTile.setTexture(*textures[63]);
-				sprTile.setPosition(x * TILE_SIZE, y * TILE_SIZE);
-				target.draw(sprTile, states);
-				continue;
-			}
-			sprTile.setTexture(*textures[tile.type]);
+			sprTile.setTexture(*textures[tile]);
 			sprTile.setPosition(x*TILE_SIZE, y*TILE_SIZE);
 			target.draw(sprTile, states);
 		}
@@ -464,10 +450,10 @@ bool TileMap::areaClear(const MSprite& spr, float dx, float dy) const {
 	bounds.left += dx;
 	bounds.top += dy;
 
-	bool lt = isOpaque(bounds.left, bounds.top);
-	bool rt = isOpaque(bounds.left + bounds.width, bounds.top);
-	bool ll = isOpaque(bounds.left, bounds.top + bounds.height);
-	bool lr = isOpaque(bounds.left + bounds.width, bounds.top + bounds.height);
+	bool lt = isOpaqueAt(bounds.left, bounds.top);
+	bool rt = isOpaqueAt(bounds.left + bounds.width, bounds.top);
+	bool ll = isOpaqueAt(bounds.left, bounds.top + bounds.height);
+	bool lr = isOpaqueAt(bounds.left + bounds.width, bounds.top + bounds.height);
 
 	if (lt || rt || ll || lr)
 		return false;
