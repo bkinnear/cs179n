@@ -1615,61 +1615,74 @@ void GameMode::logic()
 		}
 	}
 
+	//compare mouse location to player
+	if (mousePos.x < player.getPosition().x) {
+		player.lookingLeft = true;
+		player.lookingRight = false;
+	}
+	else {
+		player.lookingLeft = false;
+		player.lookingRight = true;
+	}
+
 	// update player sprite
-	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.isAlive()) {
+	if ((player.lookingLeft || player.lookingRight) && player.isAlive()) {
 		Item::type weaponType = inventory.getWielded().itemType;
-		if (player.getAnimSpeed() == -1)
-			player.setAnimSpeed(12);
 		switch (weaponType) {
 		case Item::type::MP5:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftMp5);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightMp5);
 			}
 			break;
 		case Item::type::M4:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM4);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM4);
 			}
 			break;
 		case Item::type::M9:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM9);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM9);
 			}
 			break;
 		case Item::type::M240:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM240);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM240);
 			}
 			break;
 		case Item::type::Shotgun:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftShotgun);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightShotgun);
 			}
 			break;
 		default:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeft);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRight);
 			}
 			break;
 		}			
+	}
+	if (player.movingLeft || player.movingRight || player.movingDown || player.movingUp) {
+		if (player.getAnimSpeed() == -1) {
+			player.setAnimSpeed(12);
+		}
 	}
 	else {
 		player.setIndex(0);
