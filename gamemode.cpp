@@ -439,6 +439,18 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
 			maxEndlessScoreCounter.setString(maxStr);
 			player.setHealth(gameLoadMeta.endlessMeta.playerHealth);
+			std::list<NPCMeta>& list = gameLoadMeta.endlessMeta.npcMeta;
+			auto metaItr = list.begin();
+			auto allyItr = allies.begin();
+			while (allyItr != allies.end() && metaItr != list.end())
+			{
+				NPCMeta& npcMeta = *metaItr;
+				NPC& npc = *allyItr;
+				npc.setHealth(npcMeta.health);
+				npc.setPosition(npcMeta.positionX, npcMeta.positionY);
+				++metaItr;
+				++allyItr;
+			}
 		}
 		else if(type == 2)
 		{
@@ -1108,6 +1120,15 @@ bool GameMode::handleEvents() {
 					gameMeta.endlessMeta.maxScore = maxEndlessScore;
 					gameMeta.endlessMeta.currentScore = currentEndlessScore;
 					gameMeta.endlessMeta.playerHealth = player.getHealth();
+					for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr)
+					{
+						NPC& ally = *allyItr;
+						NPCMeta npcMeta;
+						npcMeta.health = ally.getHealth();
+						npcMeta.positionX = ally.getPosition().x;
+						npcMeta.positionY = ally.getPosition().y;
+						gameMeta.endlessMeta.npcMeta.push_back(npcMeta);
+					}
 				}
 				else if (type == 2)//Survival Meta save
 				{
@@ -2518,6 +2539,18 @@ void GameMode::loadGame(bool isLoadCall)
 		gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
 		gameMeta.endlessMeta.playerHealth = loadMeta.endlessMeta.playerHealth;
 		//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
+		std::list<NPCMeta> list = loadMeta.endlessMeta.npcMeta;
+		for (auto allyItr = list.begin(); allyItr != list.end(); ++allyItr)
+		{
+			NPCMeta& ally = *allyItr;
+			NPCMeta tempNPCMeta;
+			tempNPCMeta.health = ally.health;
+			tempNPCMeta.positionX = ally.positionX;
+			tempNPCMeta.positionY = ally.positionY;
+
+			gameMeta.endlessMeta.npcMeta.push_back(tempNPCMeta);
+		}
+
 
 		/*
 		for (std::vector <Tile>& tileMap : gameMeta.survivalMeta.currentMap)

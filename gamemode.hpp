@@ -264,6 +264,12 @@ protected:
 	bool debugging = false;
 	bool isLoadInvoked = false;
 
+	struct NPCMeta
+	{
+		int health = 0;
+		int positionX = 0;
+		int positionY = 0;
+	};
 	struct GameMeta
 	{
 		struct EndlessMeta
@@ -274,6 +280,7 @@ protected:
 			int maxScore = 0;
 			int currentScore = 0;
 			int playerHealth = 100;
+			std::list<NPCMeta> npcMeta;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -287,7 +294,6 @@ protected:
 			int playerHealth = 100;
 		}survivalMeta;
 	}gameMeta;
-
 	bool gamestateChange = false;
 	std::string metaFileName = "thelastwar.dat";
 	void loadGame(bool);
