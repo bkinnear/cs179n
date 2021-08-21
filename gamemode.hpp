@@ -269,7 +269,8 @@ protected:
 		int health = 0;
 		int positionX = 0;
 		int positionY = 0;
-	};
+	}npcSaveMeta[2];
+
 	struct GameMeta
 	{
 		struct EndlessMeta
@@ -280,7 +281,6 @@ protected:
 			int maxScore = 0;
 			int currentScore = 0;
 			int playerHealth = 100;
-			std::list<NPCMeta> npcMeta;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -336,7 +336,7 @@ private:
 
 public:
 
-	GameMode(int, Game&, PlayerClass, GameMeta, bool);
+	GameMode(int, Game&, PlayerClass, GameMeta, NPCMeta[], bool);
 	~GameMode();
 
 	virtual void logic();

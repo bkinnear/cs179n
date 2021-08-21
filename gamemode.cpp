@@ -97,7 +97,7 @@ Item::type getLootItem(Item::type type) {
 	return type;
 }
 
-GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, bool isLoadCall) :
+GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, NPCMeta npcLoadMeta[], bool isLoadCall) :
 	State(game),
 	type(type),
 	player(playerClass),
@@ -439,16 +439,18 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			std::string maxStr = "Max Score: " + std::to_string(maxEndlessScore);
 			maxEndlessScoreCounter.setString(maxStr);
 			player.setHealth(gameLoadMeta.endlessMeta.playerHealth);
-			std::list<NPCMeta>& list = gameLoadMeta.endlessMeta.npcMeta;
-			auto metaItr = list.begin();
+			
 			auto allyItr = allies.begin();
-			while (allyItr != allies.end() && metaItr != list.end())
+			int counter = 0;
+			while (allyItr != allies.end())
 			{
-				NPCMeta& npcMeta = *metaItr;
 				NPC& npc = *allyItr;
-				npc.setHealth(npcMeta.health);
-				npc.setPosition(npcMeta.positionX, npcMeta.positionY);
-				++metaItr;
+				npc.setHealth(npcLoadMeta[counter].health);
+				npc.setPosition(npcLoadMeta[counter].positionX, npcLoadMeta[counter].positionY);
+				std::cout << "\nNEW Health = " << npc.getHealth();
+				std::cout << "\nNEW PositionX = " << npc.getPosition().x;
+				std::cout << "\nNEW PositionY = " << npc.getPosition().y;
+				counter++;
 				++allyItr;
 			}
 		}
@@ -1089,9 +1091,9 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::F2:
 				// restarts the map
 				if (type == 1)
-					game.setState(new GameMode(1, game, player.playerClass, gameMeta, false));
+					game.setState(new GameMode(1, game, player.playerClass, gameMeta, npcSaveMeta, false));
 				else if (type == 2)
-					game.setState(new GameMode(2, game, player.playerClass, gameMeta, false));
+					game.setState(new GameMode(2, game, player.playerClass, gameMeta, npcSaveMeta, false));
 				delete this;
 				return false;
 				break;
@@ -1120,6 +1122,7 @@ bool GameMode::handleEvents() {
 					gameMeta.endlessMeta.maxScore = maxEndlessScore;
 					gameMeta.endlessMeta.currentScore = currentEndlessScore;
 					gameMeta.endlessMeta.playerHealth = player.getHealth();
+					int counter = 0;
 					for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr)
 					{
 						NPC& ally = *allyItr;
@@ -1127,7 +1130,8 @@ bool GameMode::handleEvents() {
 						npcMeta.health = ally.getHealth();
 						npcMeta.positionX = ally.getPosition().x;
 						npcMeta.positionY = ally.getPosition().y;
-						gameMeta.endlessMeta.npcMeta.push_back(npcMeta);
+						npcSaveMeta[counter] = npcMeta;
+						counter++;
 					}
 				}
 				else if (type == 2)//Survival Meta save
@@ -2525,66 +2529,70 @@ void GameMode::loadGame(bool isLoadCall)
 		return;
 	}
 	struct GameMeta loadMeta;
-	while (fread(&loadMeta, sizeof(struct GameMeta), 1, readFile))
+	fread(&loadMeta, sizeof(struct GameMeta), 1, readFile);
+	gameMeta.survivalMeta.currentLevel = loadMeta.survivalMeta.currentLevel;
+	gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
+	gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
+	gameMeta.survivalMeta.maxScore = loadMeta.survivalMeta.maxScore;
+	gameMeta.survivalMeta.playerHealth = loadMeta.survivalMeta.playerHealth;
+	//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
+
+	gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
+	gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
+	gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
+	gameMeta.endlessMeta.playerHealth = loadMeta.endlessMeta.playerHealth;
+	//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
+	/*
+	for (std::vector <Tile>& tileMap : gameMeta.survivalMeta.currentMap)
 	{
-		gameMeta.survivalMeta.currentLevel = loadMeta.survivalMeta.currentLevel;
-		gameMeta.survivalMeta.playerPosX = loadMeta.survivalMeta.playerPosX;
-		gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
-		gameMeta.survivalMeta.maxScore = loadMeta.survivalMeta.maxScore;
-		gameMeta.survivalMeta.playerHealth = loadMeta.survivalMeta.playerHealth;
-		//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
-
-		gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
-		gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
-		gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
-		gameMeta.endlessMeta.playerHealth = loadMeta.endlessMeta.playerHealth;
-		//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
-		std::list<NPCMeta> list = loadMeta.endlessMeta.npcMeta;
-		for (auto allyItr = list.begin(); allyItr != list.end(); ++allyItr)
+		for (Tile& tile : tileMap)
 		{
-			NPCMeta& ally = *allyItr;
-			NPCMeta tempNPCMeta;
-			tempNPCMeta.health = ally.health;
-			tempNPCMeta.positionX = ally.positionX;
-			tempNPCMeta.positionY = ally.positionY;
-
-			gameMeta.endlessMeta.npcMeta.push_back(tempNPCMeta);
+			std::cout << "Tile Type = " << tile.type << " & Opaque = " << tile.opaque << "   ";
 		}
-
-
-		/*
-		for (std::vector <Tile>& tileMap : gameMeta.survivalMeta.currentMap)
-		{
-			for (Tile& tile : tileMap)
-			{
-				std::cout << "Tile Type = " << tile.type << " & Opaque = " << tile.opaque << "   ";
-			}
-			std::cout << "\n";
-		}
-		*/
-		std::cout << "Survival Level = "<< gameMeta.survivalMeta.playerHealth << "\n";
-		std::cout << "Endless Level = "<<  gameMeta.endlessMeta.playerHealth <<"\n";
-		
-		if (isLoadCall)
-		{
-			gameMeta.endlessMeta.currentScore = loadMeta.endlessMeta.currentScore;
-			gameMeta.survivalMeta.currentScore = loadMeta.survivalMeta.currentScore;
-			initGame();
-		}
+		std::cout << "\n";
 	}
+	*/
+	std::cout << "Survival Level = "<< gameMeta.survivalMeta.playerHealth << "\n";
+	std::cout << "Endless Level = "<<  gameMeta.endlessMeta.playerHealth <<"\n";
+	if(type == 1)
+	{
+		//Loading NPC Meta Start
+		int counter = 0;
+		struct NPCMeta loadNPCMeta;
+		fread(&loadNPCMeta, sizeof(loadNPCMeta), 1, readFile);
+		NPCMeta npcMeta;
+		npcMeta.health = loadNPCMeta.health;
+		npcMeta.positionX = loadNPCMeta.positionX;
+		npcMeta.positionY = loadNPCMeta.positionY;
+		npcSaveMeta[0] = npcMeta;
+
+		fread(&loadNPCMeta, sizeof(loadNPCMeta), 1, readFile);
+		NPCMeta npcMeta2;
+		npcMeta2.health = loadNPCMeta.health;
+		npcMeta2.positionX = loadNPCMeta.positionX;
+		npcMeta2.positionY = loadNPCMeta.positionY;
+		npcSaveMeta[1] = npcMeta2;
+		//Loading NPC Meta End
+	}
+	if (isLoadCall)
+	{
+		gameMeta.endlessMeta.currentScore = loadMeta.endlessMeta.currentScore;
+		gameMeta.survivalMeta.currentScore = loadMeta.survivalMeta.currentScore;
+		initGame();
+	}
+	
 	fclose(readFile);
 }
-
 void GameMode::initGame()
 {
 	gamestateChange = true;
 	if (type == 1)//Start a new endless game state with the saved properties
 	{
-		game.setState(new GameMode(1, game, player.playerClass, gameMeta, true));
+		game.setState(new GameMode(1, game, player.playerClass, gameMeta, npcSaveMeta, true));
 	}
 	else if (type == 2)//Start a new endless game state with the saved properties
 	{
-		game.setState(new GameMode(2, game, player.playerClass, gameMeta, true));
+		game.setState(new GameMode(2, game, player.playerClass, gameMeta, npcSaveMeta, true));
 	}
 	delete this;
 	return;
@@ -2615,6 +2623,12 @@ void GameMode::saveGame()
 		return;
 	}
 	fwrite(&gameMeta, sizeof(struct GameMeta), 1, writeFile);
+	if (type == 1)
+	{
+		std::cout << "Printing save \n";
+		std::cout<<"\nFirst Obj = "<<fwrite(&npcSaveMeta[0], sizeof(struct NPCMeta), 1, writeFile);
+		std::cout<<"\nSecond Obj = "<<fwrite(&npcSaveMeta[1], sizeof(struct NPCMeta), 1, writeFile);
+	}
 	if (fwrite != 0)
 	{
 		std::cout << "Successfully Saved!" << "\n";

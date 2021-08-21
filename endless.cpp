@@ -5,7 +5,7 @@
 
 // NOTE: we must call the original constructor and pass it the Game pointer
 EndlessState::EndlessState(Game& game, PlayerClass playerClass) :
-	GameMode(1, game, playerClass, gameMeta, false)
+	GameMode(1, game, playerClass, gameMeta, npcSaveMeta, false)
 {}
 
 EndlessState::~EndlessState() {
