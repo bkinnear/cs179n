@@ -151,20 +151,24 @@ TileMap::TileMap(unsigned mapWidth, unsigned mapHeight):
 	height(mapHeight)
 {}
 
-void TileMap::generate(GameMode* gmode) {
-	// change state to a reference
-	GameMode& state = *gmode;
-
+void TileMap::loadTextures(GameMode* gmode) {
 	// load tile textures
 	int nTextures = 80; // TODO make this not a magic number
 	textures.resize(nTextures);
 	for (int i = 0; i < nTextures; i++) {
 		// create new texture for tile of type i
-		textures[i] = &state.createTexture(
+		textures[i] = &gmode->createTexture(
 			"res/tileset.png", // TODO make this not a magic string (maybe doesnt matter)
 			sf::IntRect(getTileTexOffset(i), { TILE_SIZE, TILE_SIZE }
 		));
 	}
+}
+
+void TileMap::generate(GameMode* gmode) {
+	// change state to a reference
+	GameMode& state = *gmode;
+
+	loadTextures(gmode);
 
 	// initialize map
 	map.resize(height);
@@ -191,7 +195,7 @@ void TileMap::generate(GameMode* gmode) {
 	int num_bldg = 50;
 	
 	for (int i = 1; i <= num_bldg; i++) {
-		int bldg_num = rand() % 6;		//randomly selects one of the building presets
+		int bldg_num = rand() % buildings.size();		//randomly selects one of the building presets
 		int x_offset = rand() % (width-12) + 2;		//generates a random number to determine the x offset
 		int y_offset = rand() % (height-12) + 2;		//generates a random number to determine the y offset
 		bool empty;
@@ -222,8 +226,10 @@ void TileMap::generate(GameMode* gmode) {
 	}
 };
 
-void TileMap::loadMap(const std::string& fname)
+void TileMap::loadMap(GameMode* gmode, const std::string& fname)
 {
+	loadTextures(gmode);
+
 	std::ifstream input(fname.c_str());
 	std::string line;
 	std::vector<std::vector<unsigned>> parsedMap;
@@ -242,31 +248,25 @@ void TileMap::loadMap(const std::string& fname)
 
 	// return if empty map loaded
 	if (parsedMap.size() == 0)
-		return;
+		throw std::runtime_error("map csv has invalid size 0");
 	else if (parsedMap.at(0).size() == 0)
-		return;
+		throw std::runtime_error("map csv has invalid size 0");
 
 	// set map width and height
 	width = parsedMap.at(0).size();
 	height = parsedMap.size();
+	std::cout << "Loaded map of size " << width << 'x' << height << std::endl;
 
 	// initialize map
 	map.resize(height);
 	for (unsigned y = 0; y < height; y++) {
 		map[y].resize(width);
 		for (unsigned x = 0; x < width; x++) {
-			// goes over every tile
-			// set all tiles to empty (0)
-			setTile(x, y, 0);
-		}
-	}
-
-	// transfer CSV to tile map
-	for (unsigned y = 0; y < height; y++) {
-		for (unsigned x = 0; x < width; x++) {
+			// set all tiles to value from csv
 			setTile(x, y, (Tile)parsedMap.at(y).at(x));
 		}
 	}
+	std::cout << "done loading level" << std::endl;
 };
 
 void TileMap::setTile(unsigned x, unsigned y, Tile tile) {

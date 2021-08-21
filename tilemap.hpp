@@ -26,8 +26,11 @@ public:
 	std::vector<std::vector<Tile>> getTileMap();
 	void setTileMap(std::vector<std::vector<Tile>>&);
 
+	// loads textures
+	void loadTextures(GameMode* gmode);
+
 	// loads map from CSV file
-	void loadMap(const std::string&);
+	void loadMap(GameMode* gmode, const std::string& fname);
 
 	// generates tile map
 	void generate(GameMode* gmode);
