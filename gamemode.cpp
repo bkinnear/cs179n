@@ -393,6 +393,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	// Player HUD
 	//  
+	//reticle
+	reticle.setScale(2, 2);
 	//HP bar
 	playerHPBack.setSize({ 200.f, 14.f });
 	playerHPBack.setFillColor(sf::Color::Transparent);
@@ -938,7 +940,7 @@ bool GameMode::handleEvents() {
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
-				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() || !inventory.useWielded()) {
+				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity()) {
 					Item::type weaponType = inventory.getWielded().itemType;
 					switch (weaponType) {
 					case Item::type::MP5:
@@ -1132,6 +1134,7 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::F3:
 				// go back to menu
+				gwindow.setMouseCursorVisible(true);
 				game.setState(new MenuState(game));
 				delete this;
 				return false;
@@ -1544,8 +1547,10 @@ void GameMode::render()
 		gwindow.draw(maxSurvivalScoreCounter);
 	}
 	// draw the inventory
-	if (showInventory)
+	if (showInventory) {
 		gwindow.draw(inventory);
+		gwindow.setMouseCursorVisible(true);
+	}
 
 	// draw item details
 	if (showItemDetails) {
@@ -1565,6 +1570,13 @@ void GameMode::render()
 	gwindow.draw(abilityClock1);
 	gwindow.draw(abilityClock2);
 	gwindow.draw(abilityClock3);
+
+	//draw reticle
+	if (!showInventory) {
+		reticle.setPosition(winMousePos.x-5, winMousePos.y-7);
+		gwindow.draw(reticle);
+		gwindow.setMouseCursorVisible(false);
+	}
 
 	if (showDialog) {
 		gwindow.draw(dialogBox1);
@@ -1615,61 +1627,74 @@ void GameMode::logic()
 		}
 	}
 
+	//compare mouse location to player
+	if (mousePos.x < player.getPosition().x) {
+		player.lookingLeft = true;
+		player.lookingRight = false;
+	}
+	else {
+		player.lookingLeft = false;
+		player.lookingRight = true;
+	}
+
 	// update player sprite
-	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.isAlive()) {
+	if ((player.lookingLeft || player.lookingRight) && player.isAlive()) {
 		Item::type weaponType = inventory.getWielded().itemType;
-		if (player.getAnimSpeed() == -1)
-			player.setAnimSpeed(12);
 		switch (weaponType) {
 		case Item::type::MP5:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftMp5);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightMp5);
 			}
 			break;
 		case Item::type::M4:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM4);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM4);
 			}
 			break;
 		case Item::type::M9:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM9);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM9);
 			}
 			break;
 		case Item::type::M240:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM240);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM240);
 			}
 			break;
 		case Item::type::Shotgun:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftShotgun);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightShotgun);
 			}
 			break;
 		default:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeft);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRight);
 			}
 			break;
 		}			
+	}
+	if (player.movingLeft || player.movingRight || player.movingDown || player.movingUp) {
+		if (player.getAnimSpeed() == -1) {
+			player.setAnimSpeed(12);
+		}
 	}
 	else {
 		player.setIndex(0);
