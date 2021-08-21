@@ -393,6 +393,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	// Player HUD
 	//  
+	//reticle
+	reticle.setScale(2, 2);
 	//HP bar
 	playerHPBack.setSize({ 200.f, 14.f });
 	playerHPBack.setFillColor(sf::Color::Transparent);
@@ -1132,6 +1134,7 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::F3:
 				// go back to menu
+				gwindow.setMouseCursorVisible(true);
 				game.setState(new MenuState(game));
 				delete this;
 				return false;
@@ -1544,8 +1547,10 @@ void GameMode::render()
 		gwindow.draw(maxSurvivalScoreCounter);
 	}
 	// draw the inventory
-	if (showInventory)
+	if (showInventory) {
 		gwindow.draw(inventory);
+		gwindow.setMouseCursorVisible(true);
+	}
 
 	// draw item details
 	if (showItemDetails) {
@@ -1565,6 +1570,13 @@ void GameMode::render()
 	gwindow.draw(abilityClock1);
 	gwindow.draw(abilityClock2);
 	gwindow.draw(abilityClock3);
+
+	//draw reticle
+	if (!showInventory) {
+		reticle.setPosition(winMousePos.x-5, winMousePos.y-7);
+		gwindow.draw(reticle);
+		gwindow.setMouseCursorVisible(false);
+	}
 
 	if (showDialog) {
 		gwindow.draw(dialogBox1);
