@@ -271,6 +271,12 @@ protected:
 		int positionY = 0;
 	}npcSaveMeta[2];
 
+	struct EnemyMeta
+	{
+		int health = 0;
+		int positionX = 0;
+		int positionY = 0;
+	}enemySaveMeta[42];
 	struct GameMeta
 	{
 		struct EndlessMeta
@@ -336,7 +342,7 @@ private:
 
 public:
 
-	GameMode(int, Game&, PlayerClass, GameMeta, NPCMeta[], bool);
+	GameMode(int, Game&, PlayerClass, GameMeta, NPCMeta[], EnemyMeta[], bool);
 	~GameMode();
 
 	virtual void logic();
