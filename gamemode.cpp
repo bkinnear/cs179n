@@ -522,7 +522,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
-	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
+	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.getWidth();
 }
 
 ItemSpr* GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
@@ -901,31 +901,19 @@ bool GameMode::handleEvents() {
 				{
 					int tileX = x / TILE_SIZE;
 					int tileY = y / TILE_SIZE;
-					switch (tileMap.getTileType(x, y))
+					switch (tileMap.getTile(x, y))
 					{
-					case 30:
+					case TILE_DOOR_CLOSED:
 						//Closed Door Type - 1
-						tileMap.setTile(tileX, tileY, 31);
-						std::cout << "changed door to 31" << std::endl;
+						tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
 						doorInteract.setBuffer(doorOpen);
 						doorInteract.play();
 						break;
-					case 32:
-						//Closed Door Type - 2
-						tileMap.setTile(tileX, tileY, 33);
-						std::cout << "changed door to 33" << std::endl;
-						break;
-					case 31:
+					case TILE_DOOR_OPEN:
 						//Opened Door Type - 1
-						tileMap.setTile(tileX, tileY, 30);
-						std::cout << "changed door to 30" << std::endl;
+						tileMap.setTile(tileX, tileY, TILE_DOOR_CLOSED);
 						doorInteract.setBuffer(doorClose);
 						doorInteract.play();
-						break;
-					case 33:
-						//Opened Door Type - 2
-						tileMap.setTile(tileX, tileY, 32);
-						std::cout << "changed door to 32" << std::endl;
 						break;
 					default:
 						break;
@@ -1273,9 +1261,9 @@ bool GameMode::handleEvents() {
 							//spawn ally at random location, at least 450.f away from player, and on clear tile
 							allies.emplace_back(texAllyLeft);
 							for (;;) {
-								pos = { (float)(rand() % tileMap.mapWidth * TILE_SIZE), (float)(rand() % tileMap.mapHeight * TILE_SIZE) };
+								pos = { (float)(rand() % tileMap.getWidth() * TILE_SIZE), (float)(rand() % tileMap.getHeight() * TILE_SIZE) };
 								float dist = Utils::pointDistance(player.getPosition(), pos);
-								if (!tileMap.isOpaque(pos.x, pos.y) && dist > 450.f)
+								if (!tileMap.isOpaqueAt(pos.x, pos.y) && dist > 450.f)
 									std::cout << "Walkie-talkie called in ally at position (" << pos.x << "," << pos.y << ")" << std::endl;
 									break;
 							}
@@ -2084,17 +2072,11 @@ void GameMode::updateEnemies(int type) {
 					sf::Vector2i tilePos = Utils::toTileCoords(sf::Vector2f({ enemy.siegingPos->x, enemy.siegingPos->y }));
 					unsigned tileX = (unsigned)tilePos.x;
 					unsigned tileY = (unsigned)tilePos.y;
-					tileType tile = tileMap.getTileType(enemy.siegingPos->x, enemy.siegingPos->y);
+					Tile tile = tileMap.getTile(enemy.siegingPos->x, enemy.siegingPos->y);
 					switch (tile) {
-					case 30:
+					case TILE_DOOR_CLOSED:
 						//Closed Door Type - 1
-						tileMap.setTile(tileX, tileY, 31);
-						doorInteract.setBuffer(doorOpen);
-						doorInteract.play();
-						break;
-					case 32:
-						//Closed Door Type - 2
-						tileMap.setTile(tileX, tileY, 33);
+						tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
 						doorInteract.setBuffer(doorOpen);
 						doorInteract.play();
 						break;
@@ -2512,8 +2494,8 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 	{
 		Enemy& enemy = createEnemy({ 0.0f, 0.0f });
 		do {
-			int randWidth = rand() % tileMap.mapWidth * TILE_SIZE;
-			int randHeight = rand() % tileMap.mapHeight * TILE_SIZE;
+			int randWidth = rand() % tileMap.getWidth() * TILE_SIZE;
+			int randHeight = rand() % tileMap.getHeight() * TILE_SIZE;
 			enemy.setPosition(randWidth, randHeight);
 		} while (!tileMap.areaClear(enemy));
 	}
