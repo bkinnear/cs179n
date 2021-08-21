@@ -129,13 +129,19 @@ struct Item {
 	int getMeleeDamage() const {
 		switch (itemType) {
 		case type::MP5:
-			return 25;
+			return 20;
 		case type::M4:
-			return 30;
+			return 25;
 		case type::dagger:
 			return 40;
 		case type::baseball_bat:
 			return 50;
+		case type::M240:
+			return 30;
+		case type::Shotgun:
+			return 25;
+		case type::M9:
+			return 15;
 		default:
 			return 10;
 		}
