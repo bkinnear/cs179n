@@ -938,7 +938,7 @@ bool GameMode::handleEvents() {
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
-				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() || !inventory.useWielded()) {
+				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity()) {
 					Item::type weaponType = inventory.getWielded().itemType;
 					switch (weaponType) {
 					case Item::type::MP5:
