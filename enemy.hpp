@@ -18,6 +18,9 @@ public:
 	}
 
 	bool isBarrel = false;
+	bool sieging = false;
+	sf::Clock siegeTimer;
+	sf::Vector2f* siegingPos = nullptr;
 
 	Character* attackTarget = nullptr;
 };

@@ -162,7 +162,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter2(createTexture("res/blood_splatter2.png")),
 	texBloodSplatter3(createTexture("res/blood_splatter3.png")),
 	texBloodSplatter4(createTexture("res/blood_splatter4.png")),
-	texBloodSplatter5(createTexture("res/blood_splatter5.png"))
+	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
+	siegingIcon(createTexture("res/sieging_icon.png"))
 {
 	// generate tile map
 	tileMap.generate(this);
@@ -2021,6 +2022,10 @@ void GameMode::renderEnemies()
 		gwindow.draw(bar1);
 		gwindow.draw(bar2);
 
+		if (enemy.sieging) {
+			siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, - 32.f}));
+			gwindow.draw(siegingIcon);
+		}
 	}
 }
 
@@ -2062,8 +2067,45 @@ void GameMode::updateEnemies(int type) {
 		Enemy& enemy = *enemyItr;
 		
 		// check enemy hp
-		if (!enemyItr->isAlive()) {
+		if (!enemy.isAlive()) {
 			enemyItr = deleteEnemy(enemyItr);
+			continue;
+		}
+
+		// check for sieging (attacking door)
+		if (enemy.sieging) {
+			if (tileMap.isDoorOpen(enemy.siegingPos->x, enemy.siegingPos->y)) {
+				enemy.sieging = false;
+				delete enemy.siegingPos;
+			}
+			else {
+				if (enemy.siegeTimer.getElapsedTime().asSeconds() > 3.f) {
+					enemy.sieging = false;
+					sf::Vector2i tilePos = Utils::toTileCoords(sf::Vector2f({ enemy.siegingPos->x, enemy.siegingPos->y }));
+					unsigned tileX = (unsigned)tilePos.x;
+					unsigned tileY = (unsigned)tilePos.y;
+					tileType tile = tileMap.getTileType(enemy.siegingPos->x, enemy.siegingPos->y);
+					switch (tile) {
+					case 30:
+						//Closed Door Type - 1
+						tileMap.setTile(tileX, tileY, 31);
+						doorInteract.setBuffer(doorOpen);
+						doorInteract.play();
+						break;
+					case 32:
+						//Closed Door Type - 2
+						tileMap.setTile(tileX, tileY, 33);
+						doorInteract.setBuffer(doorOpen);
+						doorInteract.play();
+						break;
+					default:
+						break;
+					}
+					delete enemy.siegingPos;
+				}
+			}
+
+			enemyItr++;
 			continue;
 		}
 
@@ -2153,6 +2195,16 @@ void GameMode::updateEnemies(int type) {
 				enemy.setTexture(texEnemyRight);
 			else
 				enemy.setTexture(texEnemyLeft);
+
+			// siege building
+			sf::Vector2f movePos = enemy.getCenter() + 24.f * (difference / length);
+			if (tileMap.isDoor(movePos.x, movePos.y)) {
+				if (!tileMap.isDoorOpen(movePos.x, movePos.y)) {
+					enemy.sieging = true;
+					enemy.siegeTimer.restart();
+					enemy.siegingPos = new sf::Vector2f(movePos);
+				}
+			}
 		}
 		else
 		{
