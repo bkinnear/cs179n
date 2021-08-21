@@ -26,16 +26,25 @@ MenuState::MenuState(Game& game):
 
 	// we're not going to store the texture anywhere (because we don't need to modify)
 	// so we just just use the createTexture() return to set the sprite texture
+
+	sprBackground.setTexture(createTexture("res/background.png"));
+	sprBackground.setPosition(-180.f, 0.f);
+	sprBackground.setScale(1.15, 1.15);
+
+
+	sprTitle.setTexture(createTexture("res/Title.png"));
+	sprTitle.setPosition(375.f, 0.f);
+
 	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 64}, 2);
-	sprEndlessButton.setPosition(320.f, 128.f);
+	sprEndlessButton.setPosition(600.f, 128.f);
 
 	//Survival Mode Button Placement Start
 	sprSurvivalButton.create(createTexture("res/menu_survival_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprSurvivalButton.setPosition(320.f, 205.f);
+	sprSurvivalButton.setPosition(600.f, 205.f);
 	//Survival Mode Button Placement End
 
 	sprOptionsButton.create(createTexture("res/menu_options.png"), { 0, 0, 160, 64 }, 2);
-	sprOptionsButton.setPosition(320.f, 320.f);
+	sprOptionsButton.setPosition(600.f, 320.f);
 }
 
 MenuState::~MenuState() {
@@ -115,6 +124,8 @@ void MenuState::render() {
 	gwindow.clear();
 
 	// draw the menu button
+	gwindow.draw(sprBackground);
+	gwindow.draw(sprTitle);
 	gwindow.draw(sprEndlessButton);
 	gwindow.draw(sprSurvivalButton);
 	gwindow.draw(sprOptionsButton);
