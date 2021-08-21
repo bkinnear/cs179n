@@ -13,10 +13,18 @@ Node* createPath(const TileMap* tileMap, sf::Vector2i start, sf::Vector2i target
 
 // returns cost between two nodes (edge on a graph)
 int getCost(const TileMap& tileMap, const Node& a, const Node& b) {
-    if (tileMap.isOpaque(a.pos.x, a.pos.y))
-        return 8;
-    if (tileMap.isOpaque(b.pos.x, b.pos.y))
-        return 8;
+    if (tileMap.isOpaque(a.pos.x, a.pos.y)) {
+        if (tileMap.isDoor(a.pos.x, a.pos.y))
+            return 3;
+        else
+            return 8;
+    }
+    if (tileMap.isOpaque(b.pos.x, b.pos.y)) {
+        if (tileMap.isDoor(b.pos.x, b.pos.y))
+            return 3;
+        else
+            return 8;
+    }
     return 1;
 }
 
