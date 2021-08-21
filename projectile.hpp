@@ -12,6 +12,8 @@ public:
 
 	bool isGrenade = false;
 
+	bool isShotgun = false;
+
 	bool isMelee = false;
 	int meleeRange = 2;
 

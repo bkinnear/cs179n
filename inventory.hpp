@@ -15,7 +15,7 @@ struct Item {
 		barrel, dagger, baseball_bat,
 		walkie_talkie,
 		military_crate, medical_crate, empty_crate,
-		shield };
+		shield, M9, M240, Shotgun, ammo_762, ammo_shotgun};
 
 	// type of item
 	type itemType = type::null;
@@ -48,6 +48,16 @@ struct Item {
 			return "Walkie-talkie";
 		case type::baseball_bat:
 			return "Baseball Bat";
+		case type::M9:
+			return "M9 Pistol";
+		case type::M240:
+			return "M240 Machine gun";
+		case type::Shotgun:
+			return "Shotgun";
+		case type::ammo_762:
+			return "7.62 Rounds";
+		case type::ammo_shotgun:
+			return "Shotgun shells";
 		default:
 			return "unknown item";
 		}
@@ -78,6 +88,16 @@ struct Item {
 			return "Walkie-talkie. Used to call in an ally.";
 		case type::baseball_bat:
 			return "Baseball Bat. Used to bash enemies.";
+		case type::M9:
+			return "The M9 Pistol";
+		case type::M240:
+			return "The M240 Machine gun";
+		case type::Shotgun:
+			return "The Shotgun";
+		case type::ammo_762:
+			return "7.62 Ammunition for M240 machine gun";
+		case type::ammo_shotgun:
+			return "Shotgun shells for Shotgun";
 		default:
 			return "unknown item desc";
 		}
@@ -90,10 +110,16 @@ struct Item {
 			return 15;
 		case type::M4:
 			return 35;
+		case type::M9:
+			return 15;
+		case type::M240:
+			return 45;
+		case type::Shotgun:
+			return 100;
 		case type::dagger:
 			return 40;
 		case type::baseball_bat:
-			return 50;
+			return 100;
 		default:
 			return 10;
 		}
@@ -122,6 +148,12 @@ struct Item {
 			return 30;
 		case type::M4:
 			return 30;
+		case type::M9:
+			return 16;
+		case type::M240:
+			return 100;
+		case type::Shotgun:
+			return 7;
 		default:
 			return 0;
 		}
@@ -134,6 +166,12 @@ struct Item {
 			return 3;
 		case type::M4:
 			return 4;
+		case type::M9:
+			return 2;
+		case type::M240:
+			return 5;
+		case type::Shotgun:
+			return 5;
 		default:
 			return 0;
 		}
@@ -146,6 +184,12 @@ struct Item {
 			return type::ammo_9mm;
 		case type::M4:
 			return type::ammo_556;
+		case type::M9:
+			return type::ammo_9mm;
+		case type::M240:
+			return type::ammo_762;
+		case type::Shotgun:
+			return type::ammo_shotgun;
 		default:
 			return type::null;
 		}
@@ -158,6 +202,12 @@ struct Item {
 			return 3;
 		case type::M4:
 			return 4;
+		case type::M9:
+			return 10;
+		case type::M240:
+			return 6;
+		case type::Shotgun:
+			return 100;
 		default:
 			return -1;
 		}

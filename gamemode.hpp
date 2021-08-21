@@ -48,6 +48,12 @@ protected:
 	sf::Texture& texPlayerLeftMp5;
 	sf::Texture& texPlayerRightM4;
 	sf::Texture& texPlayerLeftM4;
+	sf::Texture& texPlayerRightM240;
+	sf::Texture& texPlayerLeftM240;
+	sf::Texture& texPlayerRightShotgun;
+	sf::Texture& texPlayerLeftShotgun;
+	sf::Texture& texPlayerRightM9;
+	sf::Texture& texPlayerLeftM9;
 	sf::Texture& texAllyRight;
 	sf::Texture& texAllyLeft;
 	sf::Texture& texDummyRight;
@@ -82,16 +88,22 @@ protected:
 	// projectiles
 	std::list<Projectile> projectiles;
 	sf::SoundBuffer gunShotBuffer;
+	sf::SoundBuffer heavyGunShotBuffer;
 	sf::SoundBuffer emptyGunBuffer;
 	sf::SoundBuffer mp5ReloadBuffer;
 	sf::SoundBuffer m4ReloadBuffer;
+	sf::SoundBuffer ShotgunReloadBuffer;
+	sf::SoundBuffer m240ReloadBuffer;
+	sf::SoundBuffer pistolReloadBuffer;
 	sf::SoundBuffer grenadeShotBuffer;
+	sf::SoundBuffer ShotgunShotBuffer;
 	sf::SoundBuffer grenadeExplodeBuffer;
 	sf::SoundBuffer meleeSoundBuffer;
 	sf::SoundBuffer meleeSwingBuffer;
 	sf::Sound reloadSound;
 	sf::Sound grenadeSound;
 	sf::Sound shotSound;
+	sf::Sound ShotgunSound;
 	sf::Sound meleeSound;
 	sf::Sound meleeSwing;
 

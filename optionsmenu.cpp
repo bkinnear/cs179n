@@ -18,15 +18,15 @@ OptionsMenu::OptionsMenu(Game& game) :
 	// and do any initialization we need
 
 	sprOptions.setTexture(createTexture("res/options_text.png"));
-	sprOptions.setPosition(320.f, 48.f);
+	sprOptions.setPosition(600.f, 48.f);
 
 	sprFullscreen.create(createTexture("res/options_fullscreen_strip.png"), { 0, 0, 520/2, 64 }, 2);
-	sprFullscreen.setPosition(320.f, 128.f);
+	sprFullscreen.setPosition(550.f, 128.f);
 	if (game.isFullscreen())
 		sprFullscreen.setIndex(1);
 
 	sprVsync.create(createTexture("res/options_vsync_strip.png"), { 0, 0, 520/2, 64 }, 2);
-	sprVsync.setPosition(320.f, 192.f);
+	sprVsync.setPosition(550.f, 192.f);
 	if (game.usingVsync())
 		sprVsync.setIndex(1);
 

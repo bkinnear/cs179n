@@ -5,6 +5,7 @@
 #include "endless.hpp"
 #include "survival.hpp"
 #include "classes.hpp"
+#include "menustate.hpp"
 
 // the main game window
 #define gwindow game.window
@@ -23,19 +24,22 @@ ClassMenu::ClassMenu(Game& game) :
 	// and do any initialization we need
 
 	sprChooseClasses.setTexture(createTexture("res/choose_class.png"));
-	sprChooseClasses.setPosition(272.f, 48.f);
+	sprChooseClasses.setPosition(525.f, 48.f);
 
 	sprMedicButton.create(createTexture("res/class_medic_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprMedicButton.setPosition(320.f, 128.f);
+	sprMedicButton.setPosition(600.f, 128.f);
 
 	sprAssaultButton.create(createTexture("res/class_assault_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprAssaultButton.setPosition(320.f, 205.f);
+	sprAssaultButton.setPosition(600.f, 205.f);
 
 	sprSlasherButton.create(createTexture("res/class_slasher_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprSlasherButton.setPosition(320.f, 282.f);
+	sprSlasherButton.setPosition(600.f, 282.f);
 
 	sprEngineerButton.create(createTexture("res/class_engineer_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprEngineerButton.setPosition(320.f, 362.f);
+	sprEngineerButton.setPosition(600.f, 362.f);
+
+	sprReturnButton.create(createTexture("res/options_return.png"), { 0, 0, 160, 64 }, 2);
+	sprReturnButton.setPosition(game.portWidth - 200.f, game.portHeight - 120.f);
 }
 
 ClassMenu::~ClassMenu() {
@@ -88,6 +92,12 @@ void ClassMenu::logic() {
 				delete this;
 				return;
 			}
+			// user clicked return
+			if (sprReturnButton.getGlobalBounds().contains(mousePos)) {
+				game.setState(new MenuState(game));
+				delete this;
+				return;
+			}
 
 			break;
 		}
@@ -113,6 +123,11 @@ void ClassMenu::logic() {
 		sprEngineerButton.setIndex(1);
 	else
 		sprEngineerButton.setIndex(0);
+
+	if (sprReturnButton.getGlobalBounds().contains(mousePos))
+		sprReturnButton.setIndex(1);
+	else
+		sprReturnButton.setIndex(0);
 }
 
 void ClassMenu::render() {
@@ -126,6 +141,7 @@ void ClassMenu::render() {
 	gwindow.draw(sprAssaultButton);
 	gwindow.draw(sprSlasherButton);
 	gwindow.draw(sprEngineerButton);
+	gwindow.draw(sprReturnButton);
 
 	// update window
 	gwindow.display();

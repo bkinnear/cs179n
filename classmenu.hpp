@@ -24,6 +24,7 @@ private:
 	AnimSprite sprAssaultButton;
 	AnimSprite sprSlasherButton;
 	AnimSprite sprEngineerButton;
+	AnimSprite sprReturnButton;
 };
 
 #endif
