@@ -46,6 +46,16 @@ int getLootAmount(Item::type type) {
 		return 3;
 	case Item::type::empty_crate:
 		return 0;
+	case Item::type::M9:
+		return 1;
+	case Item::type::M240:
+		return 1;
+	case Item::type::Shotgun:
+		return 1;
+	case Item::type::ammo_762:
+		return 50 + rand() % 50;
+	case Item::type::ammo_shotgun:
+		return 10 + rand() % 5;
 	}
 
 	return 1;
@@ -57,24 +67,32 @@ Item::type getLootItem(Item::type type) {
 	case Item::type::ammo_crate:
 		// ammo crates yield a random ammo type
 		{
-			int r = rand() % 2;
+			int r = rand() % 4;
 			switch (r) {
 			case 0:
 				return Item::type::ammo_9mm;
 			case 1:
 				return Item::type::ammo_556;
+			case 2:
+				return Item::type::ammo_762;
+			case 3:
+				return Item::type::ammo_shotgun;
 			}
 		}
 		break;
 	case Item::type::military_crate:
 		// military crates yield ammo
 		{
-			int r = rand() % 2;
+			int r = rand() % 4;
 			switch (r) {
 			case 0:
 				return Item::type::ammo_9mm;
 			case 1:
 				return Item::type::ammo_556;
+			case 2:
+				return Item::type::ammo_762;
+			case 3:
+				return Item::type::ammo_shotgun;
 			}
 		}
 		break;
@@ -105,6 +123,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texPlayerLeftMp5(createTexture("res/player_l_mp5_strip.png")),
 	texPlayerRightM4(createTexture("res/player_r_m4_strip.png")),
 	texPlayerLeftM4(createTexture("res/player_l_m4_strip.png")),
+	texPlayerRightShotgun(createTexture("res/player_r_strip_shotgun.png")),
+	texPlayerLeftShotgun(createTexture("res/player_l_strip_shotgun.png")),
+	texPlayerRightM240(createTexture("res/player_r_m240_strip.png")),
+	texPlayerLeftM240(createTexture("res/player_l_m240_strip.png")),
+	texPlayerRightM9(createTexture("res/player_r_strip_M9.png")),
+	texPlayerLeftM9(createTexture("res/player_l_strip_M9.png")),
 	texAllyRight(createTexture("res/player2_r_strip.png")),
 	texAllyLeft(createTexture("res/player2_l_strip.png")),
 	texDummyRight(createTexture("res/Dummy_stand.png")),
@@ -160,6 +184,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	if (!gunShotBuffer.loadFromFile("res/gun-shot.wav")) {
 		std::cout << "error loading gunshot noises" << std::endl;
 	}
+	if (!heavyGunShotBuffer.loadFromFile("res/heavy-gun-shot.wav")) {
+		std::cout << "error loading gunshot noises" << std::endl;
+	}
 	if (!emptyGunBuffer.loadFromFile("res/empty-gun.wav")) {
 		std::cout << "error loading gunshot noises" << std::endl;
 	}
@@ -167,7 +194,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		std::cout << "error loading mp5-reload noises" << std::endl;
 	}
 	if (!m4ReloadBuffer.loadFromFile("res/m4-reload.wav")) {
-		std::cout << "error loading mp5-reload noises" << std::endl;
+		std::cout << "error loading m4-reload noises" << std::endl;
+	}
+	if (!ShotgunReloadBuffer.loadFromFile("res/Shotgun_reload.wav")) {
+		std::cout << "error loading Shotgun-reload noises" << std::endl;
+	}
+	if (!m240ReloadBuffer.loadFromFile("res/240_reload.wav")) {
+		std::cout << "error loading m240 reload noises" << std::endl;
+	}
+	if (!ShotgunShotBuffer.loadFromFile("res/Shotgun_shot.wav")) {
+		std::cout << "error loading Shotgun noises" << std::endl;
+	}
+	if (!pistolReloadBuffer.loadFromFile("res/pistol_reload.wav")) {
+		std::cout << "error loading Pistol reload noises" << std::endl;
 	}
 
 	//grenade sounds
@@ -309,8 +348,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	deadEyeFX.setScale(0.75, 0.75);
 
 	// add some stuff to the inventory
-	inventory.addItem(Item::type::MP5, 1);
-	inventory.addItem(Item::type::ammo_9mm, 95);
+	inventory.addItem(Item::type::Shotgun, 1);
+	inventory.addItem(Item::type::ammo_shotgun, 20);
+	inventory.addItem(Item::type::M240, 1);
+	inventory.addItem(Item::type::ammo_762, 200);
+	inventory.addItem(Item::type::M9, 1);
+	inventory.addItem(Item::type::ammo_9mm,50);
 
 	GameMode::spawnItems();
 
@@ -340,15 +383,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	ammoCount.setCharacterSize(12);
 	ammoCount.setColor(sf::Color::Black);
 	ammoCount.setPosition(playerHPBar.getPosition().x + 25, playerHPBar.getPosition().y - 20);
-	//grenade counter
-	int gCount = 3;
-	grenadeIcon.setPosition(playerHPBack.getPosition().x + 75, playerHPBack.getPosition().y - 26);
-	grenadeIcon.setColor(sf::Color::Green);
-	grenadesNum.setFont(font);
-	grenadesNum.setCharacterSize(12);
-	grenadesNum.setColor(sf::Color::Black);
-	grenadesNum.setString("x" + std::to_string(gCount));
-	grenadesNum.setPosition(playerHPBar.getPosition().x + 100, playerHPBar.getPosition().y - 20);
 	//ability HUD
 	abilityIcon1.setPosition(playerHPBack.getPosition().x+220, playerHPBack.getPosition().y-15);
 	abilityIcon1.setScale(.75, .75);
@@ -890,6 +924,18 @@ bool GameMode::handleEvents() {
 						reloadSound.setBuffer(m4ReloadBuffer);
 						reloadSound.play();
 						break;
+					case Item::type::Shotgun:
+						reloadSound.setBuffer(ShotgunReloadBuffer);
+						reloadSound.play();
+						break;
+					case Item::type::M240:
+						reloadSound.setBuffer(m240ReloadBuffer);
+						reloadSound.play();
+						break;
+					case Item::type::M9:
+						reloadSound.setBuffer(pistolReloadBuffer);
+						reloadSound.play();
+						break;
 					default:
 						break;
 					}
@@ -1159,7 +1205,6 @@ bool GameMode::handleEvents() {
 			switch (e.mouseButton.button) {
 			case sf::Mouse::Button::Left:
 				// LMB pressed
-
 				// NOTE: moved attacks to mouse holding so user can do automatic fire
 				// TODO make it so that only full-auto weapons can be held
 				break;
@@ -1268,7 +1313,7 @@ bool GameMode::handleEvents() {
 						break;
 					case Item::type::M4:
 						meleeSwing.setPitch(1);
-						break;
+						break;						
 				}
 				meleeSwing.play();
 				// TODO - check to make sure weapon is ranged
@@ -1291,23 +1336,49 @@ bool GameMode::handleEvents() {
 				shotSound.setVolume(50);
 				switch (inventory.getWielded().itemType) {
 					case Item::type::MP5:
+					case Item::type::M9:
 						shotSound.setPitch(3);
 						break;
 					case Item::type::M4:
+						shotSound.setPitch(2);
+						break;
+					case Item::type::M240:
+						shotSound.setBuffer(heavyGunShotBuffer);
 						shotSound.setPitch(1);
+						break;
+					case Item::type::Shotgun:
+						ShotgunSound.setBuffer(ShotgunShotBuffer);
+						break;
 				}
 				shotSound.play();
 				// TODO - check to make sure weapon is ranged
-				projectiles.emplace_back();
-				Projectile& proj = projectiles.back();
-				proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
-				proj.setTexture(texProjectile);
-				// set mask bounds to just the sprite bounds (default)
-				proj.setMaskBounds(proj.getLocalBounds());
-				proj.speed = 12;
-				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
-				proj.setRotation(proj.direction);
-				proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
+				if (inventory.getWielded().itemType == Item::type::Shotgun) {
+					ShotgunSound.play();
+					projectiles.emplace_back();
+					Projectile& proj = projectiles.back();
+					proj.shotFrom = player.getPosition();
+					proj.isShotgun = true;
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					proj.setMaskBounds(proj.getLocalBounds());
+					proj.speed = 10;
+					proj.setScale(3, 3);
+					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					proj.setRotation(proj.direction);
+					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
+				}
+				else {
+					projectiles.emplace_back();
+					Projectile& proj = projectiles.back();
+					proj.setPosition(player.getPosition().x + 16, player.getPosition().y + 16);
+					proj.setTexture(texProjectile);
+					// set mask bounds to just the sprite bounds (default)
+					proj.setMaskBounds(proj.getLocalBounds());
+					proj.speed = 12;
+					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					proj.setRotation(proj.direction);
+					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
+				}
 			}
 			else if (inventory.getWielded().getAmmoType() != Item::type::null && inventory.getRoundsLeft() == 0) {
 				if (shotSound.getStatus() != sf::Sound::Status::Playing) {
@@ -1464,8 +1535,6 @@ void GameMode::render()
 	gwindow.draw(playerIcon);
 	gwindow.draw(ammoIcon);
 	gwindow.draw(ammoCount);
-	gwindow.draw(grenadeIcon);
-	gwindow.draw(grenadesNum);
 	gwindow.draw(abilityIcon1);
 	gwindow.draw(abilityIcon2);
 	gwindow.draw(abilityIcon3);
@@ -1542,6 +1611,30 @@ void GameMode::logic()
 			}
 			if (player.movingRight) {
 				player.setTexture(texPlayerRightM4);
+			}
+			break;
+		case Item::type::M9:
+			if (player.movingLeft) {
+				player.setTexture(texPlayerLeftM9);
+			}
+			if (player.movingRight) {
+				player.setTexture(texPlayerRightM9);
+			}
+			break;
+		case Item::type::M240:
+			if (player.movingLeft) {
+				player.setTexture(texPlayerLeftM240);
+			}
+			if (player.movingRight) {
+				player.setTexture(texPlayerRightM240);
+			}
+			break;
+		case Item::type::Shotgun:
+			if (player.movingLeft) {
+				player.setTexture(texPlayerLeftShotgun);
+			}
+			if (player.movingRight) {
+				player.setTexture(texPlayerRightShotgun);
 			}
 			break;
 		default:
@@ -1660,7 +1753,7 @@ void GameMode::updateProjectiles() {
 			projItr = projectiles.erase(projItr);
 			continue;
 		}
-
+		 
 		if (projItr->isGrenade) {
 			float maxRange = 250.f;
 			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
@@ -1696,6 +1789,7 @@ void GameMode::updateProjectiles() {
 				continue;
 			}
 		}
+
 		else {
 			//check if melee projectile, to shorten distance
 			if (projItr->isMelee) {
@@ -1704,6 +1798,27 @@ void GameMode::updateProjectiles() {
 					//melee reached max range
 					projItr = projectiles.erase(projItr);
 					break;
+				}
+			}
+
+			if (projItr->isShotgun) {
+				float maxRange = 200.f;
+				float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
+				if (dist >= 40.f && dist < 80.f) {
+					projItr->damage = 80;
+				}
+				else if (dist >= 80.f && dist < 120.f) {
+					projItr->damage = 60;
+				}
+				else if (dist >= 120.f && dist < 160.f) {
+					projItr->damage = 40;
+				}
+				else if (dist >= 160.f && dist < 200.f) {
+					projItr->damage = 20;
+				}
+				else if (dist > 200.f) {
+					projItr = projectiles.erase(projItr);
+					continue;
 				}
 			}
 			// check for collision with enemies
@@ -1756,6 +1871,8 @@ void GameMode::updateProjectiles() {
 				else if (itemSpr->type == Item::type::barrel) {
 					getEffectSprite(explosionLarge).setScale(3, 3);
 					createEffect(explosionLarge, itemSpr->spr.getPosition() + sf::Vector2f({ -72.f,-64.f }));
+					grenadeSound.setBuffer(grenadeExplodeBuffer);
+					grenadeSound.play();
 					removeItem(itemSpr);
 					auto enemyItr = enemies.begin();
 					while (enemyItr != enemies.end()) {
@@ -2005,7 +2122,7 @@ void GameMode::updateEnemies(int type) {
 void GameMode::spawnItems() {
 	for (const sf::Vector2f& pos: lootSpawnPoints) {
 		Item::type itemType = Item::type::null;
-		int randomItem = rand() % 10;//randomly generate what item to spawn
+		int randomItem = rand() % 15;//randomly generate what item to spawn
 		switch (randomItem) {//selects item type to spawn
 		case 0:
 			continue;
@@ -2036,6 +2153,21 @@ void GameMode::spawnItems() {
 			break;
 		case 9:
 			itemType = Item::type::walkie_talkie;
+			break;
+		case 10:
+			itemType = Item::type::M9;
+			break;
+		case 11:
+			itemType = Item::type::M240;
+			break;
+		case 12:
+			itemType = Item::type::Shotgun;
+			break;
+		case 13:
+			itemType = Item::type::ammo_762;
+			break;
+		case 14:
+			itemType = Item::type::ammo_shotgun;
 			break;
 		}
 
@@ -2322,6 +2454,7 @@ void GameMode::updateAllies() {
 			continue;
 		}
 		else if (ally.isDummy) {
+			allyItr++;
 			continue;
 		}
 

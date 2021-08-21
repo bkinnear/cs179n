@@ -222,7 +222,49 @@ bool Inventory::useWielded() {
 		else
 			return false;
 		break;
+	case Item::type::M9:
+		if (weaponReady) {
+			if (roundsLeft == 0) {
+				reloadWielded();
+				return false;
+			}
+			roundsLeft--;
+			weaponReady = false;
+			weaponWaitTick = wielded.getDelayTime();
+			return true;
+		}
+		else
+			return false;
+		break;
 	case Item::type::M4:
+		if (weaponReady) {
+			if (roundsLeft == 0) {
+				reloadWielded();
+				return false;
+			}
+			roundsLeft--;
+			weaponReady = false;
+			weaponWaitTick = wielded.getDelayTime();
+			return true;
+		}
+		else
+			return false;
+		break;
+	case Item::type::M240:
+		if (weaponReady) {
+			if (roundsLeft == 0) {
+				reloadWielded();
+				return false;
+			}
+			roundsLeft--;
+			weaponReady = false;
+			weaponWaitTick = wielded.getDelayTime();
+			return true;
+		}
+		else
+			return false;
+		break;
+	case Item::type::Shotgun:
 		if (weaponReady) {
 			if (roundsLeft == 0) {
 				reloadWielded();
