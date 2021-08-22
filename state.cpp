@@ -30,7 +30,7 @@ void State::updateEffects() {
 	}
 }
 
-void State::drawEffects() {
+void State::drawEffects(sf::RenderStates states) {
 	// loop through all effect buckets
 	for (auto eDataPair : effects) {
 		EffectData& eData = eDataPair.second;
@@ -45,7 +45,7 @@ void State::drawEffects() {
 			eData.effectSprite.setIndex(effect.tick / eData.effectSprite.getTicksPerFrame());
 			eData.effectSprite.setPosition(effect.pos);
 
-			gwindow.draw(eData.effectSprite);
+			gwindow.draw(eData.effectSprite, states);
 
 			eItr++;
 		}

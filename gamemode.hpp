@@ -30,6 +30,8 @@ protected:
 	// mouse position in world (updated every logic tick)
 	sf::Vector2f mousePos;
 
+	// shader
+	sf::Shader shader;
 
 	// views
 	sf::View mainView;
@@ -40,6 +42,11 @@ protected:
 
 	// tile map
 	TileMap tileMap;
+
+	// intro for game start
+	sf::RectangleShape introShape;
+	sf::Clock introClock;
+	sf::Text introMessage;
 
 	// textures
 	sf::Texture& texPlayerRight;
@@ -124,6 +131,7 @@ protected:
 
 	// fonts
 	sf::Font font;
+	sf::Font font2;
 
 	// effects
 	EffectID explosionSmall;
@@ -328,16 +336,18 @@ protected:
 	void saveGame();
 	void initGame();
 
+	void loadShaders();
+
 	void spawnEnemies(int);
 	Enemy& createEnemy(const sf::Vector2f&);
 	void respawnEnemies();
 	void spawnItems();
 	void updateEnemies(int);
-	void renderEnemies();
+	void renderEnemies(sf::RenderStates);
 	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator&);
 	bool handleEvents();
 	void updateProjectiles();
-	void renderAllies();
+	void renderAllies(sf::RenderStates);
 	void updateAllies();
 
 	struct Area : sf::FloatRect {

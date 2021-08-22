@@ -21,6 +21,11 @@
 // player default speed
 #define PLAYER_SPEED 3.f
 
+// line of sight radius around player
+#define LOS_RADIUS 600.f
+// sharpness of LOS edge
+#define LOS_SHARPNESS 256.f
+
 #define MODE_ENDLESS 1
 #define MODE_SURVIVAL 2
 #define MODE_STORY 3
@@ -168,6 +173,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
 	siegingIcon(createTexture("res/sieging_icon.png"))
 {
+	loadShaders();
+
 	if (type == MODE_STORY) {
 		tileMap.loadMap(this, "res/maps/level0.csv");
 	}
@@ -304,6 +311,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
+	font2.loadFromFile("res/Friday13v12.ttf");
 
 	// load item details text
 	txtItemDetails.setFont(font);
@@ -348,6 +356,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
 	shpItemDetails.setOutlineThickness(1.f);
 	shpItemDetails.setOutlineColor(sf::Color::Black);
+
+	// load intro screen
+	introShape.setFillColor(sf::Color::Black);
+	introShape.setSize(guiView.getSize());
+	introMessage.setFont(font2);
+	introMessage.setCharacterSize(24);
+	if (type == MODE_ENDLESS)
+		introMessage.setString("You have been abandoned. Survive.");
+	else if (type == MODE_SURVIVAL)
+		introMessage.setString("Survive the ever growing hordes");
+	else if (type == MODE_STORY)
+		introMessage.setString("Find your way to the evac zone");
+	introMessage.setPosition(mainView.getCenter() - sf::Vector2f({ introMessage.getGlobalBounds().width / 2, -12.f }));
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
@@ -446,6 +467,20 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	abilityClock3.setColor(sf::Color::Black);
 	abilityClock3.setStyle(sf::Text::Bold);
 	abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+
+	// player positioning
+	sf::Vector2f mapCenter = { tileMap.getWidth() * 32.f / 2.f, tileMap.getHeight() * 32.f / 2.f };
+	do {
+		sf::Vector2f newPos({ mapCenter.x, mapCenter.y });
+		sf::Vector2i offset({
+			(rand() % ((int)tileMap.getWidth() / 4)) - ((int)tileMap.getWidth() / 8),
+			(rand() % ((int)tileMap.getHeight() / 4)) - ((int)tileMap.getHeight() / 8)
+		});
+		newPos += 32.f * sf::Vector2f(offset);
+		player.setPosition(newPos);
+	} while (!tileMap.areaClear(player));
+
+	// Score HUD
 	if (type == MODE_ENDLESS)
 	{
 		endlessScoreCounter.setPosition({ 5.f, 30.f });
@@ -478,6 +513,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		maxSurvivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
 		maxSurvivalScoreCounter.setOutlineThickness(2.f);
 	}
+
+	// LOAD game
 	if (isLoadCall)
 	{
 		if (type == MODE_ENDLESS)
@@ -574,7 +611,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		inventory.addItem(Item::type::ammo_9mm, 50);
 	}
 	
-	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
+	//std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -1527,8 +1564,13 @@ void GameMode::render()
 	// = v   world drawing   v  = //
 	// ========================== //
 
+	// update shader variables
+	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
+	shader.setParameter("los_radius", LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("los_sharpness", LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+
 	// move view target to center on player
-	mainViewTarget = { floor(player.getPosition().x), floor(player.getPosition().y) };
+	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
 
 	// move the view towards target
 	sf::Vector2f delta(floor((mainViewTarget.x - mainView.getCenter().x) / 10), floor((mainViewTarget.y - mainView.getCenter().y) / 10));
@@ -1539,11 +1581,11 @@ void GameMode::render()
 	gwindow.setView(mainView);
 
 	// draw the tilemap
-	gwindow.draw(tileMap);
+	gwindow.draw(tileMap, &shader);
 
-	//draw the weapons
+	// draw items
 	for (auto item : itemsOnMap) {
-		gwindow.draw(item->spr);
+		gwindow.draw(item->spr, &shader);
 	}
 
 	//draw ability/item animations
@@ -1609,20 +1651,20 @@ void GameMode::render()
 
 	// draw the projectiles
 	for (Projectile& proj : projectiles) {
-		gwindow.draw(proj);
+		gwindow.draw(proj, &shader);
 	}
 
 	// draw the enemies
-	GameMode::renderEnemies();
+	GameMode::renderEnemies(&shader);
 
 	if (type == MODE_ENDLESS)
 	{
 		// draw the allies
-		renderAllies();
+		renderAllies(&shader);
 	}
 
 	// draw effects
-	drawEffects();
+	drawEffects(&shader);
 
 	// draw hidden areas
 	sf::RectangleShape areaShape;
@@ -1691,6 +1733,14 @@ void GameMode::render()
 
 	gwindow.draw(fpsCounter);
 
+	if (introShape.getFillColor().a > 0) {
+		gwindow.draw(introShape);
+		gwindow.draw(introMessage);
+		if (introClock.getElapsedTime().asSeconds() > 1.5f) {
+			introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, introShape.getFillColor().a - .05));
+			introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, introShape.getFillColor().a - .05));
+		}
+	}
 
 	// update window
 	gwindow.display();
@@ -2108,52 +2158,45 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 	}
 }
 
-void GameMode::renderEnemies()
+void GameMode::renderEnemies(sf::RenderStates states)
 {
 	//draw the enemies
 	std::list<Enemy>::iterator enemyItr;
 	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
 		Enemy& enemy = *enemyItr;
-		enemy.animateFrame();
-		gwindow.draw(enemy);
+		float dist = Utils::pointDistance(player.getCenter(), enemy.getCenter());
+		if (dist < LOS_RADIUS + 128.f) {
+			enemy.animateFrame();
+			gwindow.draw(enemy, states);
 
-		if (debugging) {
-			if (enemy.isOnPath()) {
-				sf::CircleShape sh;
-				sh.setFillColor(sf::Color::Green);
-				sh.setPosition(enemy.getPosition() + sf::Vector2f({ 9.f, -20.f }));
-				sh.setRadius(4);
-				sh.setOutlineColor(sf::Color::Black);
-				sh.setOutlineThickness(1.f);
-				gwindow.draw(sh);
-
-				sf::RectangleShape sh2;
-				sh2.setFillColor(sf::Color::Transparent);
-				sh2.setOutlineColor(sf::Color::Blue);
-				sh2.setOutlineThickness(1.f);
-				sh2.setSize({ 32, 32 });
-				Node* pNode = enemy.pathHead;
-				while (pNode != nullptr) {
-					sh2.setPosition(sf::Vector2f(pNode->pos));
-					gwindow.draw(sh2);
-					pNode = pNode->parent;
+			if (debugging) {
+				if (enemy.isOnPath()) {
+					sf::CircleShape sh;
+					sh.setFillColor(sf::Color::Blue);
+					sh.setRadius(4.f);
+					Node* pNode = enemy.pathHead;
+					while (pNode != nullptr) {
+						sh.setPosition(sf::Vector2f(pNode->pos) + sf::Vector2f({ 16.f, 16.f }));
+						gwindow.draw(sh);
+						pNode = pNode->parent;
+					}
 				}
 			}
-		}
 
-		// draw the HP bar
-		sf::RectangleShape bar1({ 26.f, 6.f });
-		bar1.setFillColor(sf::Color::Black);
-		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
-		bar2.setFillColor(sf::Color::Red);
-		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
-		gwindow.draw(bar1);
-		gwindow.draw(bar2);
+			// draw the HP bar
+			sf::RectangleShape bar1({ 26.f, 6.f });
+			bar1.setFillColor(sf::Color::Black);
+			bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
+			sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
+			bar2.setFillColor(sf::Color::Red);
+			bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
+			gwindow.draw(bar1);
+			gwindow.draw(bar2);
 
-		if (enemy.sieging) {
-			siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, - 32.f}));
-			gwindow.draw(siegingIcon);
+			if (enemy.sieging) {
+				siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, -32.f }));
+				gwindow.draw(siegingIcon);
+			}
 		}
 	}
 }
@@ -2770,11 +2813,11 @@ void GameMode::updateAllies() {
 	}
 }
 
-void GameMode::renderAllies() {
+void GameMode::renderAllies(sf::RenderStates states) {
 	for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
 		NPC& ally = *allyItr;
 		ally.animateFrame();
-		gwindow.draw(ally);
+		gwindow.draw(ally, states);
 
 		// draw the HP bar
 		if (ally.isShield) {
@@ -2904,6 +2947,12 @@ void GameMode::initGame()
 	}
 	delete this;
 	return;
+}
+
+void GameMode::loadShaders() {
+	if (!shader.loadFromFile("frag_shader.hlsl", sf::Shader::Fragment)) {
+		throw std::runtime_error("Error loading shader");
+	}
 }
 
 void GameMode::addHiddenArea(const sf::FloatRect& rect) {
