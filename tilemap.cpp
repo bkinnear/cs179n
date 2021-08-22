@@ -311,7 +311,7 @@ void TileMap::saveMap(int gameType)
 	{
 		for (unsigned j = 0;j < width;j++)
 		{
-			Tile tile = map[j][i];
+			Tile tile = map[i][j];
 			out << (int) tile <<",";
 		}
 		out << "\n";
