@@ -99,6 +99,13 @@ void setLootSpawn(GameMode& gmode, int x, int y, Tile tile) {
 bool isOpaque(Tile tile) {
 	switch (tile) {
 	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
 	case 15:
 	case 17:
 	case 22:
@@ -117,6 +124,13 @@ bool isOpaque(Tile tile) {
 bool isOpen(Tile tile) {
 	switch (tile) {
 	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
 	case 15:
 	case 17:
 	case 22:
@@ -161,6 +175,15 @@ void TileMap::loadTextures(GameMode* gmode) {
 			"res/tileset.png", // TODO make this not a magic string (maybe doesnt matter)
 			sf::IntRect(getTileTexOffset(i), { TILE_SIZE, TILE_SIZE }
 		));
+	}
+}
+
+void TileMap::updateGrass() {
+	for (int y = 0; y < width; y++) {
+		for (int x = 0; x < height; x++) {
+			if (map[y][x] == 0)
+				setTile(x, y, rand()%8);
+		}
 	}
 }
 
@@ -213,16 +236,18 @@ void TileMap::generate(GameMode* gmode) {
 		}
 	}
 
+	updateGrass();
+
 	// find and place crate spawn points
 	int numCrates = height/4; // set num of crates to 1/4 the map hiehgt for sparse crate distribution
 	for (int i = 0; i < numCrates; i++) {
 		// find free spot for crate
-		int x, y;
+		float x, y;
 		do {
-			x = rand() % width;
-			y = rand() % height;
+			x = (rand() % width) * 32.f;
+			y = (rand() % height) * 32.f;
 		} while (isOpaqueAt(x, y));
-		state.addCrateSpawn({ x * 32.f, y * 32.f });
+		state.addCrateSpawn({ x, y });
 	}
 };
 
@@ -266,9 +291,34 @@ void TileMap::loadMap(GameMode* gmode, const std::string& fname)
 			setTile(x, y, (Tile)parsedMap.at(y).at(x));
 		}
 	}
-	std::cout << "done loading level" << std::endl;
+	
+	updateGrass();
 };
 
+void TileMap::saveMap(int gameType)
+{
+	std::string fileName = "res/maps/save/";
+	if (gameType == 1)
+	{
+		fileName = fileName + "map_Endless.csv";
+	}
+	else if (gameType == 2)
+	{
+		fileName = fileName + "map_Survival.csv";
+	}
+	std::ofstream out(fileName);
+	for (unsigned i = 0;i < height;i++)
+	{
+		for (unsigned j = 0;j < width;j++)
+		{
+			Tile tile = map[i][j];
+			out << (int) tile <<",";
+		}
+		out << "\n";
+	}
+	std::cout << "\nFile written in " << fileName<<"\n";
+	out.close();
+}
 void TileMap::setTile(unsigned x, unsigned y, Tile tile) {
 	if (x >= width || y >= height)
 		return;

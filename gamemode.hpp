@@ -30,6 +30,8 @@ protected:
 	// mouse position in world (updated every logic tick)
 	sf::Vector2f mousePos;
 
+	// shader
+	sf::Shader shader;
 
 	// views
 	sf::View mainView;
@@ -40,6 +42,11 @@ protected:
 
 	// tile map
 	TileMap tileMap;
+
+	// intro for game start
+	sf::RectangleShape introShape;
+	sf::Clock introClock;
+	sf::Text introMessage;
 
 	// textures
 	sf::Texture& texPlayerRight;
@@ -80,6 +87,7 @@ protected:
 	sf::Texture& texBloodSplatter3;
 	sf::Texture& texBloodSplatter4;
 	sf::Texture& texBloodSplatter5;
+	sf::Texture& texSmash;
 
 	// Music
 	sf::Music music;
@@ -124,6 +132,7 @@ protected:
 
 	// fonts
 	sf::Font font;
+	sf::Font font2;
 
 	// effects
 	EffectID explosionSmall;
@@ -140,6 +149,7 @@ protected:
 	AnimSprite guardianWingsFX;
 	AnimSprite deadEyeFX;
 	AnimSprite dashFX;
+	EffectID smashFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
@@ -152,6 +162,22 @@ protected:
 	sf::SoundBuffer metalBox;
 	sf::SoundBuffer barrelBuffer;
 	sf::Sound dropTech;
+
+	// medic sounds
+	sf::SoundBuffer medkitBuffer;
+	sf::SoundBuffer dashBuffer;
+	sf::SoundBuffer guardianAngelBuffer;
+	sf::Sound medkitSound;
+	sf::Sound dashSound;
+	sf::Sound guardianAngelSound;
+
+	// slasher sounds
+	sf::SoundBuffer smashBuffer;
+	sf::SoundBuffer rageBuffer;
+	sf::SoundBuffer warcryBuffer;
+	sf::Sound rageSound;
+	sf::Sound warcrySound;
+	sf::Sound smashSound;
 
 	// powerup sound
 	sf::SoundBuffer powerupBuffer;
@@ -276,6 +302,25 @@ protected:
 	bool debugging = false;
 	bool isLoadInvoked = false;
 
+	struct NPCMeta
+	{
+		int health = 0;
+		int positionX = 0;
+		int positionY = 0;
+	}npcSaveMeta[2];
+
+	struct EnemyMeta
+	{
+		int health = 0;
+		int positionX = 0;
+		int positionY = 0;
+	}enemySaveMeta[42];
+
+	struct InventoryMeta
+	{
+		int itemNumber = 0;
+		int count = 0;
+	}inventorySaveMeta[15];
 	struct GameMeta
 	{
 		struct EndlessMeta
@@ -286,6 +331,8 @@ protected:
 			int maxScore = 0;
 			int currentScore = 0;
 			int playerHealth = 100;
+			int currentWieldedWeapon = 0;
+			int roundsLeft = 0;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -297,25 +344,28 @@ protected:
 			int maxScore = 0;
 			int currentScore = 0;
 			int playerHealth = 100;
+			int currentWieldedWeapon = 0;
+			int roundsLeft = 0;
 		}survivalMeta;
 	}gameMeta;
-
 	bool gamestateChange = false;
 	std::string metaFileName = "thelastwar.dat";
 	void loadGame(bool);
 	void saveGame();
 	void initGame();
 
+	void loadShaders();
+
 	void spawnEnemies(int);
 	Enemy& createEnemy(const sf::Vector2f&);
 	void respawnEnemies();
 	void spawnItems();
 	void updateEnemies(int);
-	void renderEnemies();
+	void renderEnemies(sf::RenderStates);
 	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator&);
 	bool handleEvents();
 	void updateProjectiles();
-	void renderAllies();
+	void renderAllies(sf::RenderStates);
 	void updateAllies();
 
 	struct Area : sf::FloatRect {
@@ -342,7 +392,7 @@ private:
 
 public:
 
-	GameMode(int, Game&, PlayerClass, GameMeta, bool);
+	GameMode(int, Game&, PlayerClass, GameMeta, NPCMeta[], EnemyMeta[], InventoryMeta[], bool);
 	~GameMode();
 
 	virtual void logic();

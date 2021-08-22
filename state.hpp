@@ -32,7 +32,7 @@ public:
 	void updateEffects();
 
 	/* draws effects to screen */
-	void drawEffects();
+	void drawEffects(sf::RenderStates states);
 
 	/* defines how to render the gamestate */
 	virtual void render() = 0;
