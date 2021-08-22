@@ -118,7 +118,7 @@ Item::type getLootItem(Item::type type) {
 	return type;
 }
 
-GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, NPCMeta npcLoadMeta[], EnemyMeta enemyMeta[], bool isLoadCall) :
+GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameLoadMeta, NPCMeta npcLoadMeta[], EnemyMeta enemyMeta[], InventoryMeta inventoryLoadMeta[], bool isLoadCall) :
 	State(game),
 	type(type),
 	player(playerClass),
@@ -379,14 +379,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	deadEyeFX.setAnimSpeed(12);
 	deadEyeFX.setScale(0.75, 0.75);
 
-	// add some stuff to the inventory
-	inventory.addItem(Item::type::Shotgun, 1);
-	inventory.addItem(Item::type::ammo_shotgun, 20);
-	inventory.addItem(Item::type::M240, 1);
-	inventory.addItem(Item::type::ammo_762, 200);
-	inventory.addItem(Item::type::M9, 1);
-	inventory.addItem(Item::type::ammo_9mm,50);
-
 	GameMode::spawnItems();
 
 	// add ally
@@ -485,7 +477,10 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			maxEndlessScoreCounter.setString(maxStr);
 			player.setHealth(gameLoadMeta.endlessMeta.playerHealth);
 			GameMode::spawnEnemies(defaultEnemySpawningCount);
-
+			Item item;
+			item.itemType = (Item::type) gameLoadMeta.endlessMeta.currentWieldedWeapon;
+			int roundsLeft = gameLoadMeta.endlessMeta.roundsLeft;
+			inventory.loadItemWielded(item, roundsLeft);
 			auto allyItr = allies.begin();
 			int counter = 0;
 			while (allyItr != allies.end())
@@ -511,6 +506,10 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			currentEnemyPresent = currentEnemySpawningCount;
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 			player.setHealth(gameLoadMeta.survivalMeta.playerHealth);
+			Item item;
+			item.itemType = (Item::type)gameLoadMeta.survivalMeta.currentWieldedWeapon;
+			int roundsLeft = gameLoadMeta.survivalMeta.roundsLeft;
+			inventory.loadItemWielded(item, roundsLeft);
 		}
 		auto enemiesItr = enemies.begin();
 		int counter = 0;
@@ -521,6 +520,11 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			enemy.setPosition(enemyMeta[counter].positionX, enemyMeta[counter].positionY);
 			counter++;
 			++enemiesItr;
+		}
+		for (int i = 0;i < 15;i++)
+		{
+			std::cout << "\n"<< inventoryLoadMeta[i].itemNumber << " - " << inventoryLoadMeta[i].count;
+			inventory.addItem((Item::type)inventoryLoadMeta[i].itemNumber, inventoryLoadMeta[i].count);
 		}
 		maxEndlessScore = gameLoadMeta.endlessMeta.maxScore;
 		maxSurvivalScore = gameLoadMeta.survivalMeta.maxScore;
@@ -548,6 +552,13 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			maxSurvivalScoreCounter.setString(maxStr);
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 		}
+		// add some stuff to the inventory
+		inventory.addItem(Item::type::Shotgun, 1);
+		inventory.addItem(Item::type::ammo_shotgun, 20);
+		inventory.addItem(Item::type::M240, 1);
+		inventory.addItem(Item::type::ammo_762, 200);
+		inventory.addItem(Item::type::M9, 1);
+		inventory.addItem(Item::type::ammo_9mm, 50);
 	}
 	
 	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
@@ -1144,11 +1155,11 @@ bool GameMode::handleEvents() {
 			case sf::Keyboard::F2:
 				// restarts the map
 				if (type == MODE_ENDLESS)
-					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_SURVIVAL)
-					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_STORY)
-					game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+					game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
 				break;
@@ -1161,7 +1172,7 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::F4:
 				// Restart, go into story mode
-				game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+				game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
 				break;
@@ -1195,6 +1206,10 @@ bool GameMode::handleEvents() {
 						npcSaveMeta[counter] = npcMeta;
 						counter++;
 					}
+					Item item = inventory.getWielded();
+					int roundsLeft = inventory.getRoundsLeft();
+					gameMeta.endlessMeta.currentWieldedWeapon = (int)item.itemType;
+					gameMeta.endlessMeta.roundsLeft = roundsLeft;
 				}
 				else if (type == MODE_SURVIVAL)//Survival Meta save
 				{
@@ -1205,6 +1220,10 @@ bool GameMode::handleEvents() {
 					gameMeta.survivalMeta.maxScore = maxSurvivalScore;
 					gameMeta.survivalMeta.currentScore = currentSurvivalScore;
 					gameMeta.survivalMeta.playerHealth = player.getHealth();
+					Item item = inventory.getWielded();
+					int roundsLeft = inventory.getRoundsLeft();
+					gameMeta.survivalMeta.currentWieldedWeapon = (int)item.itemType;
+					gameMeta.survivalMeta.roundsLeft = roundsLeft;
 				}
 				int counter = 0;
 				for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
@@ -1216,6 +1235,20 @@ bool GameMode::handleEvents() {
 					enemyMeta.positionY = enemy.getPosition().y;
 					enemySaveMeta[counter] = enemyMeta;
 					counter++;
+				}
+				counter = 0;
+				std::vector<std::vector<Item>> inventoryGrid = inventory.getInventoryGrid();
+				for (auto rowItr=inventoryGrid.begin(); rowItr != inventoryGrid.end(); rowItr++)
+				{
+					for (auto columnItr = (*rowItr).begin(); columnItr != (*rowItr).end(); columnItr++)
+					{
+						Item& item = *(columnItr);
+						InventoryMeta inventoryMeta;
+						inventoryMeta.itemNumber = (int) item.itemType;
+						inventoryMeta.count = item.num;
+						inventorySaveMeta[counter] = inventoryMeta;
+						counter++;
+					}
 				}
 				saveGame();
 			}
@@ -2774,12 +2807,16 @@ void GameMode::loadGame(bool isLoadCall)
 	gameMeta.survivalMeta.playerPosY = loadMeta.survivalMeta.playerPosY;
 	gameMeta.survivalMeta.maxScore = loadMeta.survivalMeta.maxScore;
 	gameMeta.survivalMeta.playerHealth = loadMeta.survivalMeta.playerHealth;
+	gameMeta.survivalMeta.currentWieldedWeapon = loadMeta.survivalMeta.currentWieldedWeapon;
+	gameMeta.survivalMeta.roundsLeft = loadMeta.survivalMeta.roundsLeft;
 	//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
 
 	gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
 	gameMeta.endlessMeta.playerPosY = loadMeta.endlessMeta.playerPosY;
 	gameMeta.endlessMeta.maxScore = loadMeta.endlessMeta.maxScore;
 	gameMeta.endlessMeta.playerHealth = loadMeta.endlessMeta.playerHealth;
+	gameMeta.endlessMeta.currentWieldedWeapon = loadMeta.endlessMeta.currentWieldedWeapon;
+	gameMeta.endlessMeta.roundsLeft = loadMeta.endlessMeta.roundsLeft;
 	//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
 	/*
 	for (std::vector <Tile>& tileMap : gameMeta.survivalMeta.currentMap)
@@ -2823,6 +2860,16 @@ void GameMode::loadGame(bool isLoadCall)
 		em.positionY = enemyLoadMeta.positionY;
 		enemySaveMeta[i] = em;
 	}
+	for (int i = 0;i < 15;i++)
+	{
+		struct InventoryMeta inventoryLoadMeta;
+		fread(&inventoryLoadMeta, sizeof(inventoryLoadMeta), 1, readFile);
+		InventoryMeta im;
+		im.itemNumber = inventoryLoadMeta.itemNumber;
+		im.count = inventoryLoadMeta.count;
+		inventorySaveMeta[i] = im;
+		std::cout << inventoryLoadMeta.itemNumber << " - " << inventoryLoadMeta.count << "\n";
+	}
 	if (isLoadCall)
 	{
 		gameMeta.endlessMeta.currentScore = loadMeta.endlessMeta.currentScore;
@@ -2837,11 +2884,11 @@ void GameMode::initGame()
 	gamestateChange = true;
 	if (type == MODE_ENDLESS)//Start a new endless game state with the saved properties
 	{
-		game.setState(new GameMode(1, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, true));
+		game.setState(new GameMode(1, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, true));
 	}
 	else if (type == MODE_SURVIVAL)//Start a new endless game state with the saved properties
 	{
-		game.setState(new GameMode(2, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, true));
+		game.setState(new GameMode(2, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, true));
 	}
 	delete this;
 	return;
@@ -2880,6 +2927,11 @@ void GameMode::saveGame()
 	for (int i = 0;i < 42;i++)
 	{
 		fwrite(&enemySaveMeta[i], sizeof(struct EnemyMeta), 1, writeFile);
+	}
+	for (int i = 0;i < 15;i++)
+	{
+		std::cout << inventorySaveMeta[i].itemNumber << "-" << inventorySaveMeta[i].count << "\n";
+		fwrite(&inventorySaveMeta[i], sizeof(struct InventoryMeta), 1, writeFile);
 	}
 	if (fwrite != 0)
 	{

@@ -289,6 +289,12 @@ protected:
 		int positionX = 0;
 		int positionY = 0;
 	}enemySaveMeta[42];
+
+	struct InventoryMeta
+	{
+		int itemNumber = 0;
+		int count = 0;
+	}inventorySaveMeta[15];
 	struct GameMeta
 	{
 		struct EndlessMeta
@@ -299,6 +305,8 @@ protected:
 			int maxScore = 0;
 			int currentScore = 0;
 			int playerHealth = 100;
+			int currentWieldedWeapon = 0;
+			int roundsLeft = 0;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -310,6 +318,8 @@ protected:
 			int maxScore = 0;
 			int currentScore = 0;
 			int playerHealth = 100;
+			int currentWieldedWeapon = 0;
+			int roundsLeft = 0;
 		}survivalMeta;
 	}gameMeta;
 	bool gamestateChange = false;
@@ -354,7 +364,7 @@ private:
 
 public:
 
-	GameMode(int, Game&, PlayerClass, GameMeta, NPCMeta[], EnemyMeta[], bool);
+	GameMode(int, Game&, PlayerClass, GameMeta, NPCMeta[], EnemyMeta[], InventoryMeta[], bool);
 	~GameMode();
 
 	virtual void logic();
