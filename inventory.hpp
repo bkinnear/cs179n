@@ -234,18 +234,19 @@ struct Item {
 		}
 	}
 
-	int getRecoil() const {
+	// returns item recoil (in degrees off)
+	float getRecoil() const {
 		switch (itemType) {
 		case type::MP5:
-			return rand() % 40;
+			return (float)round(rand() % 10) - 5.f;
 		case type::M4:
-			return rand() % 30;
+			return (float)round(rand() % 12) - 6.f;
 		case type::M240:
-			return rand() % 50;
+			return (float)round(rand() % 20) - 10.f;
 		case type::M9:
-			return rand() % 20;
+			return (float)round(rand() % 10) - 6.f;
 		case type::Shotgun:
-			return rand() % 50;
+			return (float)round(rand() % 24) - 12.f;
 		default:
 			return 0;
 		}

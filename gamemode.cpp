@@ -1474,7 +1474,7 @@ bool GameMode::handleEvents() {
 					proj.speed = 10;
 					proj.setScale(3, 3);
 					if (!player.isDeadEye) {
-						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x, mousePos.y }) + inventory.getWielded().getRecoil();
 					}
 					else {
 						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
@@ -1491,7 +1491,7 @@ bool GameMode::handleEvents() {
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 12;
 					if (!player.isDeadEye) {
-						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x , mousePos.y}) + inventory.getWielded().getRecoil();
 					}
 					else {
 						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
