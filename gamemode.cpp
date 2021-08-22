@@ -2488,6 +2488,7 @@ void GameMode::assault_ammo() {
 
 	createItem(player.getPosition(), Item::type::ammo_crate);
 	dropTech.setBuffer(metalBox);
+	dropTech.setVolume(15);
 	dropTech.play();
 	
 	abilityTimer1.restart();
@@ -2513,6 +2514,7 @@ void GameMode::assault_grenade() {
 
 	shotSound.setBuffer(grenadeShotBuffer);
 	shotSound.setPitch(1);
+	shotSound.setVolume(20);
 	shotSound.play();
 
 	abilityTimer2.restart();
@@ -2615,6 +2617,7 @@ void GameMode::engineer_shield() {
 	onCoolDown3 = true;
 
 	dropTech.setBuffer(het_hon);
+	dropTech.setVolume(10);
 	dropTech.play();
 
 	allies.emplace_back(texShield);

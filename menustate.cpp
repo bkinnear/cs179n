@@ -48,6 +48,8 @@ MenuState::MenuState(Game& game):
 
 	sprOptionsButton.create(createTexture("res/menu_options.png"), { 0, 0, 160, 64 }, 2);
 	sprOptionsButton.setPosition(600.f, 397.f);
+
+	game.menuSong.play();
 }
 
 MenuState::~MenuState() {
