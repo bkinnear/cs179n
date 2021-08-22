@@ -190,6 +190,10 @@ const Item& Inventory::getWielded() const {
 	return wielded;
 }
 
+std::vector<std::vector<Item>> Inventory::getInventoryGrid() {
+	return inventoryGrid;
+}
+
 void Inventory::reloadWielded() {
 	// ignore if mag is full
 	if (roundsLeft == wielded.getMagCapacity())
@@ -204,6 +208,11 @@ void Inventory::reloadWielded() {
 
 int Inventory::getRoundsLeft() const {
 	return roundsLeft;
+}
+
+void Inventory::loadItemWielded(Item& item, int roundsLeft) {
+	this->roundsLeft = roundsLeft;
+	wielded = item;
 }
 
 bool Inventory::useWielded() {

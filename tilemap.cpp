@@ -295,6 +295,30 @@ void TileMap::loadMap(GameMode* gmode, const std::string& fname)
 	updateGrass();
 };
 
+void TileMap::saveMap(int gameType)
+{
+	std::string fileName = "res/maps/save/";
+	if (gameType == 1)
+	{
+		fileName = fileName + "map_Endless.csv";
+	}
+	else if (gameType == 2)
+	{
+		fileName = fileName + "map_Survival.csv";
+	}
+	std::ofstream out(fileName);
+	for (unsigned i = 0;i < height;i++)
+	{
+		for (unsigned j = 0;j < width;j++)
+		{
+			Tile tile = map[j][i];
+			out << (int) tile <<",";
+		}
+		out << "\n";
+	}
+	std::cout << "\nFile written in " << fileName<<"\n";
+	out.close();
+}
 void TileMap::setTile(unsigned x, unsigned y, Tile tile) {
 	if (x >= width || y >= height)
 		return;
