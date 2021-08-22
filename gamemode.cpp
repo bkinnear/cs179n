@@ -303,6 +303,38 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		std::cout << "error loading mechanical noises" << std::endl;
 	}
 
+	//medic sounds
+	if (!medkitBuffer.loadFromFile("res/medkit_sound.wav")) {
+		std::cout << "error loading medkit noises" << std::endl;
+	}
+	medkitSound.setBuffer(medkitBuffer);
+	if (!dashBuffer.loadFromFile("res/dash_sound.wav")) {
+		std::cout << "error loading dash noises" << std::endl;
+	}
+	dashSound.setBuffer(dashBuffer);
+	dashSound.setPitch(2);
+	if (!guardianAngelBuffer.loadFromFile("res/guardian_angel_sound.wav")) {
+		std::cout << "error loading guardian angel noises" << std::endl;
+	}
+	guardianAngelSound.setBuffer(guardianAngelBuffer);
+	guardianAngelSound.setVolume(60);
+
+	//slasher sounds
+	if (!warcryBuffer.loadFromFile("res/warcry_sound.wav")) {
+		std::cout << "error loading warcry noises" << std::endl;
+	}
+	warcrySound.setBuffer(warcryBuffer);
+	warcrySound.setVolume(70);
+	if (!smashBuffer.loadFromFile("res/smash_sound.wav")) {
+		std::cout << "error loading smash noises" << std::endl;
+	}
+	smashSound.setBuffer(smashBuffer);
+	if (!rageBuffer.loadFromFile("res/rage_sound.wav")) {
+		std::cout << "error loading rage noises" << std::endl;
+	}
+	rageSound.setBuffer(rageBuffer);
+	rageSound.setVolume(70);
+
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 
@@ -2443,6 +2475,8 @@ void GameMode::medic_bandage() {
 	//ability functionality
 	createItem(player.getPosition(), Item::type::health_pack);
 
+	medkitSound.play();
+
 	//cooldown timer starts
 	abilityTimer1.restart();
 
@@ -2457,6 +2491,8 @@ void GameMode::medic_dash() {
 	player.setSpeed(10);
 
 	dashFX.setIndex(0);
+
+	dashSound.play();
 
 	abilityTimer2.restart();
 
@@ -2477,6 +2513,8 @@ void GameMode::medic_heal() {
 	guardianElapsed = sf::seconds(0);
 	guardianAngelFX.setIndex(0);
 	guardianPlaying = true;
+
+	guardianAngelSound.play();
 
 	abilityTimer3.restart();
 
@@ -2552,6 +2590,8 @@ void GameMode::slasher_smash() {
 			enemy.damage(30);
 	}
 
+	smashSound.play();
+
 	abilityTimer1.restart();
 
 	abilityIcon1.setTexture(createTexture("res/ability_icons/smash_cd.png"));
@@ -2563,6 +2603,8 @@ void GameMode::slasher_warcry() {
 	player.isWarcry = true;
 
 	warcryFX.setIndex(0);
+
+	warcrySound.play();
 
 	abilityTimer2.restart();
 
@@ -2576,6 +2618,8 @@ void GameMode::slasher_rage() {
 	player.setSpeed(5);
 
 	rageFX.setIndex(0);
+
+	rageSound.play();
 
 	abilityTimer3.restart();
 
