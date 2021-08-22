@@ -20,6 +20,7 @@ private:
 
 	// place any vars we need in this state in here
 	sf::Sprite sprTitle;
+	AnimSprite sprStoryButton;
 	AnimSprite sprEndlessButton;
 	AnimSprite sprSurvivalButton;
 	AnimSprite sprOptionsButton;

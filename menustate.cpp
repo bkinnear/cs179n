@@ -35,16 +35,19 @@ MenuState::MenuState(Game& game):
 	sprTitle.setTexture(createTexture("res/Title.png"));
 	sprTitle.setPosition(375.f, 0.f);
 
+	sprStoryButton.create(createTexture("res/menu_story_strip.png"), { 0, 0, 160, 64 }, 2);
+	sprStoryButton.setPosition(600.f, 128.f);
+
 	sprEndlessButton.create(createTexture("res/menu_endless_strip.png"), {0, 0, 160, 64}, 2);
-	sprEndlessButton.setPosition(600.f, 128.f);
+	sprEndlessButton.setPosition(600.f, 205.f);
 
 	//Survival Mode Button Placement Start
 	sprSurvivalButton.create(createTexture("res/menu_survival_strip.png"), { 0, 0, 160, 64 }, 2);
-	sprSurvivalButton.setPosition(600.f, 205.f);
+	sprSurvivalButton.setPosition(600.f, 282.f);
 	//Survival Mode Button Placement End
 
 	sprOptionsButton.create(createTexture("res/menu_options.png"), { 0, 0, 160, 64 }, 2);
-	sprOptionsButton.setPosition(600.f, 320.f);
+	sprOptionsButton.setPosition(600.f, 397.f);
 }
 
 MenuState::~MenuState() {
@@ -72,6 +75,14 @@ void MenuState::logic() {
 			// end function so we don't run this state anymore
 			return;
 		case sf::Event::MouseButtonPressed:
+			//As of Right now Story Button sends to new class Menu
+			//TODO: Send to new StoryState
+			if (sprStoryButton.getGlobalBounds().contains(mousePos)) {
+				std::cout << "Starting Story Mode\n";
+				game.setState(new ClassMenu(game));
+				delete this;
+				return;
+			}
 			// user clicked endless button
 			if (sprEndlessButton.getGlobalBounds().contains(mousePos)) {
 				std::cout << "Starting Endless Mode\n";
@@ -103,6 +114,11 @@ void MenuState::logic() {
 		}
 	}
 	
+	if (sprStoryButton.getGlobalBounds().contains(mousePos))
+		sprStoryButton.setIndex(1);
+	else
+		sprStoryButton.setIndex(0);
+
 	if (sprEndlessButton.getGlobalBounds().contains(mousePos))
 		sprEndlessButton.setIndex(1);
 	else
@@ -126,6 +142,7 @@ void MenuState::render() {
 	// draw the menu button
 	gwindow.draw(sprBackground);
 	gwindow.draw(sprTitle);
+	gwindow.draw(sprStoryButton);
 	gwindow.draw(sprEndlessButton);
 	gwindow.draw(sprSurvivalButton);
 	gwindow.draw(sprOptionsButton);
