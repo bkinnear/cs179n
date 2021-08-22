@@ -171,7 +171,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter3(createTexture("res/blood_splatter3.png")),
 	texBloodSplatter4(createTexture("res/blood_splatter4.png")),
 	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
-	siegingIcon(createTexture("res/sieging_icon.png"))
+	siegingIcon(createTexture("res/sieging_icon.png")),
+	texSmash(createTexture("res/smash_animation.png"))
 {
 	loadShaders();
 
@@ -205,6 +206,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		 allocate our resources here
 		=============================  */
 
+	game.menuSong.stop();
 	if (!music.openFromFile("res/music.wav")) {
 		std::cout << "error loading ambient music" << std::endl;
 	}
@@ -309,6 +311,38 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		std::cout << "error loading mechanical noises" << std::endl;
 	}
 
+	//medic sounds
+	if (!medkitBuffer.loadFromFile("res/medkit_sound.wav")) {
+		std::cout << "error loading medkit noises" << std::endl;
+	}
+	medkitSound.setBuffer(medkitBuffer);
+	if (!dashBuffer.loadFromFile("res/dash_sound.wav")) {
+		std::cout << "error loading dash noises" << std::endl;
+	}
+	dashSound.setBuffer(dashBuffer);
+	dashSound.setPitch(2);
+	if (!guardianAngelBuffer.loadFromFile("res/guardian_angel_sound.wav")) {
+		std::cout << "error loading guardian angel noises" << std::endl;
+	}
+	guardianAngelSound.setBuffer(guardianAngelBuffer);
+	guardianAngelSound.setVolume(60);
+
+	//slasher sounds
+	if (!warcryBuffer.loadFromFile("res/warcry_sound.wav")) {
+		std::cout << "error loading warcry noises" << std::endl;
+	}
+	warcrySound.setBuffer(warcryBuffer);
+	warcrySound.setVolume(70);
+	if (!smashBuffer.loadFromFile("res/smash_sound.wav")) {
+		std::cout << "error loading smash noises" << std::endl;
+	}
+	smashSound.setBuffer(smashBuffer);
+	if (!rageBuffer.loadFromFile("res/rage_sound.wav")) {
+		std::cout << "error loading rage noises" << std::endl;
+	}
+	rageSound.setBuffer(rageBuffer);
+	rageSound.setVolume(70);
+
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 	font2.loadFromFile("res/Friday13v12.ttf");
@@ -395,7 +429,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	rageFX.create(texRage, { 0,0, 100, 100 }, 56);
 	rageFX.setAnimSpeed(56);
 	rageFX.setScale(0.75, 0.75);
-
+	smashFX = loadEffect(texSmash, { 0,0,100,100 }, 72, 60);
+	getEffectSprite(smashFX).setScale(1.5, 1.5);
 	//healing items
 	healingFX.create(texHealAnimation, { 0, 0, 38, 39 }, 20);
 	healingFX.setAnimSpeed(20);
@@ -2485,6 +2520,8 @@ void GameMode::medic_bandage() {
 	//ability functionality
 	createItem(player.getPosition(), Item::type::health_pack);
 
+	medkitSound.play();
+
 	//cooldown timer starts
 	abilityTimer1.restart();
 
@@ -2499,6 +2536,8 @@ void GameMode::medic_dash() {
 	player.setSpeed(10);
 
 	dashFX.setIndex(0);
+
+	dashSound.play();
 
 	abilityTimer2.restart();
 
@@ -2520,6 +2559,8 @@ void GameMode::medic_heal() {
 	guardianAngelFX.setIndex(0);
 	guardianPlaying = true;
 
+	guardianAngelSound.play();
+
 	abilityTimer3.restart();
 
 	abilityIcon3.setTexture(createTexture("res/ability_icons/guardian_angel_cd.png"));
@@ -2530,6 +2571,7 @@ void GameMode::assault_ammo() {
 
 	createItem(player.getPosition(), Item::type::ammo_crate);
 	dropTech.setBuffer(metalBox);
+	dropTech.setVolume(15);
 	dropTech.play();
 	
 	abilityTimer1.restart();
@@ -2555,6 +2597,7 @@ void GameMode::assault_grenade() {
 
 	shotSound.setBuffer(grenadeShotBuffer);
 	shotSound.setPitch(1);
+	shotSound.setVolume(20);
 	shotSound.play();
 
 	abilityTimer2.restart();
@@ -2588,9 +2631,35 @@ void GameMode::slasher_smash() {
 		sf::Vector2f difference = playerPos - enemyPos;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
-		if (length < 100)
+		if (length < 80) {
 			enemy.damage(30);
+			bloodEffect = rand() % 5 + 1;
+			switch (bloodEffect) {
+			case 1:
+				bloodSplatter = loadEffect(texBloodSplatter1, { 0,0,100,100 }, 23, 60);
+				break;
+			case 2:
+				bloodSplatter = loadEffect(texBloodSplatter2, { 0,0,100,100 }, 22, 60);
+				break;
+			case 3:
+				bloodSplatter = loadEffect(texBloodSplatter3, { 0,0,100,100 }, 23, 60);
+				break;
+			case 4:
+				bloodSplatter = loadEffect(texBloodSplatter4, { 0,0,100,100 }, 14, 60);
+				break;
+			case 5:
+				bloodSplatter = loadEffect(texBloodSplatter5, { 0,0,100,100 }, 30, 60);
+				break;
+			}
+			getEffectSprite(bloodSplatter).setScale(0.45, 0.45);
+			createEffect(bloodSplatter, enemy.getPosition());
+		}
+
 	}
+
+	smashSound.play();
+
+	createEffect(smashFX, { player.getPosition().x-60, player.getPosition().y-60});
 
 	abilityTimer1.restart();
 
@@ -2604,6 +2673,8 @@ void GameMode::slasher_warcry() {
 
 	warcryFX.setIndex(0);
 
+	warcrySound.play();
+
 	abilityTimer2.restart();
 
 	abilityIcon2.setTexture(createTexture("res/ability_icons/warcry_cd.png"));
@@ -2616,6 +2687,8 @@ void GameMode::slasher_rage() {
 	player.setSpeed(5);
 
 	rageFX.setIndex(0);
+
+	rageSound.play();
 
 	abilityTimer3.restart();
 
@@ -2657,6 +2730,7 @@ void GameMode::engineer_shield() {
 	onCoolDown3 = true;
 
 	dropTech.setBuffer(het_hon);
+	dropTech.setVolume(10);
 	dropTech.play();
 
 	allies.emplace_back(texShield);

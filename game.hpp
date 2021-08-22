@@ -6,6 +6,7 @@
 #include <SFML/Network.hpp>
 #include <SFML/Audio.hpp>
 #include <vector>
+#include <iostream>
 
 #include "mask.hpp"
 #include "anim.hpp"
@@ -68,6 +69,15 @@ public:
 	float portHeight = 768.f;
 
 	const std::string title;
+
+	sf::SoundBuffer menuSongBuffer;
+	sf::Sound menuSong;
+	sf::SoundBuffer menuSelectBuffer1;
+	sf::Sound menuSelect1;
+	sf::SoundBuffer menuSelectBuffer2;
+	sf::Sound menuSelect2;
+	sf::SoundBuffer toggleBuffer;
+	sf::Sound toggleSound;
 
 private:
 	/* current state being ran in run() */

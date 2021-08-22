@@ -87,6 +87,7 @@ protected:
 	sf::Texture& texBloodSplatter3;
 	sf::Texture& texBloodSplatter4;
 	sf::Texture& texBloodSplatter5;
+	sf::Texture& texSmash;
 
 	// Music
 	sf::Music music;
@@ -148,6 +149,7 @@ protected:
 	AnimSprite guardianWingsFX;
 	AnimSprite deadEyeFX;
 	AnimSprite dashFX;
+	EffectID smashFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
@@ -160,6 +162,22 @@ protected:
 	sf::SoundBuffer metalBox;
 	sf::SoundBuffer barrelBuffer;
 	sf::Sound dropTech;
+
+	// medic sounds
+	sf::SoundBuffer medkitBuffer;
+	sf::SoundBuffer dashBuffer;
+	sf::SoundBuffer guardianAngelBuffer;
+	sf::Sound medkitSound;
+	sf::Sound dashSound;
+	sf::Sound guardianAngelSound;
+
+	// slasher sounds
+	sf::SoundBuffer smashBuffer;
+	sf::SoundBuffer rageBuffer;
+	sf::SoundBuffer warcryBuffer;
+	sf::Sound rageSound;
+	sf::Sound warcrySound;
+	sf::Sound smashSound;
 
 	// powerup sound
 	sf::SoundBuffer powerupBuffer;

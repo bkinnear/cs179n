@@ -69,24 +69,28 @@ void ClassMenu::logic() {
 		case sf::Event::MouseButtonPressed:
 			// user clicked button
 			if (sprMedicButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect2.play();
 				std::cout << "Chose Medic\n";
 				game.setState(new EndlessState(game, PlayerClass::MEDIC));
 				delete this;
 				return;
 			}
 			if (sprAssaultButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect2.play();
 				std::cout << "Chose Assault\n";
 				game.setState(new EndlessState(game, PlayerClass::ASSAULT));
 				delete this;
 				return;
 			}
 			if (sprSlasherButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect2.play();
 				std::cout << "Chose Slasher\n";
 				game.setState(new EndlessState(game, PlayerClass::SLASHER));
 				delete this;
 				return;
 			}
 			if (sprEngineerButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect2.play();
 				std::cout << "Chose Engineer\n";
 				game.setState(new EndlessState(game, PlayerClass::ENGINEER));
 				delete this;
@@ -94,6 +98,7 @@ void ClassMenu::logic() {
 			}
 			// user clicked return
 			if (sprReturnButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect1.play();
 				game.setState(new MenuState(game));
 				delete this;
 				return;

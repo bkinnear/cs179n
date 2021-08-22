@@ -52,6 +52,7 @@ void OptionsMenu::logic() {
 		case sf::Event::MouseButtonPressed:
 			// user clicked fullscreen
 			if (sprFullscreen.getGlobalBounds().contains(mousePos)) {
+				game.toggleSound.play();
 				game.setFullscreen(!game.isFullscreen());
 
 				if (game.isFullscreen())
@@ -64,6 +65,7 @@ void OptionsMenu::logic() {
 
 			// user clicked vsync
 			if (sprVsync.getGlobalBounds().contains(mousePos)) {
+				game.toggleSound.play();
 				game.setVsync(!game.usingVsync());
 
 				if (game.usingVsync())
@@ -76,6 +78,7 @@ void OptionsMenu::logic() {
 
 			// user clicked return
 			if (sprReturnButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect1.play();
 				game.setState(new MenuState(game));
 				delete this;
 				return;
