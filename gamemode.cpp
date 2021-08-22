@@ -9,6 +9,7 @@
 #include <list>
 #include <unordered_map>
 #include <algorithm>
+#include <typeinfo>
 
 // map width in tiles
 #define MAP_WIDTH 50
@@ -354,6 +355,35 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	}
 	healSound.setBuffer(healBuffer);
 	healSound.setVolume(15);
+
+	//player damaged sounds
+	if (!hitBuffer1.loadFromFile("res/hit1.wav")) {
+		std::cout << "error loading hit1 noises" << std::endl;
+	}
+	if (!hitBuffer2.loadFromFile("res/hit2.wav")) {
+		std::cout << "error loading hit2 noises" << std::endl;
+	}
+	if (!hitBuffer3.loadFromFile("res/hit3.wav")) {
+		std::cout << "error loading hit3 noises" << std::endl;
+	}
+	if (!hitBuffer4.loadFromFile("res/hit4.wav")) {
+		std::cout << "error loading hit4 noises" << std::endl;
+	}
+	if (!hitBuffer5.loadFromFile("res/hit5.wav")) {
+		std::cout << "error loading hit5 noises" << std::endl;
+	}
+	if (!hitBuffer6.loadFromFile("res/hit6.wav")) {
+		std::cout << "error loading hit6 noises" << std::endl;
+	}
+	if (!hitBuffer7.loadFromFile("res/hit7.wav")) {
+		std::cout << "error loading hit7 noises" << std::endl;
+	}
+	if (!hitBuffer8.loadFromFile("res/hit8.wav")) {
+		std::cout << "error loading hit8 noises" << std::endl;
+	}
+	if (!hitBuffer9.loadFromFile("res/hit9.wav")) {
+		std::cout << "error loading hit9 noises" << std::endl;
+	}
 
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
@@ -2430,9 +2460,47 @@ void GameMode::updateEnemies(int type) {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (!enemy.attack && nearestTarget->isAlive()) {
-				if (player.isWarcry) {
-					std::cout << "Reduced damage due to Warcry!" << std::endl;
-					nearestTarget->damage(enemy.hitRate * .25);
+				if ((nearestTarget == &player)) {
+					if (player.isWarcry) {
+						std::cout << "Reduced damage due to Warcry!" << std::endl;
+						nearestTarget->damage(enemy.hitRate * .25);
+					}
+					else {
+						nearestTarget->damage(enemy.hitRate);
+					}
+					hitSoundNum = rand() % 9 + 1;
+					switch (hitSoundNum) {
+					case 1:
+						hitSound.setBuffer(hitBuffer1);
+						break;
+					case 2:
+						hitSound.setBuffer(hitBuffer2);
+						break;
+					case 3:
+						hitSound.setBuffer(hitBuffer3);
+						break;
+					case 4:
+						hitSound.setBuffer(hitBuffer4);
+						break;
+					case 5:
+						hitSound.setBuffer(hitBuffer5);
+						break;
+					case 6:
+						hitSound.setBuffer(hitBuffer6);
+						break;
+					case 7:
+						hitSound.setBuffer(hitBuffer7);
+						break;
+					case 8:
+						hitSound.setBuffer(hitBuffer8);
+						break;
+					case 9:
+						hitSound.setBuffer(hitBuffer9);
+						break;
+					default:
+						break;
+					}
+					hitSound.play();
 				}
 				else {
 					nearestTarget->damage(enemy.hitRate);
