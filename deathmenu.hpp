@@ -1,13 +1,13 @@
-#ifndef CLASSMENU_H_
-#define CLASSMENU_H_
+#ifndef DEATHMENU_H_
+#define DEATHMENU_H_
 
- 
+
 #include "state.hpp"
 
-class ClassMenu : public State {
+class DeathMenu : public State {
 public:
-	ClassMenu(Game&);
-	~ClassMenu();
+	DeathMenu(Game&);
+	~DeathMenu();
 
 	virtual void logic();
 	virtual void render();
@@ -20,12 +20,9 @@ private:
 	sf::View view;
 
 	// place any vars we need in this state in here
-	sf::Sprite sprChooseClasses;
-	AnimSprite sprMedicButton;
-	AnimSprite sprAssaultButton;
-	AnimSprite sprSlasherButton;
-	AnimSprite sprEngineerButton;
+
+	sf::Sprite sprYouDied;
 	AnimSprite sprReturnButton;
 };
 
-#endif
+#endif#pragma once
