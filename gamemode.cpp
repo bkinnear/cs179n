@@ -1,5 +1,6 @@
 #include "gamemode.hpp"
 #include "menustate.hpp"
+#include "deathmenu.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -749,6 +750,7 @@ void GameMode::setDialog(const std::string& speaker, const std::string& msg) {
 void GameMode::hideDialog() {
 	showDialog = false;
 }
+
 void GameMode::updateCooldowns() {
 	switch (player.playerClass) {
 	case PlayerClass::DEFAULT:
@@ -1940,6 +1942,12 @@ void GameMode::logic()
 			break;
 		}			
 	}
+	else {
+		game.setState(new DeathMenu(game));
+		music.stop();
+		ambientZombie.stop();
+	}
+
 	if ((player.movingLeft || player.movingRight || player.movingDown || player.movingUp) && player.isAlive()) {
 		if (player.getAnimSpeed() == -1) {
 			player.setAnimSpeed(12);

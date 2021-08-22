@@ -40,6 +40,7 @@ ClassMenu::ClassMenu(Game& game) :
 
 	sprReturnButton.create(createTexture("res/options_return.png"), { 0, 0, 160, 64 }, 2);
 	sprReturnButton.setPosition(game.portWidth - 200.f, game.portHeight - 120.f);
+
 }
 
 ClassMenu::~ClassMenu() {
@@ -138,6 +139,8 @@ void ClassMenu::logic() {
 void ClassMenu::render() {
 	// clear window
 	gwindow.clear();
+
+	gwindow.setMouseCursorVisible(true);
 
 	gwindow.draw(sprChooseClasses);
 
