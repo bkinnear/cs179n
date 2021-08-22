@@ -1944,6 +1944,7 @@ void GameMode::logic()
 	}
 	else {
 		game.setState(new DeathMenu(game));
+		game.menuSong.play();
 		music.stop();
 		ambientZombie.stop();
 	}
