@@ -27,9 +27,6 @@ public:
 	std::vector<std::vector<Tile>> getTileMap();
 	void setTileMap(std::vector<std::vector<Tile>>&);
 
-	// loads textures
-	void loadTextures(GameMode* gmode);
-
 	// loads map from CSV file
 	void loadMap(GameMode* gmode, const std::string& fname);
 
@@ -88,6 +85,12 @@ private:
 	static sf::Vector2i getTileTexOffset(Tile tile);
 
 	unsigned width, height;
+
+	// loads textures
+	void loadTextures(GameMode* gmode);
+
+	// creates varied grass tiles
+	void updateGrass();
 };
 
 #endif
