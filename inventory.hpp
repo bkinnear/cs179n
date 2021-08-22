@@ -233,6 +233,23 @@ struct Item {
 			return 20;
 		}
 	}
+
+	int getRecoil() const {
+		switch (itemType) {
+		case type::MP5:
+			return rand() % 40;
+		case type::M4:
+			return rand() % 30;
+		case type::M240:
+			return rand() % 50;
+		case type::M9:
+			return rand() % 20;
+		case type::Shotgun:
+			return rand() % 50;
+		default:
+			return 0;
+		}
+	}
 };
 
 sf::Vector2i getItemTexOffset(Item::type type); //declared here because inventory.cpp has an inline call, but endless.cpp needs to use it
