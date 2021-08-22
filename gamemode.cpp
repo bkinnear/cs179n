@@ -311,6 +311,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
+	font2.loadFromFile("res/Friday13v12.ttf");
 
 	// load item details text
 	txtItemDetails.setFont(font);
@@ -355,6 +356,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
 	shpItemDetails.setOutlineThickness(1.f);
 	shpItemDetails.setOutlineColor(sf::Color::Black);
+
+	// load intro screen
+	introShape.setFillColor(sf::Color::Black);
+	introShape.setSize(guiView.getSize());
+	introMessage.setFont(font2);
+	introMessage.setCharacterSize(24);
+	if (type == MODE_ENDLESS)
+		introMessage.setString("You have been abandoned. Survive.");
+	else if (type == MODE_SURVIVAL)
+		introMessage.setString("Survive the ever growing hordes");
+	else if (type == MODE_STORY)
+		introMessage.setString("Find your way to the evac zone");
+	introMessage.setPosition(mainView.getCenter() - sf::Vector2f({ introMessage.getGlobalBounds().width / 2, -12.f }));
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
@@ -453,6 +467,20 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	abilityClock3.setColor(sf::Color::Black);
 	abilityClock3.setStyle(sf::Text::Bold);
 	abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+
+	// player positioning
+	sf::Vector2f mapCenter = { tileMap.getWidth() * 32.f / 2.f, tileMap.getHeight() * 32.f / 2.f };
+	do {
+		sf::Vector2f newPos({ mapCenter.x, mapCenter.y });
+		sf::Vector2i offset({
+			(rand() % ((int)tileMap.getWidth() / 4)) - ((int)tileMap.getWidth() / 8),
+			(rand() % ((int)tileMap.getHeight() / 4)) - ((int)tileMap.getHeight() / 8)
+		});
+		newPos += 32.f * sf::Vector2f(offset);
+		player.setPosition(newPos);
+	} while (!tileMap.areaClear(player));
+
+	// Score HUD
 	if (type == MODE_ENDLESS)
 	{
 		endlessScoreCounter.setPosition({ 5.f, 30.f });
@@ -485,6 +513,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		maxSurvivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
 		maxSurvivalScoreCounter.setOutlineThickness(2.f);
 	}
+
+	// LOAD game
 	if (isLoadCall)
 	{
 		if (type == MODE_ENDLESS)
@@ -581,7 +611,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		inventory.addItem(Item::type::ammo_9mm, 50);
 	}
 	
-	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
+	//std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -1703,6 +1733,14 @@ void GameMode::render()
 
 	gwindow.draw(fpsCounter);
 
+	if (introShape.getFillColor().a > 0) {
+		gwindow.draw(introShape);
+		gwindow.draw(introMessage);
+		if (introClock.getElapsedTime().asSeconds() > 1.5f) {
+			introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, introShape.getFillColor().a - .05));
+			introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, introShape.getFillColor().a - .05));
+		}
+	}
 
 	// update window
 	gwindow.display();

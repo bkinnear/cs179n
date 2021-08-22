@@ -43,6 +43,11 @@ protected:
 	// tile map
 	TileMap tileMap;
 
+	// intro for game start
+	sf::RectangleShape introShape;
+	sf::Clock introClock;
+	sf::Text introMessage;
+
 	// textures
 	sf::Texture& texPlayerRight;
 	sf::Texture& texPlayerLeft;
@@ -126,6 +131,7 @@ protected:
 
 	// fonts
 	sf::Font font;
+	sf::Font font2;
 
 	// effects
 	EffectID explosionSmall;
