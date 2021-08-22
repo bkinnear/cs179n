@@ -1252,6 +1252,7 @@ bool GameMode::handleEvents() {
 				// go back to menu
 				gwindow.setMouseCursorVisible(true);
 				game.setState(new MenuState(game));
+				game.menuSong.play();
 				delete this;
 				return false;
 				break;
