@@ -76,6 +76,7 @@ void OptionsMenu::logic() {
 
 			// user clicked return
 			if (sprReturnButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect1.play();
 				game.setState(new MenuState(game));
 				delete this;
 				return;

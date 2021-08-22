@@ -198,6 +198,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		 allocate our resources here
 		=============================  */
 
+	game.menuSong.stop();
 	if (!music.openFromFile("res/music.wav")) {
 		std::cout << "error loading ambient music" << std::endl;
 	}

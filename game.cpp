@@ -7,6 +7,26 @@ Game::Game():
 	curState(nullptr)
 {
 	setVsync(true);
+
+	//set sounds
+	if (!menuSongBuffer.loadFromFile("res/menu_music.wav")) {
+		std::cout << "error loading menu music" << std::endl;
+	}
+	menuSong.setBuffer(menuSongBuffer);
+	menuSong.setLoop(true);
+	menuSong.play();
+
+	if (!menuSelectBuffer1.loadFromFile("res/menu_select1.wav")) {
+		std::cout << "error loading menu select sound" << std::endl;
+	}
+	menuSelect1.setBuffer(menuSelectBuffer1);
+	menuSelect1.setVolume(50);
+
+	if (!menuSelectBuffer2.loadFromFile("res/menu_select2.wav")) {
+		std::cout << "error loading menu select sound" << std::endl;
+	}
+	menuSelect2.setBuffer(menuSelectBuffer2);
+	menuSelect2.setVolume(50);
 }
 
 Game::~Game() {
