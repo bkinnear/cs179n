@@ -115,6 +115,7 @@ protected:
 	sf::SoundBuffer zombieBuffer4;
 	sf::SoundBuffer zombieBuffer5;
 	sf::Sound zombieSound;
+	sf::Sprite siegingIcon;
 
 	// FPS counter
 	unsigned fpsTick;
@@ -191,7 +192,6 @@ protected:
 
 	// allies
 	std::list<NPC> allies;
-
 
 	// items
 	// items in world

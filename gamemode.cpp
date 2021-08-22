@@ -21,6 +21,9 @@
 // player default speed
 #define PLAYER_SPEED 3.f
 
+#define MODE_ENDLESS 1
+#define MODE_SURVIVAL 2
+#define MODE_STORY 3
 
 #define gwindow game.window
 
@@ -162,10 +165,16 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter2(createTexture("res/blood_splatter2.png")),
 	texBloodSplatter3(createTexture("res/blood_splatter3.png")),
 	texBloodSplatter4(createTexture("res/blood_splatter4.png")),
-	texBloodSplatter5(createTexture("res/blood_splatter5.png"))
+	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
+	siegingIcon(createTexture("res/sieging_icon.png"))
 {
-	// generate tile map
-	tileMap.generate(this);
+	if (type == MODE_STORY) {
+		tileMap.loadMap(this, "res/maps/level0.csv");
+	}
+	else {
+		// generate tile map
+		tileMap.generate(this);
+	}
 
 	// set main view
 	mainView.reset({ 0.f, 0.f, 1366.f, 768.f });
@@ -381,7 +390,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	GameMode::spawnItems();
 
 	// add ally
-	if (type == 1) {
+	if (type == MODE_ENDLESS) {
 		allies.emplace_back(texAllyLeft);
 		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
 		allies.back().setMaskBounds({ 8, 0, 15, 32 });
@@ -392,6 +401,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	// Player HUD
 	//  
+	//reticle
+	reticle.setScale(2, 2);
 	//HP bar
 	playerHPBack.setSize({ 200.f, 14.f });
 	playerHPBack.setFillColor(sf::Color::Transparent);
@@ -429,7 +440,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	abilityClock3.setColor(sf::Color::Black);
 	abilityClock3.setStyle(sf::Text::Bold);
 	abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 	{
 		endlessScoreCounter.setPosition({ 5.f, 30.f });
 		endlessScoreCounter.setFont(font);
@@ -445,7 +456,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		maxEndlessScoreCounter.setOutlineColor(sf::Color(0x000000FF));
 		maxEndlessScoreCounter.setOutlineThickness(2.f);
 	}
-	else if (type == 2)
+	else if (type == MODE_SURVIVAL)
 	{
 		survivalScoreCounter.setPosition({ 5.f, 30.f });
 		survivalScoreCounter.setFont(font);
@@ -463,7 +474,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	}
 	if (isLoadCall)
 	{
-		if (type == 1)
+		if (type == MODE_ENDLESS)
 		{
 			player.setPosition(gameLoadMeta.endlessMeta.playerPosX, gameLoadMeta.endlessMeta.playerPosY);
 			//tileMap.setTileMap(gameLoadMeta.endlessMeta.currentMap);
@@ -521,7 +532,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		maxEndlessScore = gameMeta.endlessMeta.maxScore;
 		maxSurvivalScore = gameMeta.survivalMeta.maxScore;
 		// TODO delegate to children classes
-		if (type == 1)
+		if (type == MODE_ENDLESS)
 		{
 			std::string str = "Score: " + std::to_string(currentEndlessScore);
 			endlessScoreCounter.setString(str);
@@ -529,7 +540,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			maxEndlessScoreCounter.setString(maxStr);
 			GameMode::spawnEnemies(defaultEnemySpawningCount);
 		}
-		else if (type == 2)
+		else if (type == MODE_SURVIVAL)
 		{
 			std::string str = "Score: " + std::to_string(currentSurvivalScore);
 			survivalScoreCounter.setString(str);
@@ -543,7 +554,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
-	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.mapWidth;
+	return (int)std::floor(pos.x / 32.f) + ((int)std::floor(pos.y / 32.f)) * tileMap.getWidth();
 }
 
 ItemSpr* GameMode::createItem(const sf::Vector2f& pos, Item::type type) {
@@ -922,31 +933,19 @@ bool GameMode::handleEvents() {
 				{
 					int tileX = x / TILE_SIZE;
 					int tileY = y / TILE_SIZE;
-					switch (tileMap.getTileType(x, y))
+					switch (tileMap.getTile(x, y))
 					{
-					case 30:
+					case TILE_DOOR_CLOSED:
 						//Closed Door Type - 1
-						tileMap.setTile(tileX, tileY, 31);
-						std::cout << "changed door to 31" << std::endl;
+						tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
 						doorInteract.setBuffer(doorOpen);
 						doorInteract.play();
 						break;
-					case 32:
-						//Closed Door Type - 2
-						tileMap.setTile(tileX, tileY, 33);
-						std::cout << "changed door to 33" << std::endl;
-						break;
-					case 31:
+					case TILE_DOOR_OPEN:
 						//Opened Door Type - 1
-						tileMap.setTile(tileX, tileY, 30);
-						std::cout << "changed door to 30" << std::endl;
+						tileMap.setTile(tileX, tileY, TILE_DOOR_CLOSED);
 						doorInteract.setBuffer(doorClose);
 						doorInteract.play();
-						break;
-					case 33:
-						//Opened Door Type - 2
-						tileMap.setTile(tileX, tileY, 32);
-						std::cout << "changed door to 32" << std::endl;
 						break;
 					default:
 						break;
@@ -959,7 +958,7 @@ bool GameMode::handleEvents() {
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
-				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() || !inventory.useWielded()) {
+				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity()) {
 					Item::type weaponType = inventory.getWielded().itemType;
 					switch (weaponType) {
 					case Item::type::MP5:
@@ -1144,16 +1143,25 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::F2:
 				// restarts the map
-				if (type == 1)
-					game.setState(new GameMode(1, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
-				else if (type == 2)
-					game.setState(new GameMode(2, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+				if (type == MODE_ENDLESS)
+					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+				else if (type == MODE_SURVIVAL)
+					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
+				else if (type == MODE_STORY)
+					game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
 				delete this;
 				return false;
 				break;
 			case sf::Keyboard::F3:
 				// go back to menu
+				gwindow.setMouseCursorVisible(true);
 				game.setState(new MenuState(game));
+				delete this;
+				return false;
+				break;
+			case sf::Keyboard::F4:
+				// Restart, go into story mode
+				game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, false));
 				delete this;
 				return false;
 				break;
@@ -1168,7 +1176,7 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::K://Save Game
 			{
-				if (type == 1)//Endless Meta save
+				if (type == MODE_ENDLESS)//Endless Meta save
 				{
 					gameMeta.endlessMeta.playerPosX = player.getPosition().x;
 					gameMeta.endlessMeta.playerPosY = player.getPosition().y;
@@ -1188,7 +1196,7 @@ bool GameMode::handleEvents() {
 						counter++;
 					}
 				}
-				else if (type == 2)//Survival Meta save
+				else if (type == MODE_SURVIVAL)//Survival Meta save
 				{
 					gameMeta.survivalMeta.currentLevel = currentLevel;
 					gameMeta.survivalMeta.playerPosX = player.getPosition().x;
@@ -1247,7 +1255,7 @@ bool GameMode::handleEvents() {
 					proj.speed = 25;
 					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 					proj.setRotation(proj.direction);
-					proj.damage = inventory.getWielded().getMeleeDamage() * 1.5f;
+					proj.damage = inventory.getWielded().getDamage() * std::max(3.f * player.isRage, 1.f);
 				}
 				break;
 			}
@@ -1316,9 +1324,9 @@ bool GameMode::handleEvents() {
 							//spawn ally at random location, at least 450.f away from player, and on clear tile
 							allies.emplace_back(texAllyLeft);
 							for (;;) {
-								pos = { (float)(rand() % tileMap.mapWidth * TILE_SIZE), (float)(rand() % tileMap.mapHeight * TILE_SIZE) };
+								pos = { (float)(rand() % tileMap.getWidth() * TILE_SIZE), (float)(rand() % tileMap.getHeight() * TILE_SIZE) };
 								float dist = Utils::pointDistance(player.getPosition(), pos);
-								if (!tileMap.isOpaque(pos.x, pos.y) && dist > 450.f)
+								if (!tileMap.isOpaqueAt(pos.x, pos.y) && dist > 450.f)
 									std::cout << "Walkie-talkie called in ally at position (" << pos.x << "," << pos.y << ")" << std::endl;
 									break;
 							}
@@ -1350,7 +1358,7 @@ bool GameMode::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
 		// try to use weapon
-		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat) { //check if weapon wielded is melee
+		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat || inventory.getWielded().itemType == Item::type::null) { //check if weapon wielded is melee
 			if (inventory.useWieldedMelee()) {
 				meleeSwing.setBuffer(meleeSwingBuffer);
 				meleeSwing.setVolume(225);
@@ -1383,7 +1391,7 @@ bool GameMode::handleEvents() {
 				proj.speed = 25;
 				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 				proj.setRotation(proj.direction);
-				proj.damage = inventory.getWielded().getDamage() * 1.5f;
+				proj.damage = inventory.getWielded().getDamage() * std::max(3.f * player.isRage, 1.f);
 			}
 		}
 		else { //weapon wielded is ranged
@@ -1419,7 +1427,12 @@ bool GameMode::handleEvents() {
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 10;
 					proj.setScale(3, 3);
-					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					if (!player.isDeadEye) {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+					}
+					else {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					}
 					proj.setRotation(proj.direction);
 					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
 				}
@@ -1431,7 +1444,12 @@ bool GameMode::handleEvents() {
 					// set mask bounds to just the sprite bounds (default)
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 12;
-					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					if (!player.isDeadEye) {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+					}
+					else {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					}
 					proj.setRotation(proj.direction);
 					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
 				}
@@ -1551,7 +1569,7 @@ void GameMode::render()
 	// draw the enemies
 	GameMode::renderEnemies();
 
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 	{
 		// draw the allies
 		renderAllies();
@@ -1576,19 +1594,21 @@ void GameMode::render()
 	// set view to draw guis
 	gwindow.setView(guiView);
 
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 	{
 		gwindow.draw(endlessScoreCounter);
 		gwindow.draw(maxEndlessScoreCounter);
 	}
-	else if (type == 2)
+	else if (type == MODE_SURVIVAL)
 	{
 		gwindow.draw(survivalScoreCounter);
 		gwindow.draw(maxSurvivalScoreCounter);
 	}
 	// draw the inventory
-	if (showInventory)
+	if (showInventory) {
 		gwindow.draw(inventory);
+		gwindow.setMouseCursorVisible(true);
+	}
 
 	// draw item details
 	if (showItemDetails) {
@@ -1608,6 +1628,13 @@ void GameMode::render()
 	gwindow.draw(abilityClock1);
 	gwindow.draw(abilityClock2);
 	gwindow.draw(abilityClock3);
+
+	//draw reticle
+	if (!showInventory) {
+		reticle.setPosition(winMousePos.x-5, winMousePos.y-7);
+		gwindow.draw(reticle);
+		gwindow.setMouseCursorVisible(false);
+	}
 
 	if (showDialog) {
 		gwindow.draw(dialogBox1);
@@ -1658,61 +1685,74 @@ void GameMode::logic()
 		}
 	}
 
+	//compare mouse location to player
+	if (mousePos.x < player.getPosition().x) {
+		player.lookingLeft = true;
+		player.lookingRight = false;
+	}
+	else {
+		player.lookingLeft = false;
+		player.lookingRight = true;
+	}
+
 	// update player sprite
-	if ((player.movingLeft || player.movingUp || player.movingRight || player.movingDown) && player.isAlive()) {
+	if ((player.lookingLeft || player.lookingRight) && player.isAlive()) {
 		Item::type weaponType = inventory.getWielded().itemType;
-		if (player.getAnimSpeed() == -1)
-			player.setAnimSpeed(12);
 		switch (weaponType) {
 		case Item::type::MP5:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftMp5);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightMp5);
 			}
 			break;
 		case Item::type::M4:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM4);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM4);
 			}
 			break;
 		case Item::type::M9:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM9);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM9);
 			}
 			break;
 		case Item::type::M240:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM240);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightM240);
 			}
 			break;
 		case Item::type::Shotgun:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftShotgun);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRightShotgun);
 			}
 			break;
 		default:
-			if (player.movingLeft) {
+			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeft);
 			}
-			if (player.movingRight) {
+			if (player.lookingRight) {
 				player.setTexture(texPlayerRight);
 			}
 			break;
 		}			
+	}
+	if (player.movingLeft || player.movingRight || player.movingDown || player.movingUp) {
+		if (player.getAnimSpeed() == -1) {
+			player.setAnimSpeed(12);
+		}
 	}
 	else {
 		player.setIndex(0);
@@ -1740,7 +1780,7 @@ void GameMode::logic()
 
 	// update enemies
 
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 	{
 		GameMode::updateEnemies(1);
 		// update all allies
@@ -1749,7 +1789,7 @@ void GameMode::logic()
 		// update ability cooldowns
 		updateCooldowns();
 	}
-	else if (type == 2)
+	else if (type == MODE_SURVIVAL)
 	{
 		GameMode::updateEnemies(2);
 	}
@@ -1781,7 +1821,7 @@ void GameMode::logic()
 	inventory.tick();
 
 
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 	{
 		std::string str = "Score: " + std::to_string(currentEndlessScore);
 		endlessScoreCounter.setString(str);
@@ -1789,7 +1829,7 @@ void GameMode::logic()
 		maxEndlessScoreCounter.setString(maxStr);
 
 	}
-	else if (type == 2)
+	else if (type == MODE_SURVIVAL)
 	{
 		std::string str = "Score: " + std::to_string(currentSurvivalScore);
 		survivalScoreCounter.setString(str);
@@ -2065,16 +2105,20 @@ void GameMode::renderEnemies()
 		gwindow.draw(bar1);
 		gwindow.draw(bar2);
 
+		if (enemy.sieging) {
+			siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, - 32.f}));
+			gwindow.draw(siegingIcon);
+		}
 	}
 }
 
 std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& enemyItr) {
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 	{
 		currentEndlessScore += 1;
 		maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
 	}
-	else if (type == 2)
+	else if (type == MODE_SURVIVAL)
 	{
 		currentSurvivalScore += 1;
 		maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
@@ -2106,8 +2150,39 @@ void GameMode::updateEnemies(int type) {
 		Enemy& enemy = *enemyItr;
 		
 		// check enemy hp
-		if (!enemyItr->isAlive()) {
+		if (!enemy.isAlive()) {
 			enemyItr = deleteEnemy(enemyItr);
+			continue;
+		}
+
+		// check for sieging (attacking door)
+		if (enemy.sieging) {
+			if (tileMap.isDoorOpen(enemy.siegingPos->x, enemy.siegingPos->y)) {
+				enemy.sieging = false;
+				delete enemy.siegingPos;
+			}
+			else {
+				if (enemy.siegeTimer.getElapsedTime().asSeconds() > 3.f) {
+					enemy.sieging = false;
+					sf::Vector2i tilePos = Utils::toTileCoords(sf::Vector2f({ enemy.siegingPos->x, enemy.siegingPos->y }));
+					unsigned tileX = (unsigned)tilePos.x;
+					unsigned tileY = (unsigned)tilePos.y;
+					Tile tile = tileMap.getTile(enemy.siegingPos->x, enemy.siegingPos->y);
+					switch (tile) {
+					case TILE_DOOR_CLOSED:
+						//Closed Door Type - 1
+						tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
+						doorInteract.setBuffer(doorOpen);
+						doorInteract.play();
+						break;
+					default:
+						break;
+					}
+					delete enemy.siegingPos;
+				}
+			}
+
+			enemyItr++;
 			continue;
 		}
 
@@ -2125,7 +2200,7 @@ void GameMode::updateEnemies(int type) {
 		}
 
 		//check NPCs
-		if (type == 1)
+		if (type == MODE_ENDLESS)
 		{
 			// find the nearest target for the enemy to attack (allies and player)
 			for (NPC& ally : allies) {
@@ -2197,6 +2272,16 @@ void GameMode::updateEnemies(int type) {
 				enemy.setTexture(texEnemyRight);
 			else
 				enemy.setTexture(texEnemyLeft);
+
+			// siege building
+			sf::Vector2f movePos = enemy.getCenter() + 24.f * (difference / length);
+			if (tileMap.isDoor(movePos.x, movePos.y)) {
+				if (!tileMap.isDoorOpen(movePos.x, movePos.y)) {
+					enemy.sieging = true;
+					enemy.siegeTimer.restart();
+					enemy.siegingPos = new sf::Vector2f(movePos);
+				}
+			}
 		}
 		else
 		{
@@ -2211,12 +2296,12 @@ void GameMode::updateEnemies(int type) {
 					nearestTarget->damage(enemy.hitRate);
 				}
 				if (!nearestTarget->isAlive()) {
-					if (type == 1)
+					if (type == MODE_ENDLESS)
 					{
 						maxEndlessScore = currentEndlessScore > maxEndlessScore ? currentEndlessScore : maxEndlessScore;
 						std::cout << " Score = " << currentEndlessScore << " AND Max Endless Score = " << maxEndlessScore << "\n";
 					}
-					else if (type == 2) 
+					else if (type == MODE_SURVIVAL) 
 					{
 						maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
 						std::cout << " Score = " << currentSurvivalScore << " AND Max Survival Score = " << maxSurvivalScore << "\n";
@@ -2504,8 +2589,8 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 	{
 		Enemy& enemy = createEnemy({ 0.0f, 0.0f });
 		do {
-			int randWidth = rand() % tileMap.mapWidth * TILE_SIZE;
-			int randHeight = rand() % tileMap.mapHeight * TILE_SIZE;
+			int randWidth = rand() % tileMap.getWidth() * TILE_SIZE;
+			int randHeight = rand() % tileMap.getHeight() * TILE_SIZE;
 			enemy.setPosition(randWidth, randHeight);
 		} while (!tileMap.areaClear(enemy));
 	}
@@ -2523,9 +2608,9 @@ Enemy& GameMode::createEnemy(const sf::Vector2f& pos) {
 }
 
 void GameMode::respawnEnemies() {
-	if (type == 1)
+	if (type == MODE_ENDLESS)
 		spawnEnemies(1);
-	else if (type == 2) {
+	else if (type == MODE_SURVIVAL) {
 		currentEnemyPresent = currentEnemyPresent - 1;
 		if (currentEnemyPresent == 0) {
 			//Level completed - Move to next Level
@@ -2543,6 +2628,9 @@ void GameMode::respawnEnemies() {
 				return;
 			}
 		}
+	}
+	else if (type == MODE_STORY) {
+		spawnEnemies(1);
 	}
 }
 
@@ -2747,11 +2835,11 @@ void GameMode::loadGame(bool isLoadCall)
 void GameMode::initGame()
 {
 	gamestateChange = true;
-	if (type == 1)//Start a new endless game state with the saved properties
+	if (type == MODE_ENDLESS)//Start a new endless game state with the saved properties
 	{
 		game.setState(new GameMode(1, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, true));
 	}
-	else if (type == 2)//Start a new endless game state with the saved properties
+	else if (type == MODE_SURVIVAL)//Start a new endless game state with the saved properties
 	{
 		game.setState(new GameMode(2, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, true));
 	}

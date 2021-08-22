@@ -4,37 +4,46 @@
 #include "game.hpp"
 #include <vector>
 #include <string>
+#include <fstream>
+#include <sstream>
 
 class GameMode;
 
 #define TILE_SIZE 32
 
-typedef unsigned char tileType;
+#define TILE_DOOR_CLOSED 42
+#define TILE_DOOR_OPEN 43
 
-struct Tile {
-	/* 0 for empty tile */
-	tileType type;
-	bool opaque;
-};
+typedef unsigned char Tile;
 
 /* holds tiles
  * TODO: make multilevelled tilemap (just add second layer)
 */
 class TileMap: public sf::Drawable {
 public:
+	TileMap() : TileMap(0, 0) {};
 	TileMap(unsigned mapWidth, unsigned mapHeight);
 
 	std::vector<std::vector<Tile>> getTileMap();
 	void setTileMap(std::vector<std::vector<Tile>>&);
 
+	// loads textures
+	void loadTextures(GameMode* gmode);
+
+	// loads map from CSV file
+	void loadMap(GameMode* gmode, const std::string& fname);
+
 	// generates tile map
 	void generate(GameMode* gmode);
 
 	// sets tile at (x, y) to type specified
-	void setTile(unsigned x, unsigned y, tileType type);
+	void setTile(unsigned x, unsigned y, Tile tile);
 
-	// returns whether tile at world coords (x, y) is opaque
-	bool isOpaque(float x, float y) const;
+	// returns whether tile at world coords (x, y) is opaque (cant be passed through)
+	bool isOpaqueAt(float x, float y) const;
+
+	// returns whether tile at world coords (x, y) is open (can be shot through)
+	bool isOpenAt(float x, float y) const;
 
 	// returns whether a tile at world coords (x,y) is a door
 	bool isDoor(unsigned x, unsigned y) const;
@@ -43,7 +52,7 @@ public:
 	bool isDoorOpen(unsigned x, unsigned y) const;
 
 	// returns the type of tile at world coords (x,y)
-	tileType getTileType(unsigned x, unsigned y) const;
+	Tile getTile(unsigned x, unsigned y) const;
 
 	//returns true if the area needed to place an obstacle is clear
 	bool tileClear(unsigned h, unsigned w, unsigned y_off, unsigned x_off);
@@ -56,8 +65,15 @@ public:
 
 	sf::FloatRect getTileBounds(float x, float y) const;
 
-	const int mapWidth;
-	const int mapHeight;
+	// returns tilemap width
+	unsigned getWidth() const {
+		return width;
+	}
+
+	// returns tilemap height
+	unsigned getHeight() const {
+		return height;
+	}
 
 protected:
 
@@ -69,7 +85,9 @@ private:
 	std::vector<std::vector<Tile>> map;
 
 	// returns texture rect offset of given tile in the tilesheet
-	static sf::Vector2i getTileTexOffset(tileType type);
+	static sf::Vector2i getTileTexOffset(Tile tile);
+
+	unsigned width, height;
 };
 
 #endif
