@@ -166,7 +166,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter3(createTexture("res/blood_splatter3.png")),
 	texBloodSplatter4(createTexture("res/blood_splatter4.png")),
 	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
-	siegingIcon(createTexture("res/sieging_icon.png"))
+	siegingIcon(createTexture("res/sieging_icon.png")),
+	texSmash(createTexture("res/smash_animation.png"))
 {
 	if (type == MODE_STORY) {
 		tileMap.loadMap(this, "res/maps/level0.csv");
@@ -407,7 +408,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	rageFX.create(texRage, { 0,0, 100, 100 }, 56);
 	rageFX.setAnimSpeed(56);
 	rageFX.setScale(0.75, 0.75);
-
+	smashFX = loadEffect(texSmash, { 0,0,100,100 }, 72, 60);
+	getEffectSprite(smashFX).setScale(1.5, 1.5);
 	//healing items
 	healingFX.create(texHealAnimation, { 0, 0, 38, 39 }, 20);
 	healingFX.setAnimSpeed(20);
@@ -2586,11 +2588,35 @@ void GameMode::slasher_smash() {
 		sf::Vector2f difference = playerPos - enemyPos;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
-		if (length < 100)
+		if (length < 80) {
 			enemy.damage(30);
+			bloodEffect = rand() % 5 + 1;
+			switch (bloodEffect) {
+			case 1:
+				bloodSplatter = loadEffect(texBloodSplatter1, { 0,0,100,100 }, 23, 60);
+				break;
+			case 2:
+				bloodSplatter = loadEffect(texBloodSplatter2, { 0,0,100,100 }, 22, 60);
+				break;
+			case 3:
+				bloodSplatter = loadEffect(texBloodSplatter3, { 0,0,100,100 }, 23, 60);
+				break;
+			case 4:
+				bloodSplatter = loadEffect(texBloodSplatter4, { 0,0,100,100 }, 14, 60);
+				break;
+			case 5:
+				bloodSplatter = loadEffect(texBloodSplatter5, { 0,0,100,100 }, 30, 60);
+				break;
+			}
+			getEffectSprite(bloodSplatter).setScale(0.45, 0.45);
+			createEffect(bloodSplatter, enemy.getPosition());
+		}
+
 	}
 
 	smashSound.play();
+
+	createEffect(smashFX, { player.getPosition().x-60, player.getPosition().y-60});
 
 	abilityTimer1.restart();
 

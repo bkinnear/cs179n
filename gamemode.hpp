@@ -80,6 +80,7 @@ protected:
 	sf::Texture& texBloodSplatter3;
 	sf::Texture& texBloodSplatter4;
 	sf::Texture& texBloodSplatter5;
+	sf::Texture& texSmash;
 
 	// Music
 	sf::Music music;
@@ -140,6 +141,7 @@ protected:
 	AnimSprite guardianWingsFX;
 	AnimSprite deadEyeFX;
 	AnimSprite dashFX;
+	EffectID smashFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
