@@ -172,8 +172,22 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		tileMap.loadMap(this, "res/maps/level0.csv");
 	}
 	else {
-		// generate tile map
-		tileMap.generate(this);
+		if (isLoadCall)
+		{
+			if (type == MODE_ENDLESS)
+			{
+				tileMap.loadMap(this, "res/maps/save/map_Endless.csv");
+			}
+			else if(type == MODE_SURVIVAL)
+			{
+				tileMap.loadMap(this, "res/maps/save/map_Survival.csv");
+			}
+		}
+		else
+		{
+			// generate tile map
+			tileMap.generate(this);
+		}
 	}
 
 	// set main view
@@ -523,7 +537,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		}
 		for (int i = 0;i < 15;i++)
 		{
-			std::cout << "\n"<< inventoryLoadMeta[i].itemNumber << " - " << inventoryLoadMeta[i].count;
 			inventory.addItem((Item::type)inventoryLoadMeta[i].itemNumber, inventoryLoadMeta[i].count);
 		}
 		maxEndlessScore = gameLoadMeta.endlessMeta.maxScore;
@@ -2868,7 +2881,6 @@ void GameMode::loadGame(bool isLoadCall)
 		im.itemNumber = inventoryLoadMeta.itemNumber;
 		im.count = inventoryLoadMeta.count;
 		inventorySaveMeta[i] = im;
-		std::cout << inventoryLoadMeta.itemNumber << " - " << inventoryLoadMeta.count << "\n";
 	}
 	if (isLoadCall)
 	{
@@ -2923,6 +2935,11 @@ void GameMode::saveGame()
 	{
 		fwrite(&npcSaveMeta[0], sizeof(struct NPCMeta), 1, writeFile);
 		fwrite(&npcSaveMeta[1], sizeof(struct NPCMeta), 1, writeFile);
+		tileMap.saveMap(MODE_ENDLESS);
+	}
+	else if (type == 2)
+	{
+		tileMap.saveMap(MODE_SURVIVAL);
 	}
 	for (int i = 0;i < 42;i++)
 	{
@@ -2930,7 +2947,6 @@ void GameMode::saveGame()
 	}
 	for (int i = 0;i < 15;i++)
 	{
-		std::cout << inventorySaveMeta[i].itemNumber << "-" << inventorySaveMeta[i].count << "\n";
 		fwrite(&inventorySaveMeta[i], sizeof(struct InventoryMeta), 1, writeFile);
 	}
 	if (fwrite != 0)

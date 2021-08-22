@@ -33,6 +33,9 @@ public:
 	// loads map from CSV file
 	void loadMap(GameMode* gmode, const std::string& fname);
 
+	// saves map from to file
+	void saveMap(int);
+
 	// generates tile map
 	void generate(GameMode* gmode);
 
