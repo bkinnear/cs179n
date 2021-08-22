@@ -1026,14 +1026,15 @@ bool GameMode::handleEvents() {
 				player.movingRight = true;
 				break;
 			case sf::Keyboard::Tab:
-				if(player.isAlive())
+				if (player.isAlive()) {
 					showInventory = !showInventory;
 					showItemDetails = false;
+				}
 				break;
 			case sf::Keyboard::E:
-				if(player.isAlive())
-				// pick up item
-				// check for items in tiles adjacent to player
+				if (player.isAlive()) {
+					// pick up item
+					// check for items in tiles adjacent to player
 					for (int i = -1; i <= 1; i++) {
 						for (int j = -1; j <= 1; j++) {
 							sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
@@ -1049,14 +1050,14 @@ bool GameMode::handleEvents() {
 							}
 						}
 					}
+				}
 				break;
 			case sf::Keyboard::Q:
 			{
 				sf::Vector2f position = player.getPosition();
 				int x, y;
-				bool isDoor;
-				if(player.isAlive())
-					bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
+				bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
+				if (player.isAlive()) {
 					if (isDoor)
 					{
 						x = position.x + 16;
@@ -1097,6 +1098,7 @@ bool GameMode::handleEvents() {
 					{
 						std::cout << "Not a door!\n";
 					}
+				}
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
@@ -1146,7 +1148,7 @@ bool GameMode::handleEvents() {
 				}
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
-				if(player.isAlive())
+				if (player.isAlive()) {
 					switch (player.playerClass) {
 					case PlayerClass::DEFAULT:
 						break;
@@ -1189,9 +1191,10 @@ bool GameMode::handleEvents() {
 						}
 						break;
 					}
+				}
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
-				if (player.isAlive())
+				if (player.isAlive()) {
 					switch (player.playerClass) {
 					case PlayerClass::DEFAULT:
 						break;
@@ -1232,9 +1235,10 @@ bool GameMode::handleEvents() {
 						}
 						break;
 					}
+				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
-				if(player.isAlive())
+				if (player.isAlive()) {
 					switch (player.playerClass) {
 					case PlayerClass::DEFAULT:
 						break;
@@ -1275,6 +1279,7 @@ bool GameMode::handleEvents() {
 						}
 						break;
 					}
+				}
 				break;
 			case sf::Keyboard::F1:
 				std::cout << "Debug mode ";
