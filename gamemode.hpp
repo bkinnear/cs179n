@@ -155,6 +155,10 @@ protected:
 	sf::SoundBuffer doorOpen;
 	sf::SoundBuffer doorClose;
 	sf::Sound doorInteract;
+	sf::SoundBuffer healBuffer;
+	sf::Sound healSound;
+	sf::SoundBuffer equipBuffer;
+	sf::Sound equipSound;
 
 	// engineer sounds
 	sf::SoundBuffer mechNoise;

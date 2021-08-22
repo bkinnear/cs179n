@@ -343,6 +343,18 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	rageSound.setBuffer(rageBuffer);
 	rageSound.setVolume(70);
 
+	//inventory & item-use sounds
+	if (!equipBuffer.loadFromFile("res/equip_sound.wav")) {
+		std::cout << "error loading eqiup noises" << std::endl;
+	}
+	equipSound.setBuffer(equipBuffer);
+	equipSound.setVolume(70);
+	if (!healBuffer.loadFromFile("res/heal_sound.wav")) {
+		std::cout << "error loading heal noises" << std::endl;
+	}
+	healSound.setBuffer(healBuffer);
+	healSound.setVolume(15);
+
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
 	font2.loadFromFile("res/Friday13v12.ttf");
@@ -1427,6 +1439,8 @@ bool GameMode::handleEvents() {
 							healTimer.restart();
 							healPlaying = true;
 
+							healSound.play();
+
 							break;
 						case Item::type::health_pack:
 							player.heal(20);
@@ -1436,6 +1450,8 @@ bool GameMode::handleEvents() {
 							healElapsed = sf::seconds(0);
 							healTimer.restart();
 							healPlaying = true;
+
+							healSound.play();
 
 							break;
 						case Item::type::walkie_talkie:
@@ -1456,6 +1472,7 @@ bool GameMode::handleEvents() {
 						default:
 							// equip item
 							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+							equipSound.play();
 							break;
 					}
 				}
