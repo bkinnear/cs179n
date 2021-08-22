@@ -1211,7 +1211,7 @@ bool GameMode::handleEvents() {
 					proj.speed = 25;
 					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 					proj.setRotation(proj.direction);
-					proj.damage = inventory.getWielded().getMeleeDamage() * 1.5f;
+					proj.damage = inventory.getWielded().getDamage() * std::max(3.f * player.isRage, 1.f);
 				}
 				break;
 			}
@@ -1314,7 +1314,7 @@ bool GameMode::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
 		// try to use weapon
-		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat) { //check if weapon wielded is melee
+		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat || inventory.getWielded().itemType == Item::type::null) { //check if weapon wielded is melee
 			if (inventory.useWieldedMelee()) {
 				meleeSwing.setBuffer(meleeSwingBuffer);
 				meleeSwing.setVolume(225);
@@ -1347,7 +1347,7 @@ bool GameMode::handleEvents() {
 				proj.speed = 25;
 				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 				proj.setRotation(proj.direction);
-				proj.damage = inventory.getWielded().getDamage() * 1.5f;
+				proj.damage = inventory.getWielded().getDamage() * std::max(3.f * player.isRage, 1.f);
 			}
 		}
 		else { //weapon wielded is ranged
@@ -1383,7 +1383,12 @@ bool GameMode::handleEvents() {
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 10;
 					proj.setScale(3, 3);
-					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					if (!player.isDeadEye) {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+					}
+					else {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					}
 					proj.setRotation(proj.direction);
 					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
 				}
@@ -1395,7 +1400,12 @@ bool GameMode::handleEvents() {
 					// set mask bounds to just the sprite bounds (default)
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 12;
-					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					if (!player.isDeadEye) {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+					}
+					else {
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
+					}
 					proj.setRotation(proj.direction);
 					proj.damage = (int)floor(inventory.getWielded().getDamage() * std::max(2 * player.isDeadEye, 1) * std::max(1.5f * player.isRage, 1.f));
 				}
