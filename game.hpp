@@ -76,6 +76,8 @@ public:
 	sf::Sound menuSelect1;
 	sf::SoundBuffer menuSelectBuffer2;
 	sf::Sound menuSelect2;
+	sf::SoundBuffer toggleBuffer;
+	sf::Sound toggleSound;
 
 private:
 	/* current state being ran in run() */
