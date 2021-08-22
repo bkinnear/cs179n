@@ -2786,21 +2786,21 @@ void GameMode::renderAllies(sf::RenderStates states) {
 			sf::RectangleShape bar1({ 62.f, 6.f });
 			bar1.setFillColor(sf::Color::Black);
 			bar1.setPosition(ally.getPosition().x+32, ally.getPosition().y - 10);
-			gwindow.draw(bar1, states);
+			gwindow.draw(bar1);
 			sf::RectangleShape bar2({ 24.f * (ally.getHealth() / 100.f), 4.f });
 			bar2.setFillColor(sf::Color::Red);
 			bar2.setPosition(ally.getPosition().x + 33, ally.getPosition().y - 9);
-			gwindow.draw(bar2, states);
+			gwindow.draw(bar2);
 		}
 		else {
 			sf::RectangleShape bar1({ 24.f, 6.f });
 			bar1.setFillColor(sf::Color::Black);
 			bar1.setPosition(ally.getPosition().x, ally.getPosition().y - 10);
-			gwindow.draw(bar1, states);
+			gwindow.draw(bar1);
 			sf::RectangleShape bar2({ 24.f * (ally.getHealth() / 100.f), 4.f });
 			bar2.setFillColor(sf::Color::Red);
 			bar2.setPosition(ally.getPosition().x + 1, ally.getPosition().y - 9);
-			gwindow.draw(bar2, states);
+			gwindow.draw(bar2);
 		}
 	}
 }
