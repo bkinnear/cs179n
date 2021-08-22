@@ -21,6 +21,11 @@
 // player default speed
 #define PLAYER_SPEED 3.f
 
+// line of sight radius around player
+#define LOS_RADIUS 600.f
+// sharpness of LOS edge
+#define LOS_SHARPNESS 256.f
+
 #define MODE_ENDLESS 1
 #define MODE_SURVIVAL 2
 #define MODE_STORY 3
@@ -168,6 +173,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
 	siegingIcon(createTexture("res/sieging_icon.png"))
 {
+	loadShaders();
+
 	if (type == MODE_STORY) {
 		tileMap.loadMap(this, "res/maps/level0.csv");
 	}
@@ -1527,8 +1534,13 @@ void GameMode::render()
 	// = v   world drawing   v  = //
 	// ========================== //
 
+	// update shader variables
+	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
+	shader.setParameter("los_radius", LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("los_sharpness", LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+
 	// move view target to center on player
-	mainViewTarget = { floor(player.getPosition().x), floor(player.getPosition().y) };
+	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
 
 	// move the view towards target
 	sf::Vector2f delta(floor((mainViewTarget.x - mainView.getCenter().x) / 10), floor((mainViewTarget.y - mainView.getCenter().y) / 10));
@@ -1539,11 +1551,11 @@ void GameMode::render()
 	gwindow.setView(mainView);
 
 	// draw the tilemap
-	gwindow.draw(tileMap);
+	gwindow.draw(tileMap, &shader);
 
-	//draw the weapons
+	// draw items
 	for (auto item : itemsOnMap) {
-		gwindow.draw(item->spr);
+		gwindow.draw(item->spr, &shader);
 	}
 
 	//draw ability/item animations
@@ -1609,20 +1621,20 @@ void GameMode::render()
 
 	// draw the projectiles
 	for (Projectile& proj : projectiles) {
-		gwindow.draw(proj);
+		gwindow.draw(proj, &shader);
 	}
 
 	// draw the enemies
-	GameMode::renderEnemies();
+	GameMode::renderEnemies(&shader);
 
 	if (type == MODE_ENDLESS)
 	{
 		// draw the allies
-		renderAllies();
+		renderAllies(&shader);
 	}
 
 	// draw effects
-	drawEffects();
+	drawEffects(&shader);
 
 	// draw hidden areas
 	sf::RectangleShape areaShape;
@@ -2108,52 +2120,45 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 	}
 }
 
-void GameMode::renderEnemies()
+void GameMode::renderEnemies(sf::RenderStates states)
 {
 	//draw the enemies
 	std::list<Enemy>::iterator enemyItr;
 	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
 		Enemy& enemy = *enemyItr;
-		enemy.animateFrame();
-		gwindow.draw(enemy);
+		float dist = Utils::pointDistance(player.getCenter(), enemy.getCenter());
+		if (dist < LOS_RADIUS + 128.f) {
+			enemy.animateFrame();
+			gwindow.draw(enemy, states);
 
-		if (debugging) {
-			if (enemy.isOnPath()) {
-				sf::CircleShape sh;
-				sh.setFillColor(sf::Color::Green);
-				sh.setPosition(enemy.getPosition() + sf::Vector2f({ 9.f, -20.f }));
-				sh.setRadius(4);
-				sh.setOutlineColor(sf::Color::Black);
-				sh.setOutlineThickness(1.f);
-				gwindow.draw(sh);
-
-				sf::RectangleShape sh2;
-				sh2.setFillColor(sf::Color::Transparent);
-				sh2.setOutlineColor(sf::Color::Blue);
-				sh2.setOutlineThickness(1.f);
-				sh2.setSize({ 32, 32 });
-				Node* pNode = enemy.pathHead;
-				while (pNode != nullptr) {
-					sh2.setPosition(sf::Vector2f(pNode->pos));
-					gwindow.draw(sh2);
-					pNode = pNode->parent;
+			if (debugging) {
+				if (enemy.isOnPath()) {
+					sf::CircleShape sh;
+					sh.setFillColor(sf::Color::Blue);
+					sh.setRadius(4.f);
+					Node* pNode = enemy.pathHead;
+					while (pNode != nullptr) {
+						sh.setPosition(sf::Vector2f(pNode->pos) + sf::Vector2f({ 16.f, 16.f }));
+						gwindow.draw(sh);
+						pNode = pNode->parent;
+					}
 				}
 			}
-		}
 
-		// draw the HP bar
-		sf::RectangleShape bar1({ 26.f, 6.f });
-		bar1.setFillColor(sf::Color::Black);
-		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
-		bar2.setFillColor(sf::Color::Red);
-		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
-		gwindow.draw(bar1);
-		gwindow.draw(bar2);
+			// draw the HP bar
+			sf::RectangleShape bar1({ 26.f, 6.f });
+			bar1.setFillColor(sf::Color::Black);
+			bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
+			sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
+			bar2.setFillColor(sf::Color::Red);
+			bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
+			gwindow.draw(bar1);
+			gwindow.draw(bar2);
 
-		if (enemy.sieging) {
-			siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, - 32.f}));
-			gwindow.draw(siegingIcon);
+			if (enemy.sieging) {
+				siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, -32.f }));
+				gwindow.draw(siegingIcon);
+			}
 		}
 	}
 }
@@ -2770,32 +2775,32 @@ void GameMode::updateAllies() {
 	}
 }
 
-void GameMode::renderAllies() {
+void GameMode::renderAllies(sf::RenderStates states) {
 	for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
 		NPC& ally = *allyItr;
 		ally.animateFrame();
-		gwindow.draw(ally);
+		gwindow.draw(ally, states);
 
 		// draw the HP bar
 		if (ally.isShield) {
 			sf::RectangleShape bar1({ 62.f, 6.f });
 			bar1.setFillColor(sf::Color::Black);
 			bar1.setPosition(ally.getPosition().x+32, ally.getPosition().y - 10);
-			gwindow.draw(bar1);
+			gwindow.draw(bar1, states);
 			sf::RectangleShape bar2({ 24.f * (ally.getHealth() / 100.f), 4.f });
 			bar2.setFillColor(sf::Color::Red);
 			bar2.setPosition(ally.getPosition().x + 33, ally.getPosition().y - 9);
-			gwindow.draw(bar2);
+			gwindow.draw(bar2, states);
 		}
 		else {
 			sf::RectangleShape bar1({ 24.f, 6.f });
 			bar1.setFillColor(sf::Color::Black);
 			bar1.setPosition(ally.getPosition().x, ally.getPosition().y - 10);
-			gwindow.draw(bar1);
+			gwindow.draw(bar1, states);
 			sf::RectangleShape bar2({ 24.f * (ally.getHealth() / 100.f), 4.f });
 			bar2.setFillColor(sf::Color::Red);
 			bar2.setPosition(ally.getPosition().x + 1, ally.getPosition().y - 9);
-			gwindow.draw(bar2);
+			gwindow.draw(bar2, states);
 		}
 	}
 }
@@ -2904,6 +2909,12 @@ void GameMode::initGame()
 	}
 	delete this;
 	return;
+}
+
+void GameMode::loadShaders() {
+	if (!shader.loadFromFile("frag_shader.hlsl", sf::Shader::Fragment)) {
+		throw std::runtime_error("Error loading shader");
+	}
 }
 
 void GameMode::addHiddenArea(const sf::FloatRect& rect) {
