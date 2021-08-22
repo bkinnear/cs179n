@@ -10,6 +10,7 @@
 #include <list>
 #include <unordered_map>
 #include <algorithm>
+#include <typeinfo>
 
 // map width in tiles
 #define MAP_WIDTH 50
@@ -343,6 +344,47 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	}
 	rageSound.setBuffer(rageBuffer);
 	rageSound.setVolume(70);
+
+	//inventory & item-use sounds
+	if (!equipBuffer.loadFromFile("res/equip_sound.wav")) {
+		std::cout << "error loading eqiup noises" << std::endl;
+	}
+	equipSound.setBuffer(equipBuffer);
+	equipSound.setVolume(70);
+	if (!healBuffer.loadFromFile("res/heal_sound.wav")) {
+		std::cout << "error loading heal noises" << std::endl;
+	}
+	healSound.setBuffer(healBuffer);
+	healSound.setVolume(15);
+
+	//player damaged sounds
+	if (!hitBuffer1.loadFromFile("res/hit1.wav")) {
+		std::cout << "error loading hit1 noises" << std::endl;
+	}
+	if (!hitBuffer2.loadFromFile("res/hit2.wav")) {
+		std::cout << "error loading hit2 noises" << std::endl;
+	}
+	if (!hitBuffer3.loadFromFile("res/hit3.wav")) {
+		std::cout << "error loading hit3 noises" << std::endl;
+	}
+	if (!hitBuffer4.loadFromFile("res/hit4.wav")) {
+		std::cout << "error loading hit4 noises" << std::endl;
+	}
+	if (!hitBuffer5.loadFromFile("res/hit5.wav")) {
+		std::cout << "error loading hit5 noises" << std::endl;
+	}
+	if (!hitBuffer6.loadFromFile("res/hit6.wav")) {
+		std::cout << "error loading hit6 noises" << std::endl;
+	}
+	if (!hitBuffer7.loadFromFile("res/hit7.wav")) {
+		std::cout << "error loading hit7 noises" << std::endl;
+	}
+	if (!hitBuffer8.loadFromFile("res/hit8.wav")) {
+		std::cout << "error loading hit8 noises" << std::endl;
+	}
+	if (!hitBuffer9.loadFromFile("res/hit9.wav")) {
+		std::cout << "error loading hit9 noises" << std::endl;
+	}
 
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
@@ -986,24 +1028,28 @@ bool GameMode::handleEvents() {
 				player.movingRight = true;
 				break;
 			case sf::Keyboard::Tab:
-				showInventory = !showInventory;
-				showItemDetails = false;
+				if (player.isAlive()) {
+					showInventory = !showInventory;
+					showItemDetails = false;
+				}
 				break;
 			case sf::Keyboard::E:
-				// pick up item
-				// check for items in tiles adjacent to player
-				for (int i = -1; i <= 1; i++) {
-					for (int j = -1; j <= 1; j++) {
-						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
-						ItemSpr* pItem = getItemAt(pos);
-						if (!pItem)
-							continue;
-						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
-						if (distToPlayer <= MIN_DIST_ITEM) {
-							// add item to inventory
-							inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
+				if (player.isAlive()) {
+					// pick up item
+					// check for items in tiles adjacent to player
+					for (int i = -1; i <= 1; i++) {
+						for (int j = -1; j <= 1; j++) {
+							sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
+							ItemSpr* pItem = getItemAt(pos);
+							if (!pItem)
+								continue;
+							float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
+							if (distToPlayer <= MIN_DIST_ITEM) {
+								// add item to inventory
+								inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
 
-							removeItem(pItem);
+								removeItem(pItem);
+							}
 						}
 					}
 				}
@@ -1013,50 +1059,52 @@ bool GameMode::handleEvents() {
 				sf::Vector2f position = player.getPosition();
 				int x, y;
 				bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
-				if (isDoor)
-				{
-					x = position.x + 16;
-					y = position.y - 16;
-				}
-				else
-				{
-					isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
+				if (player.isAlive()) {
 					if (isDoor)
 					{
 						x = position.x + 16;
-						y = position.y + 48;
+						y = position.y - 16;
 					}
-				}
-				if (isDoor)
-				{
-					int tileX = x / TILE_SIZE;
-					int tileY = y / TILE_SIZE;
-					switch (tileMap.getTile(x, y))
+					else
 					{
-					case TILE_DOOR_CLOSED:
-						//Closed Door Type - 1
-						tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
-						doorInteract.setBuffer(doorOpen);
-						doorInteract.play();
-						break;
-					case TILE_DOOR_OPEN:
-						//Opened Door Type - 1
-						tileMap.setTile(tileX, tileY, TILE_DOOR_CLOSED);
-						doorInteract.setBuffer(doorClose);
-						doorInteract.play();
-						break;
-					default:
-						break;
+						isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
+						if (isDoor)
+						{
+							x = position.x + 16;
+							y = position.y + 48;
+						}
 					}
-				}
-				else
-				{
-					std::cout << "Not a door!\n";
+					if (isDoor)
+					{
+						int tileX = x / TILE_SIZE;
+						int tileY = y / TILE_SIZE;
+						switch (tileMap.getTile(x, y))
+						{
+						case TILE_DOOR_CLOSED:
+							//Closed Door Type - 1
+							tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
+							doorInteract.setBuffer(doorOpen);
+							doorInteract.play();
+							break;
+						case TILE_DOOR_OPEN:
+							//Opened Door Type - 1
+							tileMap.setTile(tileX, tileY, TILE_DOOR_CLOSED);
+							doorInteract.setBuffer(doorClose);
+							doorInteract.play();
+							break;
+						default:
+							break;
+						}
+					}
+					else
+					{
+						std::cout << "Not a door!\n";
+					}
 				}
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
-				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity()) {
+				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() && player.isAlive()) {
 					Item::type weaponType = inventory.getWielded().itemType;
 					switch (weaponType) {
 					case Item::type::MP5:
@@ -1102,131 +1150,137 @@ bool GameMode::handleEvents() {
 				}
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
-				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					//ASSAULT FIRST ABILITY GOES HERE
-					if (!onCoolDown1) {
-						assault_ammo();
-						std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+				if (player.isAlive()) {
+					switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							assault_ammo();
+							std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						//MEDIC FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							medic_bandage();
+							std::cout << "Medic Ability - Dropped Health Pack" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Health Packs are on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::SLASHER:
+						if (!onCoolDown1) {
+							slasher_smash();
+							std::cout << "Slasher Ability - Smash" << std::endl;
+						}
+						else {
+							std::cout << "Slasher Ability - Smash is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::ENGINEER:
+						if (!onCoolDown1) {
+							engineer_decoy();
+							std::cout << "Engineer Ability - Deployed Decoy" << std::endl;
+						}
+						else {
+							std::cout << "Engineer Ability - Decoys are on cooldown" << std::endl;
+						}
+						break;
 					}
-					else {
-						std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::MEDIC:
-					//MEDIC FIRST ABILITY GOES HERE
-					if (!onCoolDown1) {
-						medic_bandage();
-						std::cout << "Medic Ability - Dropped Health Pack" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Health Packs are on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::SLASHER:
-					if (!onCoolDown1) {
-						slasher_smash();
-						std::cout << "Slasher Ability - Smash" << std::endl;
-					}
-					else {
-						std::cout << "Slasher Ability - Smash is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::ENGINEER:
-					if (!onCoolDown1) {
-						engineer_decoy();
-						std::cout << "Engineer Ability - Deployed Decoy" << std::endl;
-					}
-					else {
-						std::cout << "Engineer Ability - Decoys are on cooldown" << std::endl;
-					}
-					break;
 				}
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
-				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					if (!onCoolDown2) {
-						assault_grenade();
-						std::cout << "Assault Ability - Grenade" << std::endl;
+				if (player.isAlive()) {
+					switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						if (!onCoolDown2) {
+							assault_grenade();
+							std::cout << "Assault Ability - Grenade" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown2) {
+							medic_dash();
+							std::cout << "Medic Ability - Dash" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::SLASHER:
+						if (!onCoolDown2) {
+							slasher_warcry();
+							std::cout << "Slasher Ability - Warcry" << std::endl;
+						}
+						else {
+							std::cout << "Slasher Ability - Warcry is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::ENGINEER:
+						if (!onCoolDown2) {
+							engineer_barrel();
+							std::cout << "Engineer Ability - Deployed Barrel" << std::endl;
+						}
+						else {
+							std::cout << "Engineer Ability - Barrels are on cooldown" << std::endl;
+						}
+						break;
 					}
-					else {
-						std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::MEDIC:
-					if (!onCoolDown2) {
-						medic_dash();
-						std::cout << "Medic Ability - Dash" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::SLASHER:
-					if (!onCoolDown2) {
-						slasher_warcry();
-						std::cout << "Slasher Ability - Warcry" << std::endl;
-					}
-					else {
-						std::cout << "Slasher Ability - Warcry is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::ENGINEER:
-					if (!onCoolDown2) {
-						engineer_barrel();
-						std::cout << "Engineer Ability - Deployed Barrel" << std::endl;
-					}
-					else {
-						std::cout << "Engineer Ability - Barrels are on cooldown" << std::endl;
-					}
-					break;
 				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
-				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					if (!onCoolDown3) {
-						assault_deadeye();
-						std::cout << "Assault Ability - Dead Eye" << std::endl;
+				if (player.isAlive()) {
+					switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						if (!onCoolDown3) {
+							assault_deadeye();
+							std::cout << "Assault Ability - Dead Eye" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown3) {
+							medic_heal();
+							std::cout << "Medic Ability - Guardian Angel" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::ENGINEER:
+						if (!onCoolDown3) {
+							engineer_shield();
+							std::cout << "Engineer Ability - Shield" << std::endl;
+						}
+						else {
+							std::cout << "Engineer Ability - Shield is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::SLASHER:
+						if (!onCoolDown3) {
+							slasher_rage();
+							std::cout << "Slasher Ability - Rage" << std::endl;
+						}
+						else {
+							std::cout << "Slasher Ability - Rage is on cooldown" << std::endl;
+						}
+						break;
 					}
-					else {
-						std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::MEDIC:
-					if (!onCoolDown3) {
-						medic_heal();
-						std::cout << "Medic Ability - Guardian Angel" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::ENGINEER:
-					if (!onCoolDown3) {
-						engineer_shield();
-						std::cout << "Engineer Ability - Shield" << std::endl;
-					}
-					else {
-						std::cout << "Engineer Ability - Shield is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::SLASHER:
-					if (!onCoolDown3) {
-						slasher_rage();
-						std::cout << "Slasher Ability - Rage" << std::endl;
-					}
-					else {
-						std::cout << "Slasher Ability - Rage is on cooldown" << std::endl;
-					}
-					break;
 				}
 				break;
 			case sf::Keyboard::F1:
@@ -1254,6 +1308,7 @@ bool GameMode::handleEvents() {
 				// go back to menu
 				gwindow.setMouseCursorVisible(true);
 				game.setState(new MenuState(game));
+				game.menuSong.play();
 				delete this;
 				return false;
 				break;
@@ -1342,7 +1397,7 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::V:
 				//melee
-				if (inventory.useWieldedMelee()) {
+				if (inventory.useWieldedMelee() && player.isAlive()) {
 					meleeSwing.setBuffer(meleeSwingBuffer);
 					meleeSwing.setVolume(225);
 					switch (inventory.getWielded().itemType) {
@@ -1428,6 +1483,8 @@ bool GameMode::handleEvents() {
 							healTimer.restart();
 							healPlaying = true;
 
+							healSound.play();
+
 							break;
 						case Item::type::health_pack:
 							player.heal(20);
@@ -1437,6 +1494,8 @@ bool GameMode::handleEvents() {
 							healElapsed = sf::seconds(0);
 							healTimer.restart();
 							healPlaying = true;
+
+							healSound.play();
 
 							break;
 						case Item::type::walkie_talkie:
@@ -1457,6 +1516,7 @@ bool GameMode::handleEvents() {
 						default:
 							// equip item
 							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+							equipSound.play();
 							break;
 					}
 				}
@@ -1475,7 +1535,7 @@ bool GameMode::handleEvents() {
 	}
 
 	// check mouse state for holding (enabling auto fire)
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.isAlive()) {
 		// LMB held
 		// try to use weapon
 		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat || inventory.getWielded().itemType == Item::type::null) { //check if weapon wielded is melee
@@ -1882,14 +1942,13 @@ void GameMode::logic()
 			break;
 		}			
 	}
-
 	else {
 		game.setState(new DeathMenu(game));
 		music.stop();
 		ambientZombie.stop();
 	}
 
-	if (player.movingLeft || player.movingRight || player.movingDown || player.movingUp) {
+	if ((player.movingLeft || player.movingRight || player.movingDown || player.movingUp) && player.isAlive()) {
 		if (player.getAnimSpeed() == -1) {
 			player.setAnimSpeed(12);
 		}
@@ -2421,9 +2480,47 @@ void GameMode::updateEnemies(int type) {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (!enemy.attack && nearestTarget->isAlive()) {
-				if (player.isWarcry) {
-					std::cout << "Reduced damage due to Warcry!" << std::endl;
-					nearestTarget->damage(enemy.hitRate * .25);
+				if ((nearestTarget == &player)) {
+					if (player.isWarcry) {
+						std::cout << "Reduced damage due to Warcry!" << std::endl;
+						nearestTarget->damage(enemy.hitRate * .25);
+					}
+					else {
+						nearestTarget->damage(enemy.hitRate);
+					}
+					hitSoundNum = rand() % 9 + 1;
+					switch (hitSoundNum) {
+					case 1:
+						hitSound.setBuffer(hitBuffer1);
+						break;
+					case 2:
+						hitSound.setBuffer(hitBuffer2);
+						break;
+					case 3:
+						hitSound.setBuffer(hitBuffer3);
+						break;
+					case 4:
+						hitSound.setBuffer(hitBuffer4);
+						break;
+					case 5:
+						hitSound.setBuffer(hitBuffer5);
+						break;
+					case 6:
+						hitSound.setBuffer(hitBuffer6);
+						break;
+					case 7:
+						hitSound.setBuffer(hitBuffer7);
+						break;
+					case 8:
+						hitSound.setBuffer(hitBuffer8);
+						break;
+					case 9:
+						hitSound.setBuffer(hitBuffer9);
+						break;
+					default:
+						break;
+					}
+					hitSound.play();
 				}
 				else {
 					nearestTarget->damage(enemy.hitRate);
@@ -2640,7 +2737,7 @@ void GameMode::slasher_smash() {
 		sf::Vector2f difference = playerPos - enemyPos;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
-		if (length < 80) {
+		if (length < 60) {
 			enemy.damage(30);
 			bloodEffect = rand() % 5 + 1;
 			switch (bloodEffect) {

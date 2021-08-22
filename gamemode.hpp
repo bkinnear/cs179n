@@ -155,6 +155,23 @@ protected:
 	sf::SoundBuffer doorOpen;
 	sf::SoundBuffer doorClose;
 	sf::Sound doorInteract;
+	sf::SoundBuffer healBuffer;
+	sf::Sound healSound;
+	sf::SoundBuffer equipBuffer;
+	sf::Sound equipSound;
+
+	//player sounds
+	int hitSoundNum;
+	sf::SoundBuffer hitBuffer1;
+	sf::SoundBuffer hitBuffer2;
+	sf::SoundBuffer hitBuffer3;
+	sf::SoundBuffer hitBuffer4;
+	sf::SoundBuffer hitBuffer5;
+	sf::SoundBuffer hitBuffer6;
+	sf::SoundBuffer hitBuffer7;
+	sf::SoundBuffer hitBuffer8;
+	sf::SoundBuffer hitBuffer9;
+	sf::Sound hitSound;
 
 	// engineer sounds
 	sf::SoundBuffer mechNoise;
