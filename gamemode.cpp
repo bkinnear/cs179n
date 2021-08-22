@@ -1211,7 +1211,7 @@ bool GameMode::handleEvents() {
 					proj.speed = 25;
 					proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 					proj.setRotation(proj.direction);
-					proj.damage = inventory.getWielded().getMeleeDamage() * 1.5f;
+					proj.damage = inventory.getWielded().getDamage() * std::max(3.f * player.isRage, 1.f);
 				}
 				break;
 			}
@@ -1314,7 +1314,7 @@ bool GameMode::handleEvents() {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 		// LMB held
 		// try to use weapon
-		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat) { //check if weapon wielded is melee
+		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat || inventory.getWielded().itemType == Item::type::null) { //check if weapon wielded is melee
 			if (inventory.useWieldedMelee()) {
 				meleeSwing.setBuffer(meleeSwingBuffer);
 				meleeSwing.setVolume(225);
@@ -1347,7 +1347,7 @@ bool GameMode::handleEvents() {
 				proj.speed = 25;
 				proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
 				proj.setRotation(proj.direction);
-				proj.damage = inventory.getWielded().getDamage() * 1.5f;
+				proj.damage = inventory.getWielded().getDamage() * std::max(3.f * player.isRage, 1.f);
 			}
 		}
 		else { //weapon wielded is ranged
