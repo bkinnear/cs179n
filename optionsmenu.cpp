@@ -5,8 +5,9 @@
 #define gwindow game.window
 
 // NOTE: we must call the original constructor and pass it the Game pointer
-OptionsMenu::OptionsMenu(Game& game) :
-	State(game)
+OptionsMenu::OptionsMenu(Game& game, State* oldState) :
+	State(game),
+	returnState(oldState)
 {
 	// set view
 	view.reset({ 0.f, 0.f, game.portWidth, game.portHeight });
@@ -79,7 +80,7 @@ void OptionsMenu::logic() {
 			// user clicked return
 			if (sprReturnButton.getGlobalBounds().contains(mousePos)) {
 				game.menuSelect1.play();
-				game.setState(new MenuState(game));
+				game.setState(returnState);
 				delete this;
 				return;
 			}
@@ -88,7 +89,7 @@ void OptionsMenu::logic() {
 		case sf::Event::KeyPressed:
 			switch (e.key.code) {
 			case sf::Keyboard::Escape:
-				game.setState(new MenuState(game));
+				game.setState(returnState);
 				delete this;
 				return;
 			}

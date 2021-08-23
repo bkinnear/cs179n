@@ -179,8 +179,8 @@ void TileMap::loadTextures(GameMode* gmode) {
 }
 
 void TileMap::updateGrass() {
-	for (int y = 0; y < width; y++) {
-		for (int x = 0; x < height; x++) {
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
 			if (map[y][x] == 0)
 				setTile(x, y, rand()%8);
 		}
@@ -219,17 +219,17 @@ void TileMap::updateBuildings(GameMode* gmode) {
 	constexpr Tile BOT_RIGHT = 26;
 
 	sf::FloatRect area;
-	for (int y = 0; y < width; y++) {
-		for (int x = 0; x < height; x++) {
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
 			// search for top left wall tiles
 			if (map[y][x] == TOP_LEFT) {
 				// store top left position for hidden area
 				area.top = y*32.f;
-				area.left = x*32.;
+				area.left = x*32.f;
 
 				// find bottom left
 				int returnY = y; 
-				while (map[y][x] != BOT_LEFT && y < height)
+				while (y < height && map[y][x] != BOT_LEFT)
 					y++;
 				if (y == height) {
 					y = returnY;
@@ -239,7 +239,7 @@ void TileMap::updateBuildings(GameMode* gmode) {
 
 				// find bottom right
 				int returnX = x;
-				while (map[y][x] != BOT_RIGHT && x < width)
+				while (x < width && map[y][x] != BOT_RIGHT)
 					x++;
 				if (x == width) {
 					x = returnX;

@@ -14,6 +14,7 @@
 #define MODE_ENDLESS 1
 #define MODE_SURVIVAL 2
 #define MODE_STORY 3
+#define MODE_DEMO 4
 
 #include <list>
 
@@ -214,6 +215,7 @@ protected:
 	sf::Text dialogMessage;
 	int triggerIndex = 0;
 	int triggerSubIndex = 0;
+	// freezes the game for dialog or whatever reason
 	bool frozen = false;
 
 	//PlayerGUI

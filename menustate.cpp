@@ -109,8 +109,7 @@ void MenuState::logic() {
 
 			if (sprOptionsButton.getGlobalBounds().contains(mousePos)) {
 				game.menuSelect1.play();
-				game.setState(new OptionsMenu(game));
-				delete this;
+				game.setState(new OptionsMenu(game, this));
 				return;
 			}
 

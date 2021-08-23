@@ -2,6 +2,7 @@
 #include "menustate.hpp"
 #include "story.hpp"
 #include "deathmenu.hpp"
+#include "optionsmenu.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -24,8 +25,10 @@
 
 // line of sight radius around player
 #define LOS_RADIUS 600.f
+constexpr float SQR_LOS_RADIUS = LOS_RADIUS * LOS_RADIUS;
 // sharpness of LOS edge
 #define LOS_SHARPNESS 256.f
+constexpr float SQR_LOS_SHARPNESS = LOS_SHARPNESS * LOS_SHARPNESS;
 
 /* texture offsets */
 
@@ -66,7 +69,7 @@ int getLootAmount(Item::type type) {
 	case Item::type::Shotgun:
 		return 1;
 	case Item::type::ammo_762:
-		return 50 + rand() % 50;
+		return 50 + rand() % 30;
 	case Item::type::ammo_shotgun:
 		return 10 + rand() % 5;
 	}
@@ -180,6 +183,9 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	if (type == MODE_STORY) {
 		tileMap.loadMap(this, "res/maps/level0.csv");
+	}
+	else if (type == MODE_DEMO) {
+		tileMap.loadMap(this, "res/maps/demo0.csv");
 	}
 	else {
 		if (isLoadCall)
@@ -398,7 +404,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	//txtItemDetails.setOutlineThickness(1);
 
 	// load dialog GUI
-	dialogBox1.setSize({ 480.f, 160.f });
+	dialogBox1.setSize({ 480.f, 60.f });
 	dialogBox1.setFillColor(sf::Color(0xf5eeceee));
 	dialogBox1.setOutlineColor(sf::Color(0x000000FF));
 	dialogBox1.setOutlineThickness(1.f);
@@ -408,16 +414,17 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	dialogBox2.setFillColor(sf::Color(0xcef5f1ee));
 	dialogBox2.setOutlineColor(sf::Color(0x000000FF));
 	dialogBox2.setOutlineThickness(1.f);
-	dialogBox2.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 16.f, -29.f }));
+	dialogBox2.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 0.f, -29.f }));
 
-	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 4.f, 4.f }));
+	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 4.f, 2.f }));
 	dialogMessage.setFont(font);
-	dialogMessage.setCharacterSize(16);
+	dialogMessage.setCharacterSize(20);
+	dialogMessage.setLineSpacing(1.5f);
 	dialogMessage.setColor(sf::Color(0x000000ff));
 
-	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 4.f }));
+	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 2.f }));
 	dialogSpeaker.setFont(font);
-	dialogSpeaker.setCharacterSize(16);
+	dialogSpeaker.setCharacterSize(20);
 	dialogSpeaker.setColor(sf::Color(0x000000ff));
 
 	// load FPS counter
@@ -440,11 +447,13 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	introMessage.setFont(font2);
 	introMessage.setCharacterSize(24);
 	if (type == MODE_ENDLESS)
-		introMessage.setString("You have been abandoned. Survive.");
+		introMessage.setString("Your team has been abandoned. Survive.");
 	else if (type == MODE_SURVIVAL)
 		introMessage.setString("Survive the ever growing hordes");
 	else if (type == MODE_STORY)
-		introMessage.setString("Find your way to the evac zone");
+		introMessage.setString("Mission 1: Find your way to the evac zone");
+	else if (type == MODE_DEMO)
+		introMessage.setString("Secret Demo Map. Hello, CS179n");
 	introMessage.setPosition(mainView.getCenter() - sf::Vector2f({ introMessage.getGlobalBounds().width / 2, -12.f }));
 
 	// create animated sprite for player
@@ -547,16 +556,21 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
 
 	// player positioning
-	sf::Vector2f mapCenter = { tileMap.getWidth() * 32.f / 2.f, tileMap.getHeight() * 32.f / 2.f };
-	do {
-		sf::Vector2f newPos({ mapCenter.x, mapCenter.y });
-		sf::Vector2i offset({
-			(rand() % ((int)tileMap.getWidth() / 4)) - ((int)tileMap.getWidth() / 8),
-			(rand() % ((int)tileMap.getHeight() / 4)) - ((int)tileMap.getHeight() / 8)
-		});
-		newPos += 32.f * sf::Vector2f(offset);
-		player.setPosition(newPos);
-	} while (!tileMap.areaClear(player));
+	if (type == MODE_DEMO) {
+		player.setPosition(4*32.f, 13*32.f);
+	}
+	else {
+		sf::Vector2f mapCenter = { tileMap.getWidth() * 32.f / 2.f, tileMap.getHeight() * 32.f / 2.f };
+		do {
+			sf::Vector2f newPos({ mapCenter.x, mapCenter.y });
+			sf::Vector2i offset({
+				(rand() % ((int)tileMap.getWidth() / 4)) - ((int)tileMap.getWidth() / 8),
+				(rand() % ((int)tileMap.getHeight() / 4)) - ((int)tileMap.getHeight() / 8)
+				});
+			newPos += 32.f * sf::Vector2f(offset);
+			player.setPosition(newPos);
+		} while (!tileMap.areaClear(player));
+	}
 
 	// Score HUD
 	if (type == MODE_ENDLESS)
@@ -621,7 +635,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 				++allyItr;
 			}
 		}
-		else if(type == 2)
+		else if(type == MODE_SURVIVAL)
 		{
 			player.setPosition(gameLoadMeta.survivalMeta.playerPosX, gameLoadMeta.survivalMeta.playerPosY);
 			currentSurvivalScore = gameLoadMeta.survivalMeta.currentScore;
@@ -680,16 +694,19 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			maxSurvivalScoreCounter.setString(maxStr);
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 		}
-		// add some stuff to the inventory
-		inventory.addItem(Item::type::Shotgun, 1);
-		inventory.addItem(Item::type::ammo_shotgun, 20);
-		inventory.addItem(Item::type::M240, 1);
-		inventory.addItem(Item::type::ammo_762, 200);
-		inventory.addItem(Item::type::M9, 1);
-		inventory.addItem(Item::type::ammo_9mm, 50);
+
+		// set initial loadout
+		if (type != MODE_STORY) {
+			inventory.addItem(Item::type::Shotgun, 1);
+			inventory.addItem(Item::type::ammo_shotgun, 20);
+			inventory.addItem(Item::type::M240, 1);
+			inventory.addItem(Item::type::ammo_762, 200);
+			inventory.addItem(Item::type::M9, 1);
+			inventory.addItem(Item::type::ammo_9mm, 50);
+		}
 	}
 	
-	//std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
+	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
 }
 
 int GameMode::hashPos(const sf::Vector2f& pos) const {
@@ -1272,6 +1289,12 @@ bool GameMode::handleEvents() {
 					}
 				}
 				break;
+			case sf::Keyboard::Escape:
+				// go back to menu
+				gwindow.setMouseCursorVisible(true);
+				game.setState(new OptionsMenu(game, this));
+				game.menuSong.play();
+				return false;
 			case sf::Keyboard::F1:
 				std::cout << "Debug mode ";
 				debugging = !debugging;
@@ -1289,7 +1312,9 @@ bool GameMode::handleEvents() {
 				else if (type == MODE_SURVIVAL)
 					game.setState(new GameMode(MODE_SURVIVAL, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_STORY)
-					game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
+					game.setState(new StoryState(game));
+				else if (type == MODE_DEMO)
+					game.setState(new GameMode(MODE_DEMO, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
 			case sf::Keyboard::F3:
@@ -1299,11 +1324,17 @@ bool GameMode::handleEvents() {
 				game.menuSong.play();
 				delete this;
 				return false;
-			case sf::Keyboard::F4:
-				// Restart, go into story mode
-				game.setState(new StoryState(game));
+			case sf::Keyboard::F5:
+				// access the demo map
+				game.setState(new GameMode(MODE_DEMO, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
+			case sf::Keyboard::P:
+				if (type == MODE_DEMO) {
+					spawnEnemy({ 4 * 32.f, 13 * 32.f });
+					spawnEnemy({ 17 * 32.f, 4 * 32.f });
+				}
+				break;
 			case sf::Keyboard::L://Load game
 			{
 				if (!isLoadInvoked) // Invoke loading only once
@@ -1649,8 +1680,8 @@ void GameMode::render()
 
 	// update shader variables
 	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
-	shader.setParameter("los_radius", LOS_RADIUS * (game.portWidth / mainView.getSize().x));
-	shader.setParameter("los_sharpness", LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("sqr_los_radius", SQR_LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("sqr_los_sharpness", SQR_LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
 
 	// move view target to center on player
 	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
@@ -2807,7 +2838,8 @@ void GameMode::engineer_decoy() {
 	allies.emplace_back(texDummyRight);
 	if (mousePos.x > player.getPosition().x) {
 		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
-	}else
+	}
+	else
 		allies.back().setPosition(player.getPosition() + sf::Vector2f({ -32.f, 0.f }));
 	
 	allies.back().isDummy = true;
