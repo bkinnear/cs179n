@@ -25,10 +25,8 @@
 
 // line of sight radius around player
 #define LOS_RADIUS 600.f
-constexpr float SQR_LOS_RADIUS = LOS_RADIUS * LOS_RADIUS;
 // sharpness of LOS edge
 #define LOS_SHARPNESS 256.f
-constexpr float SQR_LOS_SHARPNESS = LOS_SHARPNESS * LOS_SHARPNESS;
 
 /* texture offsets */
 
@@ -51,7 +49,7 @@ int getLootAmount(Item::type type) {
 	case Item::type::ammo_crate:
 		return 10 + rand() % 10;
 	case Item::type::health_pack:
-		return 1;
+		return 2;
 	case Item::type::medkit:
 		return 1;
 	case Item::type::barrel:
@@ -69,9 +67,9 @@ int getLootAmount(Item::type type) {
 	case Item::type::Shotgun:
 		return 1;
 	case Item::type::ammo_762:
-		return 50 + rand() % 30;
+		return 50 + rand() % 50;
 	case Item::type::ammo_shotgun:
-		return 10 + rand() % 5;
+		return 5 + rand() % 5;
 	}
 
 	return 1;
@@ -83,15 +81,17 @@ Item::type getLootItem(Item::type type) {
 	case Item::type::ammo_crate:
 		// ammo crates yield a random ammo type
 		{
-			int r = rand() % 4;
-			switch (r) {
-			case 0:
+			int r = rand() % 10;
+			if (r < 5) {
 				return Item::type::ammo_9mm;
-			case 1:
+			}
+			else if (r < 7) {
 				return Item::type::ammo_556;
-			case 2:
+			}
+			else if (r < 9) {
 				return Item::type::ammo_762;
-			case 3:
+			}
+			else {
 				return Item::type::ammo_shotgun;
 			}
 		}
@@ -99,27 +99,27 @@ Item::type getLootItem(Item::type type) {
 	case Item::type::military_crate:
 		// military crates yield ammo
 		{
-			int r = rand() % 4;
-			switch (r) {
-			case 0:
+			int r = rand() % 9;
+			if(r < 2){
 				return Item::type::ammo_9mm;
-			case 1:
-				return Item::type::ammo_556;
-			case 2:
-				return Item::type::ammo_762;
-			case 3:
-				return Item::type::ammo_shotgun;
 			}
+			else if (r < 6) {
+				return Item::type::ammo_556;
+			}
+			else {
+				return Item::type::ammo_762;
+			}
+
 		}
 		break;
 	case Item::type::medical_crate:
 		// medical create yields medical supplies
 		{
-			int r = rand() % 2;
-			switch (r) {
-			case 0:
+			int r = rand() % 6;
+			if (r < 2) {
 				return Item::type::medkit;
-			case 1:
+			}
+			else {
 				return Item::type::health_pack;
 			}
 		}
@@ -705,6 +705,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			inventory.addItem(Item::type::ammo_762, 200);
 			inventory.addItem(Item::type::M9, 1);
 			inventory.addItem(Item::type::ammo_9mm, 50);
+		}
+		else
+		{
+			// add some stuff to the inventory
+			inventory.addItem(Item::type::M9, 1);
+			inventory.addItem(Item::type::ammo_9mm, 250);
 		}
 	}
 	
@@ -1522,16 +1528,18 @@ bool GameMode::handleEvents() {
 						case Item::type::walkie_talkie:
 							//call in ally
 							//spawn ally at random location, at least 450.f away from player, and on clear tile
-							allies.emplace_back(texAllyLeft);
-							for (;;) {
-								pos = { (float)(rand() % tileMap.getWidth() * TILE_SIZE), (float)(rand() % tileMap.getHeight() * TILE_SIZE) };
-								float dist = Utils::pointDistance(player.getPosition(), pos);
-								if (!tileMap.isOpaqueAt(pos.x, pos.y) && dist > 450.f)
-									std::cout << "Walkie-talkie called in ally at position (" << pos.x << "," << pos.y << ")" << std::endl;
+							for (int i = 0; i < 3; i++) {
+								allies.emplace_back(texAllyLeft);
+								for (;;) {
+									pos = { (float)(rand() % tileMap.getWidth() * TILE_SIZE), (float)(rand() % tileMap.getHeight() * TILE_SIZE) };
+									float dist = Utils::pointDistance(player.getPosition(), pos);
+									if (!tileMap.isOpaqueAt(pos.x, pos.y) && dist > 450.f)
+										std::cout << "Walkie-talkie called in ally at position (" << pos.x << "," << pos.y << ")" << std::endl;
 									break;
+								}
+								allies.back().setPosition(pos);
+								allies.back().setMaskBounds({ 8, 0, 15, 32 });
 							}
-							allies.back().setPosition(pos);
-							allies.back().setMaskBounds({ 8, 0, 15, 32 });
 							inventory.removeItem(Item::type::walkie_talkie, 1);
 							break;
 						default:
@@ -1684,8 +1692,8 @@ void GameMode::render()
 
 	// update shader variables
 	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
-	shader.setParameter("sqr_los_radius", SQR_LOS_RADIUS * (game.portWidth / mainView.getSize().x));
-	shader.setParameter("sqr_los_sharpness", SQR_LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("los_radius", LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("los_sharpness", LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
 
 	// move view target to center on player
 	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
@@ -1927,6 +1935,7 @@ void GameMode::logic()
 		Item::type weaponType = inventory.getWielded().itemType;
 		switch (weaponType) {
 		case Item::type::MP5:
+			player.setSpeed(PLAYER_SPEED * 1.15);
 			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftMp5);
 			}
@@ -1935,6 +1944,7 @@ void GameMode::logic()
 			}
 			break;
 		case Item::type::M4:
+			player.setSpeed(PLAYER_SPEED);
 			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM4);
 			}
@@ -1943,6 +1953,7 @@ void GameMode::logic()
 			}
 			break;
 		case Item::type::M9:
+			player.setSpeed(PLAYER_SPEED * 1.25);
 			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM9);
 			}
@@ -1951,6 +1962,7 @@ void GameMode::logic()
 			}
 			break;
 		case Item::type::M240:
+			player.setSpeed(PLAYER_SPEED * .75);
 			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftM240);
 			}
@@ -1959,6 +1971,7 @@ void GameMode::logic()
 			}
 			break;
 		case Item::type::Shotgun:
+			player.setSpeed(PLAYER_SPEED);
 			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeftShotgun);
 			}
@@ -1967,6 +1980,7 @@ void GameMode::logic()
 			}
 			break;
 		default:
+			player.setSpeed(PLAYER_SPEED);
 			if (player.lookingLeft) {
 				player.setTexture(texPlayerLeft);
 			}
@@ -1975,12 +1989,6 @@ void GameMode::logic()
 			}
 			break;
 		}			
-	}
-	else {
-		game.setState(new DeathMenu(game));
-		game.menuSong.play();
-		music.stop();
-		ambientZombie.stop();
 	}
 
 	if ((player.movingLeft || player.movingRight || player.movingDown || player.movingUp) && player.isAlive()) {
@@ -2007,6 +2015,11 @@ void GameMode::logic()
 		if (player.movingDown)
 			if (tileMap.areaClear(player, 0, player.getSpeed()))
 				player.move(0, player.getSpeed());
+	}
+	else {
+		game.setState(new DeathMenu(game));
+		music.stop();
+		ambientZombie.stop();
 	}
 
 	// update projectiles
@@ -2070,31 +2083,61 @@ void GameMode::logic()
 	auto areaItr = hiddenAreas.begin();
 	while (areaItr != hiddenAreas.end()) {
 		if (player.getBounds().intersects(*areaItr)) {
-			// do not spawn items in story mode
 			if (type != MODE_STORY) {
 				// spawn hidden enemies (default is 1)
-				for (unsigned i = 0; i < areaItr->numEnemies; i++) {
-					Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
-					do {
-						float x = areaItr->left + rand() % (int)areaItr->width;
-						float y = areaItr->top + rand() % (int)areaItr->height;
-						enemy.setPosition(x, y);
-					} while (!tileMap.areaClear(enemy));
-					enemy.setColor(sf::Color(0xFF8888FF));
-					enemy.setSpeed(2);
-					enemy.setArmor(10);
+				int chance = rand() % 10;
+				if (chance < 4) {
+					for (unsigned i = 0; i < areaItr->numEnemies; i++) {
+						Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
+						do {
+							float x = areaItr->left + rand() % (int)areaItr->width;
+							float y = areaItr->top + rand() % (int)areaItr->height;
+							enemy.setPosition(x, y);
+						} while (!tileMap.areaClear(enemy));
+						enemy.setColor(sf::Color(0xFF8888FF));
+						enemy.setSpeed(3);
+						enemy.setArmor(15);
+					}
 				}
+				else {
+					Item::type itemType = Item::type::null;
+					int weapon = rand() % 7;
+					switch (weapon) {
+					case 1:
+						itemType = Item::type::dagger;
+						break;
+					case 2:
+						itemType = Item::type::baseball_bat;
+						break;
+					case 3:
+						itemType = Item::type::MP5;
+						break;
+					case 4:
+						itemType = Item::type::M4;
+						break;
+					case 5:
+						itemType = Item::type::Shotgun;
+						break;
+					case 6:
+						itemType = Item::type::M240;
+						break;
+					}
+					float x = areaItr->left + rand() % (int)areaItr->width;
+					float y = areaItr->top + rand() % (int)areaItr->height;
+					sf::Vector2f spawnPt = { x, y };
+					createItem(spawnPt, itemType);
+				}
+			}
 
-				// spawn hidden items (default is 2)
-				for (unsigned i = 0; i < areaItr->numItems; i++) {
-					Item::type item = Item::type::null;
-					int r = rand() % 2;
-					if (r == 0)
-						item = Item::type::ammo_crate;
-					else if (r == 1)
-						item = Item::type::health_pack;
-					createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
-				}
+			// spawn hidden items (default is 2)
+			for (unsigned i = 0; i < areaItr->numItems; i++) {
+				Item::type item = Item::type::null;
+				int r = rand()%2;
+				if (r == 0)
+					item = Item::type::ammo_crate;
+				else if (r == 1)
+					item = Item::type::health_pack;
+				createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
 			}
 
 			areaItr = hiddenAreas.erase(areaItr);
@@ -2347,7 +2390,7 @@ std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& ene
 		currentSurvivalScore += 1;
 		maxSurvivalScore = currentSurvivalScore > maxSurvivalScore ? currentSurvivalScore : maxSurvivalScore;
 	}
-
+	
 	// spawn loot for enemy
 	Item::type item = Item::type::null;
 	int r = rand() % 10;
@@ -2587,45 +2630,24 @@ void GameMode::spawnItems() {
 			continue;
 			break;
 		case 1:
-			itemType = Item::type::MP5;
-			break;
-		case 2:
 			itemType = Item::type::ammo_9mm;
 			break;
-		case 3:
-			itemType = Item::type::M4;
-			break;
-		case 4:
+		case 2:
 			itemType = Item::type::ammo_556;
 			break;
-		case 5:
+		case 3:
 			itemType = Item::type::medkit;
 			break;
-		case 6:
+		case 4:
 			itemType = Item::type::ammo_crate;
 			break;
-		case 7:
-			itemType = Item::type::dagger;
-			break;
-		case 8:
-			itemType = Item::type::baseball_bat;
-			break;
-		case 9:
+		case 5:
 			itemType = Item::type::walkie_talkie;
 			break;
-		case 10:
-			itemType = Item::type::M9;
-			break;
-		case 11:
-			itemType = Item::type::M240;
-			break;
-		case 12:
-			itemType = Item::type::Shotgun;
-			break;
-		case 13:
+		case 6:
 			itemType = Item::type::ammo_762;
 			break;
-		case 14:
+		case 7:
 			itemType = Item::type::ammo_shotgun;
 			break;
 		}
@@ -2650,6 +2672,7 @@ void GameMode::spawnItems() {
 
 		createItem(pos, itemType);
 	}
+	
 }
 
 void GameMode::medic_bandage() {
@@ -2899,11 +2922,12 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 }
 
 Enemy& GameMode::spawnEnemy(const sf::Vector2f& pos) {
+	float enemySpeed = (rand() % 11)/10.f + 1.f;
 	enemies.push_back(Enemy());
 	Enemy& enemy = enemies.back();
 	enemy.setPosition(pos);
 	enemy.hitRate = 15;
-	enemy.setSpeed(1.f);
+	enemy.setSpeed(enemySpeed);
 	enemy.create(texEnemyRight, { 0, 0, 32,32 }, 8);
 	enemy.setMaskBounds({ 4, 2, 17, 27 });
 	return enemy;
@@ -3181,6 +3205,7 @@ void GameMode::addLootSpawn(const sf::Vector2f& pos) {
 void GameMode::addCrateSpawn(const sf::Vector2f& pos) {
 	crateSpawnPoints.push_back(pos);
 }
+
 
 void GameMode::saveGame()
 {
