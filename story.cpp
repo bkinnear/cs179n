@@ -8,11 +8,11 @@ StoryState::StoryState(Game& game) :
 	GameMode(MODE_STORY, game, PlayerClass::DEFAULT, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false),
 	introNews(createTexture("res/news.png")),
 	texSoldierRight(createTexture("res/soldier_r_strip.png")),
-	texSoldierLeft(createTexture("res/soldier_l_strip.png"))
+	texSoldierLeft(createTexture("res/soldier_l_strip.png")),
+	texHumvee(createTexture("res/humvee.png")),
+	texTent(createTexture("res/tent.png"))
 {
-	// populate decor
-	decor.emplace_back();
-	AnimSprite& flag = decor.back();
+	// place flag
 	flag.create(createTexture("res/jdf_flag_strip.png"), {0, 0, 64, 96}, 8);
 	flag.setAnimSpeed(15);
 	flag.setPosition(65*32.f, 78*32.f);
@@ -25,6 +25,18 @@ StoryState::StoryState(Game& game) :
 	NPC& soldier1 = npcs.back();
 	soldier1.setMaskBounds({ 8, 0, 15, 32 });
 	soldier1.setPosition({ 65*32.f, 83*32.f });
+
+	// populate decor
+	decor.emplace_back(texTent);
+	decor.back().setPosition({ 73 * 32.f, 76 * 32.f });
+	decor.emplace_back(texTent);
+	decor.back().setPosition({ 79 * 32.f, 76 * 32.f });
+	decor.emplace_back(texHumvee);
+	decor.back().setPosition({ 70 * 32.f, 80 * 32.f });
+	decor.emplace_back(texTent);
+	decor.back().setPosition({ 73 * 32.f, 85 * 32.f });
+	decor.emplace_back(texTent);
+	decor.back().setPosition({ 79 * 32.f, 85 * 32.f });
 
 	// dont show intro right away
 	introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, 0x00));
@@ -71,10 +83,12 @@ void StoryState::modeRenderWorld() {
 	}
 
 	// draw decor sprites
-	for (AnimSprite& spr : decor) {
-		spr.animateFrame();
+	for (sf::Sprite& spr : decor) {
 		gwindow.draw(spr, &shader);
 	}
+
+	flag.animateFrame();
+	gwindow.draw(flag, &shader);
 }
 
 void StoryState::modeRenderGUI() {
