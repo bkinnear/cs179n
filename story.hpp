@@ -31,6 +31,9 @@ private:
 	float triggerWaitIndex = 0;
 
 	void setTimedTrigger(int, float);
+
+	sf::Texture& texSoldierRight;
+	sf::Texture& texSoldierLeft;
 };
 
 #endif
