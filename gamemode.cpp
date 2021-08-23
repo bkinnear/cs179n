@@ -652,7 +652,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			player.setHealth(gameLoadMeta.survivalMeta.playerHealth);
 			Item item;
 			item.itemType = (Item::type)gameLoadMeta.survivalMeta.currentWieldedWeapon;
-			item.num = gameLoadMeta.endlessMeta.currentWieldedNum;
+			item.num = gameLoadMeta.survivalMeta.currentWieldedNum;
 			int roundsLeft = gameLoadMeta.survivalMeta.roundsLeft;
 			inventory.loadItemWielded(item, roundsLeft);
 		}
