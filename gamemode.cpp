@@ -1,5 +1,6 @@
 #include "gamemode.hpp"
 #include "menustate.hpp"
+#include "story.hpp"
 #include "deathmenu.hpp"
 
 #include <iostream>
@@ -16,8 +17,6 @@
 #define MAP_WIDTH 50
 // map height in tiles
 #define MAP_HEIGHT 50
-// offset to get middle of player sprite
-#define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
 // minimum distance to pick up items
 #define MIN_DIST_ITEM 48.f
 // player default speed
@@ -28,9 +27,10 @@
 // sharpness of LOS edge
 #define LOS_SHARPNESS 256.f
 
-#define MODE_ENDLESS 1
-#define MODE_SURVIVAL 2
-#define MODE_STORY 3
+/* texture offsets */
+
+#define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
+#define EXPLOSION_LARGE_OFFSET sf::Vector2f({32.f, 32.f})
 
 #define gwindow game.window
 
@@ -412,12 +412,12 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 4.f, 4.f }));
 	dialogMessage.setFont(font);
-	dialogMessage.setCharacterSize(14);
+	dialogMessage.setCharacterSize(16);
 	dialogMessage.setColor(sf::Color(0x000000ff));
 
 	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 4.f }));
 	dialogSpeaker.setFont(font);
-	dialogSpeaker.setCharacterSize(14);
+	dialogSpeaker.setCharacterSize(16);
 	dialogSpeaker.setColor(sf::Color(0x000000ff));
 
 	// load FPS counter
@@ -1133,21 +1133,10 @@ bool GameMode::handleEvents() {
 				}
 				inventory.reloadWielded();
 				break;
-			case sf::Keyboard::T:
-				switch (dialogTreeIndex++) {
-				case 0:
-					setDialog("Bryce", "I can see you...");
-					break;
-				case 1:
-					setDialog("Bryce", "jk");
-					break;
-				case 2:
-					setDialog("Bryce", "ok bye");
-					break;
-				case 3:
-					hideDialog();
-					break;
-				}
+			case sf::Keyboard::Enter:
+			case sf::Keyboard::Space:				
+				triggerSubIndex++;
+				execTriggers();
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
 				if (player.isAlive()) {
@@ -1298,12 +1287,11 @@ bool GameMode::handleEvents() {
 				if (type == MODE_ENDLESS)
 					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_SURVIVAL)
-					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
+					game.setState(new GameMode(MODE_SURVIVAL, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_STORY)
 					game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
-				break;
 			case sf::Keyboard::F3:
 				// go back to menu
 				gwindow.setMouseCursorVisible(true);
@@ -1311,13 +1299,11 @@ bool GameMode::handleEvents() {
 				game.menuSong.play();
 				delete this;
 				return false;
-				break;
 			case sf::Keyboard::F4:
 				// Restart, go into story mode
-				game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
+				game.setState(new StoryState(game));
 				delete this;
 				return false;
-				break;
 			case sf::Keyboard::L://Load game
 			{
 				if (!isLoadInvoked) // Invoke loading only once
@@ -1760,6 +1746,9 @@ void GameMode::render()
 		renderAllies(&shader);
 	}
 
+	// mode specific rendering
+	modeRenderWorld();
+
 	// draw effects
 	drawEffects(&shader);
 
@@ -1821,6 +1810,8 @@ void GameMode::render()
 		gwindow.setMouseCursorVisible(false);
 	}
 
+	modeRenderGUI();
+
 	if (showDialog) {
 		gwindow.draw(dialogBox1);
 		gwindow.draw(dialogBox2);
@@ -1833,7 +1824,7 @@ void GameMode::render()
 	if (introShape.getFillColor().a > 0) {
 		gwindow.draw(introShape);
 		gwindow.draw(introMessage);
-		if (introClock.getElapsedTime().asSeconds() > 1.5f) {
+		if (introClock.getElapsedTime().asSeconds() > 2.f) {
 			introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, introShape.getFillColor().a - .05));
 			introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, introShape.getFillColor().a - .05));
 		}
@@ -1876,6 +1867,14 @@ void GameMode::logic()
 		else {
 			showItemDetails = false;
 		}
+	}
+
+	// run mode-specific logic code
+	modeLogic();
+
+	// freeze game
+	if (frozen) {
+		return;
 	}
 
 	//compare mouse location to player
@@ -1978,21 +1977,16 @@ void GameMode::logic()
 	updateProjectiles();
 
 	// update enemies
+	GameMode::updateEnemies();
 
 	if (type == MODE_ENDLESS)
 	{
-		GameMode::updateEnemies(1);
 		// update all allies
 		updateAllies();
 
 		// update ability cooldowns
 		updateCooldowns();
 	}
-	else if (type == MODE_SURVIVAL)
-	{
-		GameMode::updateEnemies(2);
-	}
-
 
 	playerHPBar.setSize({ playerHPBack.getSize().x * (player.getHealth() / 100.f), playerHPBack.getSize().y });
 	if (player.getHealth() > 75) {
@@ -2043,7 +2037,7 @@ void GameMode::logic()
 
 			// spawn hidden enemies (default is 1)
 			for (unsigned i = 0; i < areaItr->numEnemies; i++) {
-				Enemy& enemy = createEnemy({ 0.0f, 0.0f });
+				Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
 				do {
 					float x = areaItr->left + rand() % (int)areaItr->width;
 					float y = areaItr->top + rand() % (int)areaItr->height;
@@ -2101,7 +2095,7 @@ void GameMode::updateProjectiles() {
 			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
 
 			if (dist > maxRange || !(tileMap.areaClear(*projItr, moveVector))) {
-				createEffect(explosionLarge, projItr->getPosition());
+				createEffect(explosionLarge, projItr->getPosition() - EXPLOSION_LARGE_OFFSET);
 				grenadeSound.setBuffer(grenadeExplodeBuffer);
 				grenadeSound.play();
 				for (Enemy& enemy : enemies) {
@@ -2335,7 +2329,7 @@ std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& ene
 	return newItr;
 }
 
-void GameMode::updateEnemies(int type) {
+void GameMode::updateEnemies() {
 	// For Enemy Movement
 	std::list<Enemy>::iterator enemyItr = enemies.begin();
 	while (enemyItr != enemies.end()) {
@@ -2856,7 +2850,7 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 
 	for (int i = 0;i < noOfEnemies;i++)
 	{
-		Enemy& enemy = createEnemy({ 0.0f, 0.0f });
+		Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
 		do {
 			int randWidth = rand() % tileMap.getWidth() * TILE_SIZE;
 			int randHeight = rand() % tileMap.getHeight() * TILE_SIZE;
@@ -2865,7 +2859,7 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 	}
 }
 
-Enemy& GameMode::createEnemy(const sf::Vector2f& pos) {
+Enemy& GameMode::spawnEnemy(const sf::Vector2f& pos) {
 	enemies.push_back(Enemy());
 	Enemy& enemy = enemies.back();
 	enemy.setPosition(pos);

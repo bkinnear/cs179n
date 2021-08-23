@@ -11,6 +11,10 @@
 #include "state.hpp"
 #include "projectile.hpp"
 
+#define MODE_ENDLESS 1
+#define MODE_SURVIVAL 2
+#define MODE_STORY 3
+
 #include <list>
 
 // item on map
@@ -201,7 +205,6 @@ protected:
 	sf::Sound powerUp;
 
 	// dialog GUI
-	int dialogTreeIndex = 0;
 	void setDialog(const std::string&, const std::string&);
 	void hideDialog();
 	bool showDialog = false;
@@ -209,6 +212,9 @@ protected:
 	sf::RectangleShape dialogBox2;
 	sf::Text dialogSpeaker;
 	sf::Text dialogMessage;
+	int triggerIndex = 0;
+	int triggerSubIndex = 0;
+	bool frozen = false;
 
 	//PlayerGUI
 	sf::RectangleShape playerHPBar;
@@ -374,10 +380,10 @@ protected:
 	void loadShaders();
 
 	void spawnEnemies(int);
-	Enemy& createEnemy(const sf::Vector2f&);
+	Enemy& spawnEnemy(const sf::Vector2f&);
 	void respawnEnemies();
 	void spawnItems();
-	void updateEnemies(int);
+	void updateEnemies();
 	void renderEnemies(sf::RenderStates);
 	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator&);
 	bool handleEvents();
@@ -418,5 +424,10 @@ public:
 	void addHiddenArea(const sf::FloatRect&);
 	void addLootSpawn(const sf::Vector2f& pos);
 	void addCrateSpawn(const sf::Vector2f& pos);
+
+	virtual void modeLogic() {};
+	virtual void modeRenderWorld() {};
+	virtual void modeRenderGUI() {};
+	virtual void execTriggers() {};
 };
 #endif

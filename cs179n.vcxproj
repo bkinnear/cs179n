@@ -127,6 +127,7 @@
     <ClCompile Include="menustate.cpp" />
     <ClCompile Include="optionsmenu.cpp" />
     <ClCompile Include="state.cpp" />
+    <ClCompile Include="story.cpp" />
     <ClCompile Include="survival.cpp" />
     <ClCompile Include="tilemap.cpp" />
     <ClCompile Include="utils.cpp" />
@@ -148,6 +149,7 @@
     <ClInclude Include="optionsmenu.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />
+    <ClInclude Include="story.hpp" />
     <ClInclude Include="state.hpp" />
     <ClInclude Include="survival.hpp" />
     <ClInclude Include="tilemap.hpp" />
