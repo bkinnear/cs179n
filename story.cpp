@@ -20,6 +20,10 @@ StoryState::StoryState(Game& game) :
 	introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, 0x00));
 	introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, 0x00));
 
+	// place baseball bat in home
+	createItem({ 17 * 32.f, 12 * 32.f }, Item::type::baseball_bat);
+
+	// execute intro
 	execTriggers();
 }
 
