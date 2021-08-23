@@ -2,6 +2,7 @@
 #include "menustate.hpp"
 #include "story.hpp"
 #include "deathmenu.hpp"
+#include "optionsmenu.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -1286,6 +1287,12 @@ bool GameMode::handleEvents() {
 					}
 				}
 				break;
+			case sf::Keyboard::Escape:
+				// go back to menu
+				gwindow.setMouseCursorVisible(true);
+				game.setState(new OptionsMenu(game, this));
+				game.menuSong.play();
+				return false;
 			case sf::Keyboard::F1:
 				std::cout << "Debug mode ";
 				debugging = !debugging;
@@ -1304,6 +1311,8 @@ bool GameMode::handleEvents() {
 					game.setState(new GameMode(MODE_SURVIVAL, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_STORY)
 					game.setState(new StoryState(game));
+				else if (type == MODE_DEMO)
+					game.setState(new GameMode(MODE_DEMO, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
 			case sf::Keyboard::F3:

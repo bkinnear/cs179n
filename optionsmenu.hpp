@@ -5,7 +5,7 @@
 
 class OptionsMenu : public State {
 public:
-	OptionsMenu(Game&);
+	OptionsMenu(Game&, State* oldState);
 	~OptionsMenu();
 
 	virtual void logic();
@@ -23,6 +23,9 @@ private:
 	AnimSprite sprFullscreen;
 	AnimSprite sprVsync;
 	AnimSprite sprReturnButton;
+	
+	// state that we will return to
+	State* returnState;
 };
 
 #endif
