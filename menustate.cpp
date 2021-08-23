@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "endless.hpp"
+#include "story.hpp"
 #include "survival.hpp"
 #include "classmenu.hpp"
 #include "optionsmenu.hpp"
@@ -78,18 +79,19 @@ void MenuState::logic() {
 			//As of Right now Story Button sends to new class Menu
 			//TODO: Send to new StoryState
 			if (sprStoryButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect1.play();
 				std::cout << "Starting Story Mode\n";
-				game.setState(new ClassMenu(game));
+				game.setState(new StoryState(game));
 				delete this;
 				return;
 			}
 			// user clicked endless button
 			if (sprEndlessButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect1.play();
 				std::cout << "Starting Endless Mode\n";
 				// this is what changing state needs to look like
 				// set new state
 				game.setState(new ClassMenu(game));
-
 				// delete old state (or not if you want to keep it loaded in RAM to go back)
 				delete this;
 
@@ -98,6 +100,7 @@ void MenuState::logic() {
 			}
 
 			if (sprSurvivalButton.getGlobalBounds().contains(mousePos)) {
+				game.menuSelect2.play();
 				std::cout << "Starting Survival Mode\n";
 				game.setState(new SurvivalState(game, PlayerClass::DEFAULT));
 				delete this;
@@ -105,8 +108,8 @@ void MenuState::logic() {
 			}
 
 			if (sprOptionsButton.getGlobalBounds().contains(mousePos)) {
-				game.setState(new OptionsMenu(game));
-				delete this;
+				game.menuSelect1.play();
+				game.setState(new OptionsMenu(game, this));
 				return;
 			}
 

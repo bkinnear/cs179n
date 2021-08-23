@@ -8,6 +8,8 @@
 
 // max distance for pathing (in tiles)
 #define MAX_DIST 100
+#define DOOR_COST 2
+#define WALL_COST 20
 
 Node* createPath(const TileMap* tileMap, sf::Vector2i start, sf::Vector2i target);
 
@@ -15,15 +17,15 @@ Node* createPath(const TileMap* tileMap, sf::Vector2i start, sf::Vector2i target
 int getCost(const TileMap& tileMap, const Node& a, const Node& b) {
     if (tileMap.isOpaqueAt(a.pos.x, a.pos.y)) {
         if (tileMap.isDoor(a.pos.x, a.pos.y))
-            return 3;
+            return DOOR_COST;
         else
-            return 8;
+            return WALL_COST;
     }
     if (tileMap.isOpaqueAt(b.pos.x, b.pos.y)) {
         if (tileMap.isDoor(b.pos.x, b.pos.y))
-            return 3;
+            return DOOR_COST;
         else
-            return 8;
+            return WALL_COST;
     }
     return 1;
 }

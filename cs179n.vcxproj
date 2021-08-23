@@ -118,6 +118,7 @@
   <ItemGroup>
     <ClCompile Include="character.cpp" />
     <ClCompile Include="classmenu.cpp" />
+    <ClCompile Include="deathmenu.cpp" />
     <ClCompile Include="endless.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gamemode.cpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="menustate.cpp" />
     <ClCompile Include="optionsmenu.cpp" />
     <ClCompile Include="state.cpp" />
+    <ClCompile Include="story.cpp" />
     <ClCompile Include="survival.cpp" />
     <ClCompile Include="tilemap.cpp" />
     <ClCompile Include="utils.cpp" />
@@ -135,6 +137,7 @@
     <ClInclude Include="character.hpp" />
     <ClInclude Include="classes.hpp" />
     <ClInclude Include="classmenu.hpp" />
+    <ClInclude Include="deathmenu.hpp" />
     <ClInclude Include="endless.hpp" />
     <ClInclude Include="enemy.hpp" />
     <ClInclude Include="game.hpp" />
@@ -146,6 +149,7 @@
     <ClInclude Include="optionsmenu.hpp" />
     <ClInclude Include="player.hpp" />
     <ClInclude Include="projectile.hpp" />
+    <ClInclude Include="story.hpp" />
     <ClInclude Include="state.hpp" />
     <ClInclude Include="survival.hpp" />
     <ClInclude Include="tilemap.hpp" />
@@ -153,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="frag_shader.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

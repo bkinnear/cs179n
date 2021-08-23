@@ -1,5 +1,8 @@
 #include "gamemode.hpp"
 #include "menustate.hpp"
+#include "story.hpp"
+#include "deathmenu.hpp"
+#include "optionsmenu.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -9,21 +12,28 @@
 #include <list>
 #include <unordered_map>
 #include <algorithm>
+#include <typeinfo>
 
 // map width in tiles
 #define MAP_WIDTH 50
 // map height in tiles
 #define MAP_HEIGHT 50
-// offset to get middle of player sprite
-#define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
 // minimum distance to pick up items
 #define MIN_DIST_ITEM 48.f
 // player default speed
 #define PLAYER_SPEED 3.f
 
-#define MODE_ENDLESS 1
-#define MODE_SURVIVAL 2
-#define MODE_STORY 3
+// line of sight radius around player
+#define LOS_RADIUS 600.f
+constexpr float SQR_LOS_RADIUS = LOS_RADIUS * LOS_RADIUS;
+// sharpness of LOS edge
+#define LOS_SHARPNESS 256.f
+constexpr float SQR_LOS_SHARPNESS = LOS_SHARPNESS * LOS_SHARPNESS;
+
+/* texture offsets */
+
+#define PLAYER_OFFSET sf::Vector2f({14.f, 16.f})
+#define EXPLOSION_LARGE_OFFSET sf::Vector2f({32.f, 32.f})
 
 #define gwindow game.window
 
@@ -59,7 +69,7 @@ int getLootAmount(Item::type type) {
 	case Item::type::Shotgun:
 		return 1;
 	case Item::type::ammo_762:
-		return 50 + rand() % 50;
+		return 50 + rand() % 30;
 	case Item::type::ammo_shotgun:
 		return 10 + rand() % 5;
 	}
@@ -166,10 +176,16 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	texBloodSplatter3(createTexture("res/blood_splatter3.png")),
 	texBloodSplatter4(createTexture("res/blood_splatter4.png")),
 	texBloodSplatter5(createTexture("res/blood_splatter5.png")),
-	siegingIcon(createTexture("res/sieging_icon.png"))
+	siegingIcon(createTexture("res/sieging_icon.png")),
+	texSmash(createTexture("res/smash_animation.png"))
 {
+	loadShaders();
+
 	if (type == MODE_STORY) {
 		tileMap.loadMap(this, "res/maps/level0.csv");
+	}
+	else if (type == MODE_DEMO) {
+		tileMap.loadMap(this, "res/maps/demo0.csv");
 	}
 	else {
 		if (isLoadCall)
@@ -198,6 +214,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		 allocate our resources here
 		=============================  */
 
+	game.menuSong.stop();
 	if (!music.openFromFile("res/music.wav")) {
 		std::cout << "error loading ambient music" << std::endl;
 	}
@@ -302,8 +319,82 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		std::cout << "error loading mechanical noises" << std::endl;
 	}
 
+	//medic sounds
+	if (!medkitBuffer.loadFromFile("res/medkit_sound.wav")) {
+		std::cout << "error loading medkit noises" << std::endl;
+	}
+	medkitSound.setBuffer(medkitBuffer);
+	if (!dashBuffer.loadFromFile("res/dash_sound.wav")) {
+		std::cout << "error loading dash noises" << std::endl;
+	}
+	dashSound.setBuffer(dashBuffer);
+	dashSound.setPitch(2);
+	if (!guardianAngelBuffer.loadFromFile("res/guardian_angel_sound.wav")) {
+		std::cout << "error loading guardian angel noises" << std::endl;
+	}
+	guardianAngelSound.setBuffer(guardianAngelBuffer);
+	guardianAngelSound.setVolume(60);
+
+	//slasher sounds
+	if (!warcryBuffer.loadFromFile("res/warcry_sound.wav")) {
+		std::cout << "error loading warcry noises" << std::endl;
+	}
+	warcrySound.setBuffer(warcryBuffer);
+	warcrySound.setVolume(70);
+	if (!smashBuffer.loadFromFile("res/smash_sound.wav")) {
+		std::cout << "error loading smash noises" << std::endl;
+	}
+	smashSound.setBuffer(smashBuffer);
+	if (!rageBuffer.loadFromFile("res/rage_sound.wav")) {
+		std::cout << "error loading rage noises" << std::endl;
+	}
+	rageSound.setBuffer(rageBuffer);
+	rageSound.setVolume(70);
+
+	//inventory & item-use sounds
+	if (!equipBuffer.loadFromFile("res/equip_sound.wav")) {
+		std::cout << "error loading eqiup noises" << std::endl;
+	}
+	equipSound.setBuffer(equipBuffer);
+	equipSound.setVolume(70);
+	if (!healBuffer.loadFromFile("res/heal_sound.wav")) {
+		std::cout << "error loading heal noises" << std::endl;
+	}
+	healSound.setBuffer(healBuffer);
+	healSound.setVolume(15);
+
+	//player damaged sounds
+	if (!hitBuffer1.loadFromFile("res/hit1.wav")) {
+		std::cout << "error loading hit1 noises" << std::endl;
+	}
+	if (!hitBuffer2.loadFromFile("res/hit2.wav")) {
+		std::cout << "error loading hit2 noises" << std::endl;
+	}
+	if (!hitBuffer3.loadFromFile("res/hit3.wav")) {
+		std::cout << "error loading hit3 noises" << std::endl;
+	}
+	if (!hitBuffer4.loadFromFile("res/hit4.wav")) {
+		std::cout << "error loading hit4 noises" << std::endl;
+	}
+	if (!hitBuffer5.loadFromFile("res/hit5.wav")) {
+		std::cout << "error loading hit5 noises" << std::endl;
+	}
+	if (!hitBuffer6.loadFromFile("res/hit6.wav")) {
+		std::cout << "error loading hit6 noises" << std::endl;
+	}
+	if (!hitBuffer7.loadFromFile("res/hit7.wav")) {
+		std::cout << "error loading hit7 noises" << std::endl;
+	}
+	if (!hitBuffer8.loadFromFile("res/hit8.wav")) {
+		std::cout << "error loading hit8 noises" << std::endl;
+	}
+	if (!hitBuffer9.loadFromFile("res/hit9.wav")) {
+		std::cout << "error loading hit9 noises" << std::endl;
+	}
+
 	// load font
 	font.loadFromFile("res/VCR_OSD_MONO.ttf");
+	font2.loadFromFile("res/Friday13v12.ttf");
 
 	// load item details text
 	txtItemDetails.setFont(font);
@@ -313,7 +404,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	//txtItemDetails.setOutlineThickness(1);
 
 	// load dialog GUI
-	dialogBox1.setSize({ 480.f, 160.f });
+	dialogBox1.setSize({ 480.f, 60.f });
 	dialogBox1.setFillColor(sf::Color(0xf5eeceee));
 	dialogBox1.setOutlineColor(sf::Color(0x000000FF));
 	dialogBox1.setOutlineThickness(1.f);
@@ -323,16 +414,17 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	dialogBox2.setFillColor(sf::Color(0xcef5f1ee));
 	dialogBox2.setOutlineColor(sf::Color(0x000000FF));
 	dialogBox2.setOutlineThickness(1.f);
-	dialogBox2.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 16.f, -29.f }));
+	dialogBox2.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 0.f, -29.f }));
 
-	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 4.f, 4.f }));
+	dialogMessage.setPosition(dialogBox1.getPosition() + sf::Vector2f({ 4.f, 2.f }));
 	dialogMessage.setFont(font);
-	dialogMessage.setCharacterSize(14);
+	dialogMessage.setCharacterSize(20);
+	dialogMessage.setLineSpacing(1.5f);
 	dialogMessage.setColor(sf::Color(0x000000ff));
 
-	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 4.f }));
+	dialogSpeaker.setPosition(dialogBox2.getPosition() + sf::Vector2f({ 4.f, 2.f }));
 	dialogSpeaker.setFont(font);
-	dialogSpeaker.setCharacterSize(14);
+	dialogSpeaker.setCharacterSize(20);
 	dialogSpeaker.setColor(sf::Color(0x000000ff));
 
 	// load FPS counter
@@ -348,6 +440,21 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	shpItemDetails.setFillColor(sf::Color(0xAAAAAAFF));
 	shpItemDetails.setOutlineThickness(1.f);
 	shpItemDetails.setOutlineColor(sf::Color::Black);
+
+	// load intro screen
+	introShape.setFillColor(sf::Color::Black);
+	introShape.setSize(guiView.getSize());
+	introMessage.setFont(font2);
+	introMessage.setCharacterSize(24);
+	if (type == MODE_ENDLESS)
+		introMessage.setString("Your team has been abandoned. Survive.");
+	else if (type == MODE_SURVIVAL)
+		introMessage.setString("Survive the ever growing hordes");
+	else if (type == MODE_STORY)
+		introMessage.setString("Mission 1: Find your way to the evac zone");
+	else if (type == MODE_DEMO)
+		introMessage.setString("Secret Demo Map. Hello, CS179n");
+	introMessage.setPosition(mainView.getCenter() - sf::Vector2f({ introMessage.getGlobalBounds().width / 2, -12.f }));
 
 	// create animated sprite for player
 	player.create(texPlayerRight, { 0, 0, 32, 32 }, 8);
@@ -374,7 +481,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	rageFX.create(texRage, { 0,0, 100, 100 }, 56);
 	rageFX.setAnimSpeed(56);
 	rageFX.setScale(0.75, 0.75);
-
+	smashFX = loadEffect(texSmash, { 0,0,100,100 }, 72, 60);
+	getEffectSprite(smashFX).setScale(1.5, 1.5);
 	//healing items
 	healingFX.create(texHealAnimation, { 0, 0, 38, 39 }, 20);
 	healingFX.setAnimSpeed(20);
@@ -446,6 +554,25 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	abilityClock3.setColor(sf::Color::Black);
 	abilityClock3.setStyle(sf::Text::Bold);
 	abilityClock3.setPosition(playerHPBack.getPosition().x + 332.5, playerHPBack.getPosition().y - 10);
+
+	// player positioning
+	if (type == MODE_DEMO) {
+		player.setPosition(4*32.f, 13*32.f);
+	}
+	else {
+		sf::Vector2f mapCenter = { tileMap.getWidth() * 32.f / 2.f, tileMap.getHeight() * 32.f / 2.f };
+		do {
+			sf::Vector2f newPos({ mapCenter.x, mapCenter.y });
+			sf::Vector2i offset({
+				(rand() % ((int)tileMap.getWidth() / 4)) - ((int)tileMap.getWidth() / 8),
+				(rand() % ((int)tileMap.getHeight() / 4)) - ((int)tileMap.getHeight() / 8)
+				});
+			newPos += 32.f * sf::Vector2f(offset);
+			player.setPosition(newPos);
+		} while (!tileMap.areaClear(player));
+	}
+
+	// Score HUD
 	if (type == MODE_ENDLESS)
 	{
 		endlessScoreCounter.setPosition({ 5.f, 30.f });
@@ -478,6 +605,8 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 		maxSurvivalScoreCounter.setOutlineColor(sf::Color(0x000000FF));
 		maxSurvivalScoreCounter.setOutlineThickness(2.f);
 	}
+
+	// LOAD game
 	if (isLoadCall)
 	{
 		if (type == MODE_ENDLESS)
@@ -507,7 +636,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 				++allyItr;
 			}
 		}
-		else if(type == 2)
+		else if(type == MODE_SURVIVAL)
 		{
 			player.setPosition(gameLoadMeta.survivalMeta.playerPosX, gameLoadMeta.survivalMeta.playerPosY);
 			currentSurvivalScore = gameLoadMeta.survivalMeta.currentScore;
@@ -567,13 +696,16 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			maxSurvivalScoreCounter.setString(maxStr);
 			GameMode::spawnEnemies(currentEnemySpawningCount);
 		}
-		// add some stuff to the inventory
-		inventory.addItem(Item::type::Shotgun, 1);
-		inventory.addItem(Item::type::ammo_shotgun, 20);
-		inventory.addItem(Item::type::M240, 1);
-		inventory.addItem(Item::type::ammo_762, 200);
-		inventory.addItem(Item::type::M9, 1);
-		inventory.addItem(Item::type::ammo_9mm, 50);
+
+		// set initial loadout
+		if (type != MODE_STORY) {
+			inventory.addItem(Item::type::Shotgun, 1);
+			inventory.addItem(Item::type::ammo_shotgun, 20);
+			inventory.addItem(Item::type::M240, 1);
+			inventory.addItem(Item::type::ammo_762, 200);
+			inventory.addItem(Item::type::M9, 1);
+			inventory.addItem(Item::type::ammo_9mm, 50);
+		}
 	}
 	
 	std::cout << "GameMode object size (on stack): " << sizeof(*this)/1024 << " KiB"<< std::endl;
@@ -637,6 +769,7 @@ void GameMode::setDialog(const std::string& speaker, const std::string& msg) {
 void GameMode::hideDialog() {
 	showDialog = false;
 }
+
 void GameMode::updateCooldowns() {
 	switch (player.playerClass) {
 	case PlayerClass::DEFAULT:
@@ -914,24 +1047,28 @@ bool GameMode::handleEvents() {
 				player.movingRight = true;
 				break;
 			case sf::Keyboard::Tab:
-				showInventory = !showInventory;
-				showItemDetails = false;
+				if (player.isAlive()) {
+					showInventory = !showInventory;
+					showItemDetails = false;
+				}
 				break;
 			case sf::Keyboard::E:
-				// pick up item
-				// check for items in tiles adjacent to player
-				for (int i = -1; i <= 1; i++) {
-					for (int j = -1; j <= 1; j++) {
-						sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
-						ItemSpr* pItem = getItemAt(pos);
-						if (!pItem)
-							continue;
-						float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
-						if (distToPlayer <= MIN_DIST_ITEM) {
-							// add item to inventory
-							inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
+				if (player.isAlive()) {
+					// pick up item
+					// check for items in tiles adjacent to player
+					for (int i = -1; i <= 1; i++) {
+						for (int j = -1; j <= 1; j++) {
+							sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
+							ItemSpr* pItem = getItemAt(pos);
+							if (!pItem)
+								continue;
+							float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
+							if (distToPlayer <= MIN_DIST_ITEM) {
+								// add item to inventory
+								inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
 
-							removeItem(pItem);
+								removeItem(pItem);
+							}
 						}
 					}
 				}
@@ -941,50 +1078,52 @@ bool GameMode::handleEvents() {
 				sf::Vector2f position = player.getPosition();
 				int x, y;
 				bool isDoor = tileMap.isDoor(position.x + 16, position.y - 16);
-				if (isDoor)
-				{
-					x = position.x + 16;
-					y = position.y - 16;
-				}
-				else
-				{
-					isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
+				if (player.isAlive()) {
 					if (isDoor)
 					{
 						x = position.x + 16;
-						y = position.y + 48;
+						y = position.y - 16;
 					}
-				}
-				if (isDoor)
-				{
-					int tileX = x / TILE_SIZE;
-					int tileY = y / TILE_SIZE;
-					switch (tileMap.getTile(x, y))
+					else
 					{
-					case TILE_DOOR_CLOSED:
-						//Closed Door Type - 1
-						tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
-						doorInteract.setBuffer(doorOpen);
-						doorInteract.play();
-						break;
-					case TILE_DOOR_OPEN:
-						//Opened Door Type - 1
-						tileMap.setTile(tileX, tileY, TILE_DOOR_CLOSED);
-						doorInteract.setBuffer(doorClose);
-						doorInteract.play();
-						break;
-					default:
-						break;
+						isDoor = tileMap.isDoor(position.x + 16, position.y + 48);
+						if (isDoor)
+						{
+							x = position.x + 16;
+							y = position.y + 48;
+						}
 					}
-				}
-				else
-				{
-					std::cout << "Not a door!\n";
+					if (isDoor)
+					{
+						int tileX = x / TILE_SIZE;
+						int tileY = y / TILE_SIZE;
+						switch (tileMap.getTile(x, y))
+						{
+						case TILE_DOOR_CLOSED:
+							//Closed Door Type - 1
+							tileMap.setTile(tileX, tileY, TILE_DOOR_OPEN);
+							doorInteract.setBuffer(doorOpen);
+							doorInteract.play();
+							break;
+						case TILE_DOOR_OPEN:
+							//Opened Door Type - 1
+							tileMap.setTile(tileX, tileY, TILE_DOOR_CLOSED);
+							doorInteract.setBuffer(doorClose);
+							doorInteract.play();
+							break;
+						default:
+							break;
+						}
+					}
+					else
+					{
+						std::cout << "Not a door!\n";
+					}
 				}
 			}
 			break;
 			case sf::Keyboard::R: // reload weapon
-				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity()) {
+				if (inventory.getRoundsLeft() != inventory.getWielded().getMagCapacity() && player.isAlive()) {
 					Item::type weaponType = inventory.getWielded().itemType;
 					switch (weaponType) {
 					case Item::type::MP5:
@@ -1013,150 +1152,151 @@ bool GameMode::handleEvents() {
 				}
 				inventory.reloadWielded();
 				break;
-			case sf::Keyboard::T:
-				switch (dialogTreeIndex++) {
-				case 0:
-					setDialog("Bryce", "I can see you...");
-					break;
-				case 1:
-					setDialog("Bryce", "jk");
-					break;
-				case 2:
-					setDialog("Bryce", "ok bye");
-					break;
-				case 3:
-					hideDialog();
-					break;
-				}
+			case sf::Keyboard::Enter:
+			case sf::Keyboard::Space:				
+				triggerSubIndex++;
+				execTriggers();
 				break;
 			case sf::Keyboard::Num1: //FIRST ABILITY
-				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					//ASSAULT FIRST ABILITY GOES HERE
-					if (!onCoolDown1) {
-						assault_ammo();
-						std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+				if (player.isAlive()) {
+					switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						//ASSAULT FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							assault_ammo();
+							std::cout << "Assault Ability - Dropped Ammo crate" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						//MEDIC FIRST ABILITY GOES HERE
+						if (!onCoolDown1) {
+							medic_bandage();
+							std::cout << "Medic Ability - Dropped Health Pack" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Health Packs are on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::SLASHER:
+						if (!onCoolDown1) {
+							slasher_smash();
+							std::cout << "Slasher Ability - Smash" << std::endl;
+						}
+						else {
+							std::cout << "Slasher Ability - Smash is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::ENGINEER:
+						if (!onCoolDown1) {
+							engineer_decoy();
+							std::cout << "Engineer Ability - Deployed Decoy" << std::endl;
+						}
+						else {
+							std::cout << "Engineer Ability - Decoys are on cooldown" << std::endl;
+						}
+						break;
 					}
-					else {
-						std::cout << "Assault Ability - Ammo are on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::MEDIC:
-					//MEDIC FIRST ABILITY GOES HERE
-					if (!onCoolDown1) {
-						medic_bandage();
-						std::cout << "Medic Ability - Dropped Health Pack" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Health Packs are on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::SLASHER:
-					if (!onCoolDown1) {
-						slasher_smash();
-						std::cout << "Slasher Ability - Smash" << std::endl;
-					}
-					else {
-						std::cout << "Slasher Ability - Smash is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::ENGINEER:
-					if (!onCoolDown1) {
-						engineer_decoy();
-						std::cout << "Engineer Ability - Deployed Decoy" << std::endl;
-					}
-					else {
-						std::cout << "Engineer Ability - Decoys are on cooldown" << std::endl;
-					}
-					break;
 				}
 				break;
 			case sf::Keyboard::Num2: //SECOND ABILITY
-				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					if (!onCoolDown2) {
-						assault_grenade();
-						std::cout << "Assault Ability - Grenade" << std::endl;
+				if (player.isAlive()) {
+					switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						if (!onCoolDown2) {
+							assault_grenade();
+							std::cout << "Assault Ability - Grenade" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown2) {
+							medic_dash();
+							std::cout << "Medic Ability - Dash" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::SLASHER:
+						if (!onCoolDown2) {
+							slasher_warcry();
+							std::cout << "Slasher Ability - Warcry" << std::endl;
+						}
+						else {
+							std::cout << "Slasher Ability - Warcry is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::ENGINEER:
+						if (!onCoolDown2) {
+							engineer_barrel();
+							std::cout << "Engineer Ability - Deployed Barrel" << std::endl;
+						}
+						else {
+							std::cout << "Engineer Ability - Barrels are on cooldown" << std::endl;
+						}
+						break;
 					}
-					else {
-						std::cout << "Assault Ability - Grenade is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::MEDIC:
-					if (!onCoolDown2) {
-						medic_dash();
-						std::cout << "Medic Ability - Dash" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Dash is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::SLASHER:
-					if (!onCoolDown2) {
-						slasher_warcry();
-						std::cout << "Slasher Ability - Warcry" << std::endl;
-					}
-					else {
-						std::cout << "Slasher Ability - Warcry is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::ENGINEER:
-					if (!onCoolDown2) {
-						engineer_barrel();
-						std::cout << "Engineer Ability - Deployed Barrel" << std::endl;
-					}
-					else {
-						std::cout << "Engineer Ability - Barrels are on cooldown" << std::endl;
-					}
-					break;
 				}
 				break;
 			case sf::Keyboard::Num3: //THIRD ABILITY
-				switch (player.playerClass) {
-				case PlayerClass::DEFAULT:
-					break;
-				case PlayerClass::ASSAULT:
-					if (!onCoolDown3) {
-						assault_deadeye();
-						std::cout << "Assault Ability - Dead Eye" << std::endl;
+				if (player.isAlive()) {
+					switch (player.playerClass) {
+					case PlayerClass::DEFAULT:
+						break;
+					case PlayerClass::ASSAULT:
+						if (!onCoolDown3) {
+							assault_deadeye();
+							std::cout << "Assault Ability - Dead Eye" << std::endl;
+						}
+						else {
+							std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::MEDIC:
+						if (!onCoolDown3) {
+							medic_heal();
+							std::cout << "Medic Ability - Guardian Angel" << std::endl;
+						}
+						else {
+							std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::ENGINEER:
+						if (!onCoolDown3) {
+							engineer_shield();
+							std::cout << "Engineer Ability - Shield" << std::endl;
+						}
+						else {
+							std::cout << "Engineer Ability - Shield is on cooldown" << std::endl;
+						}
+						break;
+					case PlayerClass::SLASHER:
+						if (!onCoolDown3) {
+							slasher_rage();
+							std::cout << "Slasher Ability - Rage" << std::endl;
+						}
+						else {
+							std::cout << "Slasher Ability - Rage is on cooldown" << std::endl;
+						}
+						break;
 					}
-					else {
-						std::cout << "Assault Ability - Dead Eye is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::MEDIC:
-					if (!onCoolDown3) {
-						medic_heal();
-						std::cout << "Medic Ability - Guardian Angel" << std::endl;
-					}
-					else {
-						std::cout << "Medic Ability - Guardian Angel is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::ENGINEER:
-					if (!onCoolDown3) {
-						engineer_shield();
-						std::cout << "Engineer Ability - Shield" << std::endl;
-					}
-					else {
-						std::cout << "Engineer Ability - Shield is on cooldown" << std::endl;
-					}
-					break;
-				case PlayerClass::SLASHER:
-					if (!onCoolDown3) {
-						slasher_rage();
-						std::cout << "Slasher Ability - Rage" << std::endl;
-					}
-					else {
-						std::cout << "Slasher Ability - Rage is on cooldown" << std::endl;
-					}
-					break;
 				}
 				break;
+			case sf::Keyboard::Escape:
+				// go back to menu
+				gwindow.setMouseCursorVisible(true);
+				game.setState(new OptionsMenu(game, this));
+				game.menuSong.play();
+				return false;
 			case sf::Keyboard::F1:
 				std::cout << "Debug mode ";
 				debugging = !debugging;
@@ -1172,24 +1312,30 @@ bool GameMode::handleEvents() {
 				if (type == MODE_ENDLESS)
 					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_SURVIVAL)
-					game.setState(new GameMode(MODE_ENDLESS, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
+					game.setState(new GameMode(MODE_SURVIVAL, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				else if (type == MODE_STORY)
-					game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
+					game.setState(new StoryState(game));
+				else if (type == MODE_DEMO)
+					game.setState(new GameMode(MODE_DEMO, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
-				break;
 			case sf::Keyboard::F3:
 				// go back to menu
 				gwindow.setMouseCursorVisible(true);
 				game.setState(new MenuState(game));
+				game.menuSong.play();
 				delete this;
 				return false;
-				break;
-			case sf::Keyboard::F4:
-				// Restart, go into story mode
-				game.setState(new GameMode(MODE_STORY, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
+			case sf::Keyboard::F5:
+				// access the demo map
+				game.setState(new GameMode(MODE_DEMO, game, player.playerClass, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false));
 				delete this;
 				return false;
+			case sf::Keyboard::P:
+				if (type == MODE_DEMO) {
+					spawnEnemy({ 4 * 32.f, 13 * 32.f });
+					spawnEnemy({ 17 * 32.f, 4 * 32.f });
+				}
 				break;
 			case sf::Keyboard::L://Load game
 			{
@@ -1272,7 +1418,7 @@ bool GameMode::handleEvents() {
 				break;
 			case sf::Keyboard::V:
 				//melee
-				if (inventory.useWieldedMelee()) {
+				if (inventory.useWieldedMelee() && player.isAlive()) {
 					meleeSwing.setBuffer(meleeSwingBuffer);
 					meleeSwing.setVolume(225);
 					switch (inventory.getWielded().itemType) {
@@ -1358,6 +1504,8 @@ bool GameMode::handleEvents() {
 							healTimer.restart();
 							healPlaying = true;
 
+							healSound.play();
+
 							break;
 						case Item::type::health_pack:
 							player.heal(20);
@@ -1367,6 +1515,8 @@ bool GameMode::handleEvents() {
 							healElapsed = sf::seconds(0);
 							healTimer.restart();
 							healPlaying = true;
+
+							healSound.play();
 
 							break;
 						case Item::type::walkie_talkie:
@@ -1387,6 +1537,7 @@ bool GameMode::handleEvents() {
 						default:
 							// equip item
 							inventory.wieldItemAt(winMousePos.x, winMousePos.y);
+							equipSound.play();
 							break;
 					}
 				}
@@ -1405,7 +1556,7 @@ bool GameMode::handleEvents() {
 	}
 
 	// check mouse state for holding (enabling auto fire)
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.isAlive()) {
 		// LMB held
 		// try to use weapon
 		if (inventory.getWielded().itemType == Item::type::dagger || inventory.getWielded().itemType == Item::type::baseball_bat || inventory.getWielded().itemType == Item::type::null) { //check if weapon wielded is melee
@@ -1478,7 +1629,7 @@ bool GameMode::handleEvents() {
 					proj.speed = 10;
 					proj.setScale(3, 3);
 					if (!player.isDeadEye) {
-						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x, mousePos.y }) + inventory.getWielded().getRecoil();
 					}
 					else {
 						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
@@ -1495,7 +1646,7 @@ bool GameMode::handleEvents() {
 					proj.setMaskBounds(proj.getLocalBounds());
 					proj.speed = 12;
 					if (!player.isDeadEye) {
-						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x + inventory.getWielded().getRecoil() , mousePos.y + inventory.getWielded().getRecoil() });
+						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, { mousePos.x , mousePos.y}) + inventory.getWielded().getRecoil();
 					}
 					else {
 						proj.direction = Utils::pointDirection(player.getPosition() + PLAYER_OFFSET, mousePos);
@@ -1531,8 +1682,13 @@ void GameMode::render()
 	// = v   world drawing   v  = //
 	// ========================== //
 
+	// update shader variables
+	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
+	shader.setParameter("sqr_los_radius", SQR_LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("sqr_los_sharpness", SQR_LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+
 	// move view target to center on player
-	mainViewTarget = { floor(player.getPosition().x), floor(player.getPosition().y) };
+	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
 
 	// move the view towards target
 	sf::Vector2f delta(floor((mainViewTarget.x - mainView.getCenter().x) / 10), floor((mainViewTarget.y - mainView.getCenter().y) / 10));
@@ -1543,11 +1699,11 @@ void GameMode::render()
 	gwindow.setView(mainView);
 
 	// draw the tilemap
-	gwindow.draw(tileMap);
+	gwindow.draw(tileMap, &shader);
 
-	//draw the weapons
+	// draw items
 	for (auto item : itemsOnMap) {
-		gwindow.draw(item->spr);
+		gwindow.draw(item->spr, &shader);
 	}
 
 	//draw ability/item animations
@@ -1613,20 +1769,23 @@ void GameMode::render()
 
 	// draw the projectiles
 	for (Projectile& proj : projectiles) {
-		gwindow.draw(proj);
+		gwindow.draw(proj, &shader);
 	}
 
 	// draw the enemies
-	GameMode::renderEnemies();
+	GameMode::renderEnemies(&shader);
 
 	if (type == MODE_ENDLESS)
 	{
 		// draw the allies
-		renderAllies();
+		renderAllies(&shader);
 	}
 
+	// mode specific rendering
+	modeRenderWorld();
+
 	// draw effects
-	drawEffects();
+	drawEffects(&shader);
 
 	// draw hidden areas
 	sf::RectangleShape areaShape;
@@ -1686,6 +1845,8 @@ void GameMode::render()
 		gwindow.setMouseCursorVisible(false);
 	}
 
+	modeRenderGUI();
+
 	if (showDialog) {
 		gwindow.draw(dialogBox1);
 		gwindow.draw(dialogBox2);
@@ -1695,6 +1856,14 @@ void GameMode::render()
 
 	gwindow.draw(fpsCounter);
 
+	if (introShape.getFillColor().a > 0) {
+		gwindow.draw(introShape);
+		gwindow.draw(introMessage);
+		if (introClock.getElapsedTime().asSeconds() > 2.f) {
+			introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, introShape.getFillColor().a - .05));
+			introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, introShape.getFillColor().a - .05));
+		}
+	}
 
 	// update window
 	gwindow.display();
@@ -1733,6 +1902,14 @@ void GameMode::logic()
 		else {
 			showItemDetails = false;
 		}
+	}
+
+	// run mode-specific logic code
+	modeLogic();
+
+	// freeze game
+	if (frozen) {
+		return;
 	}
 
 	//compare mouse location to player
@@ -1799,7 +1976,14 @@ void GameMode::logic()
 			break;
 		}			
 	}
-	if (player.movingLeft || player.movingRight || player.movingDown || player.movingUp) {
+	else {
+		game.setState(new DeathMenu(game));
+		game.menuSong.play();
+		music.stop();
+		ambientZombie.stop();
+	}
+
+	if ((player.movingLeft || player.movingRight || player.movingDown || player.movingUp) && player.isAlive()) {
 		if (player.getAnimSpeed() == -1) {
 			player.setAnimSpeed(12);
 		}
@@ -1829,21 +2013,16 @@ void GameMode::logic()
 	updateProjectiles();
 
 	// update enemies
+	GameMode::updateEnemies();
 
 	if (type == MODE_ENDLESS)
 	{
-		GameMode::updateEnemies(1);
 		// update all allies
 		updateAllies();
 
 		// update ability cooldowns
 		updateCooldowns();
 	}
-	else if (type == MODE_SURVIVAL)
-	{
-		GameMode::updateEnemies(2);
-	}
-
 
 	playerHPBar.setSize({ playerHPBack.getSize().x * (player.getHealth() / 100.f), playerHPBack.getSize().y });
 	if (player.getHealth() > 75) {
@@ -1891,29 +2070,31 @@ void GameMode::logic()
 	auto areaItr = hiddenAreas.begin();
 	while (areaItr != hiddenAreas.end()) {
 		if (player.getBounds().intersects(*areaItr)) {
+			// do not spawn items in story mode
+			if (type != MODE_STORY) {
+				// spawn hidden enemies (default is 1)
+				for (unsigned i = 0; i < areaItr->numEnemies; i++) {
+					Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
+					do {
+						float x = areaItr->left + rand() % (int)areaItr->width;
+						float y = areaItr->top + rand() % (int)areaItr->height;
+						enemy.setPosition(x, y);
+					} while (!tileMap.areaClear(enemy));
+					enemy.setColor(sf::Color(0xFF8888FF));
+					enemy.setSpeed(2);
+					enemy.setArmor(10);
+				}
 
-			// spawn hidden enemies (default is 1)
-			for (unsigned i = 0; i < areaItr->numEnemies; i++) {
-				Enemy& enemy = createEnemy({ 0.0f, 0.0f });
-				do {
-					float x = areaItr->left + rand() % (int)areaItr->width;
-					float y = areaItr->top + rand() % (int)areaItr->height;
-					enemy.setPosition(x, y);
-				} while (!tileMap.areaClear(enemy));
-				enemy.setColor(sf::Color(0xFF8888FF));
-				enemy.setSpeed(2);
-				enemy.setArmor(10);
-			}
-
-			// spawn hidden items (default is 2)
-			for (unsigned i = 0; i < areaItr->numItems; i++) {
-				Item::type item = Item::type::null;
-				int r = rand()%2;
-				if (r == 0)
-					item = Item::type::ammo_crate;
-				else if (r == 1)
-					item = Item::type::health_pack;
-				createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
+				// spawn hidden items (default is 2)
+				for (unsigned i = 0; i < areaItr->numItems; i++) {
+					Item::type item = Item::type::null;
+					int r = rand() % 2;
+					if (r == 0)
+						item = Item::type::ammo_crate;
+					else if (r == 1)
+						item = Item::type::health_pack;
+					createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
+				}
 			}
 
 			areaItr = hiddenAreas.erase(areaItr);
@@ -1952,7 +2133,7 @@ void GameMode::updateProjectiles() {
 			float dist = Utils::pointDistance(projItr->shotFrom, projItr->getPosition());
 
 			if (dist > maxRange || !(tileMap.areaClear(*projItr, moveVector))) {
-				createEffect(explosionLarge, projItr->getPosition());
+				createEffect(explosionLarge, projItr->getPosition() - EXPLOSION_LARGE_OFFSET);
 				grenadeSound.setBuffer(grenadeExplodeBuffer);
 				grenadeSound.play();
 				for (Enemy& enemy : enemies) {
@@ -2112,52 +2293,45 @@ void GameMode::chooseClass(PlayerClass playerClass) {
 	}
 }
 
-void GameMode::renderEnemies()
+void GameMode::renderEnemies(sf::RenderStates states)
 {
 	//draw the enemies
 	std::list<Enemy>::iterator enemyItr;
 	for (enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr) {
 		Enemy& enemy = *enemyItr;
-		enemy.animateFrame();
-		gwindow.draw(enemy);
+		float dist = Utils::pointDistance(player.getCenter(), enemy.getCenter());
+		if (dist < LOS_RADIUS + 128.f) {
+			enemy.animateFrame();
+			gwindow.draw(enemy, states);
 
-		if (debugging) {
-			if (enemy.isOnPath()) {
-				sf::CircleShape sh;
-				sh.setFillColor(sf::Color::Green);
-				sh.setPosition(enemy.getPosition() + sf::Vector2f({ 9.f, -20.f }));
-				sh.setRadius(4);
-				sh.setOutlineColor(sf::Color::Black);
-				sh.setOutlineThickness(1.f);
-				gwindow.draw(sh);
-
-				sf::RectangleShape sh2;
-				sh2.setFillColor(sf::Color::Transparent);
-				sh2.setOutlineColor(sf::Color::Blue);
-				sh2.setOutlineThickness(1.f);
-				sh2.setSize({ 32, 32 });
-				Node* pNode = enemy.pathHead;
-				while (pNode != nullptr) {
-					sh2.setPosition(sf::Vector2f(pNode->pos));
-					gwindow.draw(sh2);
-					pNode = pNode->parent;
+			if (debugging) {
+				if (enemy.isOnPath()) {
+					sf::CircleShape sh;
+					sh.setFillColor(sf::Color::Blue);
+					sh.setRadius(4.f);
+					Node* pNode = enemy.pathHead;
+					while (pNode != nullptr) {
+						sh.setPosition(sf::Vector2f(pNode->pos) + sf::Vector2f({ 16.f, 16.f }));
+						gwindow.draw(sh);
+						pNode = pNode->parent;
+					}
 				}
 			}
-		}
 
-		// draw the HP bar
-		sf::RectangleShape bar1({ 26.f, 6.f });
-		bar1.setFillColor(sf::Color::Black);
-		bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
-		sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
-		bar2.setFillColor(sf::Color::Red);
-		bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
-		gwindow.draw(bar1);
-		gwindow.draw(bar2);
+			// draw the HP bar
+			sf::RectangleShape bar1({ 26.f, 6.f });
+			bar1.setFillColor(sf::Color::Black);
+			bar1.setPosition(enemy.getPosition().x, enemy.getPosition().y - 10);
+			sf::RectangleShape bar2({ 24.f * (enemy.getHealth() / 100.f), 4.f });
+			bar2.setFillColor(sf::Color::Red);
+			bar2.setPosition(enemy.getPosition().x + 1, enemy.getPosition().y - 9);
+			gwindow.draw(bar1);
+			gwindow.draw(bar2);
 
-		if (enemy.sieging) {
-			siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, - 32.f}));
-			gwindow.draw(siegingIcon);
+			if (enemy.sieging) {
+				siegingIcon.setPosition(enemy.getPosition() + sf::Vector2f({ 0.f, -32.f }));
+				gwindow.draw(siegingIcon);
+			}
 		}
 	}
 }
@@ -2193,7 +2367,7 @@ std::list<Enemy>::iterator GameMode::deleteEnemy(std::list<Enemy>::iterator& ene
 	return newItr;
 }
 
-void GameMode::updateEnemies(int type) {
+void GameMode::updateEnemies() {
 	// For Enemy Movement
 	std::list<Enemy>::iterator enemyItr = enemies.begin();
 	while (enemyItr != enemies.end()) {
@@ -2338,9 +2512,47 @@ void GameMode::updateEnemies(int type) {
 			//enemy is in attacking range
 			enemy.cooldown(); //triggers attack timer/cooldown
 			if (!enemy.attack && nearestTarget->isAlive()) {
-				if (player.isWarcry) {
-					std::cout << "Reduced damage due to Warcry!" << std::endl;
-					nearestTarget->damage(enemy.hitRate * .25);
+				if ((nearestTarget == &player)) {
+					if (player.isWarcry) {
+						std::cout << "Reduced damage due to Warcry!" << std::endl;
+						nearestTarget->damage(enemy.hitRate * .25);
+					}
+					else {
+						nearestTarget->damage(enemy.hitRate);
+					}
+					hitSoundNum = rand() % 9 + 1;
+					switch (hitSoundNum) {
+					case 1:
+						hitSound.setBuffer(hitBuffer1);
+						break;
+					case 2:
+						hitSound.setBuffer(hitBuffer2);
+						break;
+					case 3:
+						hitSound.setBuffer(hitBuffer3);
+						break;
+					case 4:
+						hitSound.setBuffer(hitBuffer4);
+						break;
+					case 5:
+						hitSound.setBuffer(hitBuffer5);
+						break;
+					case 6:
+						hitSound.setBuffer(hitBuffer6);
+						break;
+					case 7:
+						hitSound.setBuffer(hitBuffer7);
+						break;
+					case 8:
+						hitSound.setBuffer(hitBuffer8);
+						break;
+					case 9:
+						hitSound.setBuffer(hitBuffer9);
+						break;
+					default:
+						break;
+					}
+					hitSound.play();
 				}
 				else {
 					nearestTarget->damage(enemy.hitRate);
@@ -2446,6 +2658,8 @@ void GameMode::medic_bandage() {
 	//ability functionality
 	createItem(player.getPosition(), Item::type::health_pack);
 
+	medkitSound.play();
+
 	//cooldown timer starts
 	abilityTimer1.restart();
 
@@ -2460,6 +2674,8 @@ void GameMode::medic_dash() {
 	player.setSpeed(10);
 
 	dashFX.setIndex(0);
+
+	dashSound.play();
 
 	abilityTimer2.restart();
 
@@ -2481,6 +2697,8 @@ void GameMode::medic_heal() {
 	guardianAngelFX.setIndex(0);
 	guardianPlaying = true;
 
+	guardianAngelSound.play();
+
 	abilityTimer3.restart();
 
 	abilityIcon3.setTexture(createTexture("res/ability_icons/guardian_angel_cd.png"));
@@ -2491,6 +2709,7 @@ void GameMode::assault_ammo() {
 
 	createItem(player.getPosition(), Item::type::ammo_crate);
 	dropTech.setBuffer(metalBox);
+	dropTech.setVolume(15);
 	dropTech.play();
 	
 	abilityTimer1.restart();
@@ -2516,6 +2735,7 @@ void GameMode::assault_grenade() {
 
 	shotSound.setBuffer(grenadeShotBuffer);
 	shotSound.setPitch(1);
+	shotSound.setVolume(20);
 	shotSound.play();
 
 	abilityTimer2.restart();
@@ -2549,9 +2769,35 @@ void GameMode::slasher_smash() {
 		sf::Vector2f difference = playerPos - enemyPos;
 		float length = sqrt((difference.x * difference.x) + (difference.y * difference.y));
 
-		if (length < 100)
+		if (length < 60) {
 			enemy.damage(30);
+			bloodEffect = rand() % 5 + 1;
+			switch (bloodEffect) {
+			case 1:
+				bloodSplatter = loadEffect(texBloodSplatter1, { 0,0,100,100 }, 23, 60);
+				break;
+			case 2:
+				bloodSplatter = loadEffect(texBloodSplatter2, { 0,0,100,100 }, 22, 60);
+				break;
+			case 3:
+				bloodSplatter = loadEffect(texBloodSplatter3, { 0,0,100,100 }, 23, 60);
+				break;
+			case 4:
+				bloodSplatter = loadEffect(texBloodSplatter4, { 0,0,100,100 }, 14, 60);
+				break;
+			case 5:
+				bloodSplatter = loadEffect(texBloodSplatter5, { 0,0,100,100 }, 30, 60);
+				break;
+			}
+			getEffectSprite(bloodSplatter).setScale(0.45, 0.45);
+			createEffect(bloodSplatter, enemy.getPosition());
+		}
+
 	}
+
+	smashSound.play();
+
+	createEffect(smashFX, { player.getPosition().x-60, player.getPosition().y-60});
 
 	abilityTimer1.restart();
 
@@ -2565,6 +2811,8 @@ void GameMode::slasher_warcry() {
 
 	warcryFX.setIndex(0);
 
+	warcrySound.play();
+
 	abilityTimer2.restart();
 
 	abilityIcon2.setTexture(createTexture("res/ability_icons/warcry_cd.png"));
@@ -2577,6 +2825,8 @@ void GameMode::slasher_rage() {
 	player.setSpeed(5);
 
 	rageFX.setIndex(0);
+
+	rageSound.play();
 
 	abilityTimer3.restart();
 
@@ -2592,7 +2842,8 @@ void GameMode::engineer_decoy() {
 	allies.emplace_back(texDummyRight);
 	if (mousePos.x > player.getPosition().x) {
 		allies.back().setPosition(player.getPosition() + sf::Vector2f({ 32.f, 0.f }));
-	}else
+	}
+	else
 		allies.back().setPosition(player.getPosition() + sf::Vector2f({ -32.f, 0.f }));
 	
 	allies.back().isDummy = true;
@@ -2618,6 +2869,7 @@ void GameMode::engineer_shield() {
 	onCoolDown3 = true;
 
 	dropTech.setBuffer(het_hon);
+	dropTech.setVolume(10);
 	dropTech.play();
 
 	allies.emplace_back(texShield);
@@ -2637,7 +2889,7 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 
 	for (int i = 0;i < noOfEnemies;i++)
 	{
-		Enemy& enemy = createEnemy({ 0.0f, 0.0f });
+		Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
 		do {
 			int randWidth = rand() % tileMap.getWidth() * TILE_SIZE;
 			int randHeight = rand() % tileMap.getHeight() * TILE_SIZE;
@@ -2646,7 +2898,7 @@ void GameMode::spawnEnemies(int noOfEnemies) {
 	}
 }
 
-Enemy& GameMode::createEnemy(const sf::Vector2f& pos) {
+Enemy& GameMode::spawnEnemy(const sf::Vector2f& pos) {
 	enemies.push_back(Enemy());
 	Enemy& enemy = enemies.back();
 	enemy.setPosition(pos);
@@ -2774,11 +3026,11 @@ void GameMode::updateAllies() {
 	}
 }
 
-void GameMode::renderAllies() {
+void GameMode::renderAllies(sf::RenderStates states) {
 	for (auto allyItr = allies.begin(); allyItr != allies.end(); ++allyItr) {
 		NPC& ally = *allyItr;
 		ally.animateFrame();
-		gwindow.draw(ally);
+		gwindow.draw(ally, states);
 
 		// draw the HP bar
 		if (ally.isShield) {
@@ -2910,6 +3162,12 @@ void GameMode::initGame()
 	}
 	delete this;
 	return;
+}
+
+void GameMode::loadShaders() {
+	if (!shader.loadFromFile("frag_shader.hlsl", sf::Shader::Fragment)) {
+		throw std::runtime_error("Error loading shader");
+	}
 }
 
 void GameMode::addHiddenArea(const sf::FloatRect& rect) {

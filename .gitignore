@@ -9,6 +9,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+res/maps/save/*
+*.dat
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -348,3 +350,4 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+res/maps/save/map_Endless.csv

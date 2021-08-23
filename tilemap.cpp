@@ -99,6 +99,13 @@ void setLootSpawn(GameMode& gmode, int x, int y, Tile tile) {
 bool isOpaque(Tile tile) {
 	switch (tile) {
 	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
 	case 15:
 	case 17:
 	case 22:
@@ -117,6 +124,13 @@ bool isOpaque(Tile tile) {
 bool isOpen(Tile tile) {
 	switch (tile) {
 	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
 	case 15:
 	case 17:
 	case 22:
@@ -161,6 +175,90 @@ void TileMap::loadTextures(GameMode* gmode) {
 			"res/tileset.png", // TODO make this not a magic string (maybe doesnt matter)
 			sf::IntRect(getTileTexOffset(i), { TILE_SIZE, TILE_SIZE }
 		));
+	}
+}
+
+void TileMap::updateGrass() {
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			if (map[y][x] == 0)
+				setTile(x, y, rand()%8);
+		}
+	}
+}
+
+void TileMap::updateBuildings(GameMode* gmode) {
+	// NOTE: only works for rectangle houses
+	/*
+	algorithm pseudocode:
+
+	box = {}
+	for tile in (row, col):
+		if tile = top_left:
+			box.top_left = (col, row)
+			while tile != bot_left:
+				row++
+				if row > map_height:
+					row = box.top_left.row
+					col = box.top_left.col
+					contine for loop
+			box.height = row - box.top_left.row
+			while tile != bot_right:
+				col++
+				if col > map_width:
+					row = box.top_left.row
+					col = box.top_left.col
+					continue for loop
+			box.width = col - box.top_left.col
+			row = box.top_left.row
+			col = box.top_left.col
+	*/
+
+	constexpr Tile TOP_LEFT = 8;
+	constexpr Tile BOT_LEFT = 24;
+	constexpr Tile BOT_RIGHT = 26;
+
+	sf::FloatRect area;
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			// search for top left wall tiles
+			if (map[y][x] == TOP_LEFT) {
+				// store top left position for hidden area
+				area.top = y*32.f;
+				area.left = x*32.f;
+
+				// find bottom left
+				int returnY = y; 
+				while (y < height && map[y][x] != BOT_LEFT)
+					y++;
+				if (y == height) {
+					y = returnY;
+					continue;
+				}
+				area.height = y * 32.f - area.top;
+
+				// find bottom right
+				int returnX = x;
+				while (x < width && map[y][x] != BOT_RIGHT)
+					x++;
+				if (x == width) {
+					x = returnX;
+					continue;
+				}
+				area.width = x * 32.f - area.left;
+
+				// success, create hidden area for building
+				area.left += 32.f;
+				area.top += 32.f - 20.f;
+				area.width -= 32.f;
+				area.height -= 32.f - 20.f;
+				gmode->addHiddenArea(area);
+
+				// restore old position in tilemap
+				x = returnX;
+				y = returnY;
+			}
+		}
 	}
 }
 
@@ -209,20 +307,27 @@ void TileMap::generate(GameMode* gmode) {
 					setLootSpawn(state, x + offset.x, y + offset.y, buildings[bldg_num].tiles[y][x]);
 				}
 			}
-			state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildings[bldg_num].getWidth() - 2) * 32.f, (buildings[bldg_num].getHeight() - 2) * 32.f + 20.f });
+			state.addHiddenArea({
+				(offset.x + 1) * 32.f,
+				(offset.y + 1) * 32.f - 20.f,
+				(buildings[bldg_num].getWidth() - 2) * 32.f,
+				(buildings[bldg_num].getHeight() - 2) * 32.f + 20.f
+				});
 		}
 	}
+
+	updateGrass();
 
 	// find and place crate spawn points
 	int numCrates = height/4; // set num of crates to 1/4 the map hiehgt for sparse crate distribution
 	for (int i = 0; i < numCrates; i++) {
 		// find free spot for crate
-		int x, y;
+		float x, y;
 		do {
-			x = rand() % width;
-			y = rand() % height;
+			x = (rand() % width) * 32.f;
+			y = (rand() % height) * 32.f;
 		} while (isOpaqueAt(x, y));
-		state.addCrateSpawn({ x * 32.f, y * 32.f });
+		state.addCrateSpawn({ x, y });
 	}
 };
 
@@ -266,7 +371,12 @@ void TileMap::loadMap(GameMode* gmode, const std::string& fname)
 			setTile(x, y, (Tile)parsedMap.at(y).at(x));
 		}
 	}
-	std::cout << "done loading level" << std::endl;
+	
+	// add variety in grass tiles
+	updateGrass();
+
+	// add hidden areas to buildings
+	updateBuildings(gmode);
 };
 
 void TileMap::saveMap(int gameType)
@@ -285,7 +395,7 @@ void TileMap::saveMap(int gameType)
 	{
 		for (unsigned j = 0;j < width;j++)
 		{
-			Tile tile = map[j][i];
+			Tile tile = map[i][j];
 			out << (int) tile <<",";
 		}
 		out << "\n";

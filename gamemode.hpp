@@ -11,6 +11,11 @@
 #include "state.hpp"
 #include "projectile.hpp"
 
+#define MODE_ENDLESS 1
+#define MODE_SURVIVAL 2
+#define MODE_STORY 3
+#define MODE_DEMO 4
+
 #include <list>
 
 // item on map
@@ -30,6 +35,8 @@ protected:
 	// mouse position in world (updated every logic tick)
 	sf::Vector2f mousePos;
 
+	// shader
+	sf::Shader shader;
 
 	// views
 	sf::View mainView;
@@ -40,6 +47,11 @@ protected:
 
 	// tile map
 	TileMap tileMap;
+
+	// intro for game start
+	sf::RectangleShape introShape;
+	sf::Clock introClock;
+	sf::Text introMessage;
 
 	// textures
 	sf::Texture& texPlayerRight;
@@ -80,6 +92,7 @@ protected:
 	sf::Texture& texBloodSplatter3;
 	sf::Texture& texBloodSplatter4;
 	sf::Texture& texBloodSplatter5;
+	sf::Texture& texSmash;
 
 	// Music
 	sf::Music music;
@@ -124,6 +137,7 @@ protected:
 
 	// fonts
 	sf::Font font;
+	sf::Font font2;
 
 	// effects
 	EffectID explosionSmall;
@@ -140,11 +154,29 @@ protected:
 	AnimSprite guardianWingsFX;
 	AnimSprite deadEyeFX;
 	AnimSprite dashFX;
+	EffectID smashFX;
 
 	// interactions
 	sf::SoundBuffer doorOpen;
 	sf::SoundBuffer doorClose;
 	sf::Sound doorInteract;
+	sf::SoundBuffer healBuffer;
+	sf::Sound healSound;
+	sf::SoundBuffer equipBuffer;
+	sf::Sound equipSound;
+
+	//player sounds
+	int hitSoundNum;
+	sf::SoundBuffer hitBuffer1;
+	sf::SoundBuffer hitBuffer2;
+	sf::SoundBuffer hitBuffer3;
+	sf::SoundBuffer hitBuffer4;
+	sf::SoundBuffer hitBuffer5;
+	sf::SoundBuffer hitBuffer6;
+	sf::SoundBuffer hitBuffer7;
+	sf::SoundBuffer hitBuffer8;
+	sf::SoundBuffer hitBuffer9;
+	sf::Sound hitSound;
 
 	// engineer sounds
 	sf::SoundBuffer mechNoise;
@@ -153,12 +185,27 @@ protected:
 	sf::SoundBuffer barrelBuffer;
 	sf::Sound dropTech;
 
+	// medic sounds
+	sf::SoundBuffer medkitBuffer;
+	sf::SoundBuffer dashBuffer;
+	sf::SoundBuffer guardianAngelBuffer;
+	sf::Sound medkitSound;
+	sf::Sound dashSound;
+	sf::Sound guardianAngelSound;
+
+	// slasher sounds
+	sf::SoundBuffer smashBuffer;
+	sf::SoundBuffer rageBuffer;
+	sf::SoundBuffer warcryBuffer;
+	sf::Sound rageSound;
+	sf::Sound warcrySound;
+	sf::Sound smashSound;
+
 	// powerup sound
 	sf::SoundBuffer powerupBuffer;
 	sf::Sound powerUp;
 
 	// dialog GUI
-	int dialogTreeIndex = 0;
 	void setDialog(const std::string&, const std::string&);
 	void hideDialog();
 	bool showDialog = false;
@@ -166,6 +213,10 @@ protected:
 	sf::RectangleShape dialogBox2;
 	sf::Text dialogSpeaker;
 	sf::Text dialogMessage;
+	int triggerIndex = 0;
+	int triggerSubIndex = 0;
+	// freezes the game for dialog or whatever reason
+	bool frozen = false;
 
 	//PlayerGUI
 	sf::RectangleShape playerHPBar;
@@ -330,16 +381,18 @@ protected:
 	void saveGame();
 	void initGame();
 
+	void loadShaders();
+
 	void spawnEnemies(int);
-	Enemy& createEnemy(const sf::Vector2f&);
+	Enemy& spawnEnemy(const sf::Vector2f&);
 	void respawnEnemies();
 	void spawnItems();
-	void updateEnemies(int);
-	void renderEnemies();
+	void updateEnemies();
+	void renderEnemies(sf::RenderStates);
 	std::list<Enemy>::iterator deleteEnemy(std::list<Enemy>::iterator&);
 	bool handleEvents();
 	void updateProjectiles();
-	void renderAllies();
+	void renderAllies(sf::RenderStates);
 	void updateAllies();
 
 	struct Area : sf::FloatRect {
@@ -375,5 +428,10 @@ public:
 	void addHiddenArea(const sf::FloatRect&);
 	void addLootSpawn(const sf::Vector2f& pos);
 	void addCrateSpawn(const sf::Vector2f& pos);
+
+	virtual void modeLogic() {};
+	virtual void modeRenderWorld() {};
+	virtual void modeRenderGUI() {};
+	virtual void execTriggers() {};
 };
 #endif
