@@ -418,5 +418,6 @@ public:
 	void addHiddenArea(const sf::FloatRect&);
 	void addLootSpawn(const sf::Vector2f& pos);
 	void addCrateSpawn(const sf::Vector2f& pos);
+	void addWeaponSpawn(const sf::Vector2f& pos);
 };
 #endif
