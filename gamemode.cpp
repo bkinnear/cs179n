@@ -25,8 +25,10 @@
 
 // line of sight radius around player
 #define LOS_RADIUS 600.f
+constexpr float SQR_LOS_RADIUS = LOS_RADIUS * LOS_RADIUS;
 // sharpness of LOS edge
 #define LOS_SHARPNESS 256.f
+constexpr float SQR_LOS_SHARPNESS = LOS_SHARPNESS * LOS_SHARPNESS;
 
 /* texture offsets */
 
@@ -1678,8 +1680,8 @@ void GameMode::render()
 
 	// update shader variables
 	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
-	shader.setParameter("los_radius", LOS_RADIUS * (game.portWidth / mainView.getSize().x));
-	shader.setParameter("los_sharpness", LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("sqr_los_radius", SQR_LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("sqr_los_sharpness", SQR_LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
 
 	// move view target to center on player
 	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
