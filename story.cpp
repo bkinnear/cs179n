@@ -30,6 +30,10 @@ StoryState::StoryState(Game& game) :
 	introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, 0x00));
 	introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, 0x00));
 
+	// place baseball bat in home
+	createItem({ 17 * 32.f, 12 * 32.f }, Item::type::baseball_bat);
+
+	// execute intro
 	// execute first dialogue trigger
 	execTriggers();
 }
@@ -107,7 +111,7 @@ void StoryState::execTriggers() {
 			setDialog("You", "Right?");
 			break;
 		case 3:
-			setDialog("You", "Maybe I should at least check out that new evac center...");
+			setDialog("You", "Maybe I should check out that new evac center...");
 			break;
 		case 4:
 			frozen = false;
@@ -146,7 +150,7 @@ void StoryState::execTriggers() {
 			setDialog("Soldier", "Halt! Civilians aren't allowed beyond this point");
 			break;
 		case 1:
-			setDialog("You", "Isn't this the evac center?");
+			setDialog("You", "Isn't this the evacuation center?");
 			break;
 		case 2:
 			setDialog("Soldier", "Not anymore. Get lost");
