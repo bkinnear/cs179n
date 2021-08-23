@@ -307,6 +307,7 @@ protected:
 			int playerHealth = 100;
 			int currentWieldedWeapon = 0;
 			int roundsLeft = 0;
+			int currentWieldedNum = 0;
 		}endlessMeta;
 
 		struct SurvivalMeta
@@ -320,6 +321,7 @@ protected:
 			int playerHealth = 100;
 			int currentWieldedWeapon = 0;
 			int roundsLeft = 0;
+			int currentWieldedNum = 0;
 		}survivalMeta;
 	}gameMeta;
 	bool gamestateChange = false;

@@ -493,6 +493,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			GameMode::spawnEnemies(defaultEnemySpawningCount);
 			Item item;
 			item.itemType = (Item::type) gameLoadMeta.endlessMeta.currentWieldedWeapon;
+			item.num = gameLoadMeta.endlessMeta.currentWieldedNum;
 			int roundsLeft = gameLoadMeta.endlessMeta.roundsLeft;
 			inventory.loadItemWielded(item, roundsLeft);
 			auto allyItr = allies.begin();
@@ -522,6 +523,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 			player.setHealth(gameLoadMeta.survivalMeta.playerHealth);
 			Item item;
 			item.itemType = (Item::type)gameLoadMeta.survivalMeta.currentWieldedWeapon;
+			item.num = gameLoadMeta.endlessMeta.currentWieldedNum;
 			int roundsLeft = gameLoadMeta.survivalMeta.roundsLeft;
 			inventory.loadItemWielded(item, roundsLeft);
 		}
@@ -1223,6 +1225,7 @@ bool GameMode::handleEvents() {
 					int roundsLeft = inventory.getRoundsLeft();
 					gameMeta.endlessMeta.currentWieldedWeapon = (int)item.itemType;
 					gameMeta.endlessMeta.roundsLeft = roundsLeft;
+					gameMeta.endlessMeta.currentWieldedNum = item.num;
 				}
 				else if (type == MODE_SURVIVAL)//Survival Meta save
 				{
@@ -1237,6 +1240,7 @@ bool GameMode::handleEvents() {
 					int roundsLeft = inventory.getRoundsLeft();
 					gameMeta.survivalMeta.currentWieldedWeapon = (int)item.itemType;
 					gameMeta.survivalMeta.roundsLeft = roundsLeft;
+					gameMeta.survivalMeta.currentWieldedNum = item.num;
 				}
 				int counter = 0;
 				for (auto enemyItr = enemies.begin(); enemyItr != enemies.end(); ++enemyItr)
@@ -2822,6 +2826,7 @@ void GameMode::loadGame(bool isLoadCall)
 	gameMeta.survivalMeta.playerHealth = loadMeta.survivalMeta.playerHealth;
 	gameMeta.survivalMeta.currentWieldedWeapon = loadMeta.survivalMeta.currentWieldedWeapon;
 	gameMeta.survivalMeta.roundsLeft = loadMeta.survivalMeta.roundsLeft;
+	gameMeta.survivalMeta.currentWieldedNum = loadMeta.survivalMeta.currentWieldedNum;
 	//gameMeta.survivalMeta.currentMap = loadMeta.survivalMeta.currentMap;
 
 	gameMeta.endlessMeta.playerPosX = loadMeta.endlessMeta.playerPosX;
@@ -2830,6 +2835,7 @@ void GameMode::loadGame(bool isLoadCall)
 	gameMeta.endlessMeta.playerHealth = loadMeta.endlessMeta.playerHealth;
 	gameMeta.endlessMeta.currentWieldedWeapon = loadMeta.endlessMeta.currentWieldedWeapon;
 	gameMeta.endlessMeta.roundsLeft = loadMeta.endlessMeta.roundsLeft;
+	gameMeta.endlessMeta.currentWieldedNum = loadMeta.endlessMeta.currentWieldedNum;
 	//gameMeta.endlessMeta.currentMap = loadMeta.endlessMeta.currentMap;
 	/*
 	for (std::vector <Tile>& tileMap : gameMeta.survivalMeta.currentMap)
