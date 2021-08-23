@@ -1056,27 +1056,6 @@ bool GameMode::handleEvents() {
 					showItemDetails = false;
 				}
 				break;
-			case sf::Keyboard::E:
-				if (player.isAlive()) {
-					// pick up item
-					// check for items in tiles adjacent to player
-					for (int i = -1; i <= 1; i++) {
-						for (int j = -1; j <= 1; j++) {
-							sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
-							ItemSpr* pItem = getItemAt(pos);
-							if (!pItem)
-								continue;
-							float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
-							if (distToPlayer <= MIN_DIST_ITEM) {
-								// add item to inventory
-								inventory.addItem(getLootItem(pItem->type), getLootAmount(pItem->type));
-
-								removeItem(pItem);
-							}
-						}
-					}
-				}
-				break;
 			case sf::Keyboard::Q:
 			{
 				sf::Vector2f position = player.getPosition();
@@ -1668,6 +1647,40 @@ bool GameMode::handleEvents() {
 			}
 		}
 	}
+
+	// check for user pressing E, pickup items
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::E)) {
+		if (player.isAlive()) {
+			// pick up item
+			// check for items in tiles adjacent to player
+			for (int i = -1; i <= 1; i++) {
+				for (int j = -1; j <= 1; j++) {
+					sf::Vector2f pos = player.getPosition() + PLAYER_OFFSET + sf::Vector2f({ i * 32.f, j * 32.f });
+					ItemSpr* pItem = getItemAt(pos);
+					if (!pItem)
+						continue;
+					float distToPlayer = Utils::pointDistance(player.getPosition() + PLAYER_OFFSET, pItem->spr.getPosition());
+					if (distToPlayer <= MIN_DIST_ITEM) {
+						// add item to inventory
+						Item::type itemT = getLootItem(pItem->type);
+						int amount = getLootAmount(pItem->type);
+						inventory.addItem(itemT, amount);
+						if (amount > 0) {
+							// create pickup text
+							pickupText.emplace_back("+" + std::to_string(amount) + " " + Item({itemT}).getName(), font, 12);
+							pickupText.back().setPosition(pItem->spr.getPosition());
+							//pickupText.back().setOutlineColor(sf::Color(0x000000FF));
+							//pickupText.back().setOutlineThickness(1.f);
+							pickupText.back().setFillColor(sf::Color(0xFFFFFFFF));
+						}
+						// remove item from map
+						removeItem(pItem);
+					}
+				}
+			}
+		}
+	}
+
 	if (gamestateChange)
 	{
 		gamestateChange = false;
@@ -1708,6 +1721,22 @@ void GameMode::render()
 	// draw items
 	for (auto item : itemsOnMap) {
 		gwindow.draw(item->spr, &shader);
+	}
+
+	// draw item pickup text
+	auto pItr = pickupText.begin();
+	while (pItr != pickupText.end()) {
+		pItr->move(0, -1.f);
+		const sf::Color& c = pItr->getFillColor();
+		if (c.a > 1) {
+			pItr->setFillColor(sf::Color(c.r, c.g, c.b, c.a - 2));
+		}
+		else {
+			pItr = pickupText.erase(pItr);
+			continue;
+		}
+		gwindow.draw(*pItr);
+		pItr++;
 	}
 
 	//draw ability/item animations
