@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "endless.hpp"
+#include "story.hpp"
 #include "survival.hpp"
 #include "classmenu.hpp"
 #include "optionsmenu.hpp"
@@ -80,7 +81,7 @@ void MenuState::logic() {
 			if (sprStoryButton.getGlobalBounds().contains(mousePos)) {
 				game.menuSelect1.play();
 				std::cout << "Starting Story Mode\n";
-				game.setState(new ClassMenu(game));
+				game.setState(new StoryState(game));
 				delete this;
 				return;
 			}
