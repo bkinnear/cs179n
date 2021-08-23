@@ -410,7 +410,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	dialogBox1.setOutlineThickness(1.f);
 	dialogBox1.setPosition({ game.portWidth / 2 - 240.f, game.portHeight - 220.f });
 
-	dialogBox2.setSize({ 96.f, 28.f });
+	dialogBox2.setSize({ 128.f, 28.f });
 	dialogBox2.setFillColor(sf::Color(0xcef5f1ee));
 	dialogBox2.setOutlineColor(sf::Color(0x000000FF));
 	dialogBox2.setOutlineThickness(1.f);
@@ -1779,7 +1779,7 @@ void GameMode::render()
 	// draw the enemies
 	GameMode::renderEnemies(&shader);
 
-	if (type == MODE_ENDLESS)
+	if (type != MODE_SURVIVAL)
 	{
 		// draw the allies
 		renderAllies(&shader);

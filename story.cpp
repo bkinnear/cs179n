@@ -116,7 +116,7 @@ void StoryState::execTriggers() {
 		switch (triggerSubIndex) {
 		case 0:
 			frozen = true;
-			setDialog("You", "Well at least Japan is isolated from all this.\nThere's no nothing to worry about");
+			setDialog("You", "Well at least Japan is isolated.\nThere's no nothing to worry about");
 			break;
 		case 1:
 			setDialog("You", "...");
@@ -204,7 +204,7 @@ void StoryState::execTriggers() {
 			frozen = true;
 			setDialog("You", "Yamasaki?");
 			// create Yamasaki
-			allies.emplace_back(texShield);
+			allies.emplace_back(texAllyLeft);
 			allies.back().setPosition({ 17 * 32.f, 25 * 32.f });
 			allies.back().setMaskBounds({ 8, 0, 15, 32 });
 			break;
