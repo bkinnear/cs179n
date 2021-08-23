@@ -258,6 +258,9 @@ protected:
 	// returns pointer to item sprite at map position (nullptr if no item found)
 	ItemSpr* getItemAt(const sf::Vector2f& pos);
 
+	// item pickup GUI
+	std::list<sf::Text> pickupText;
+
 	//Endless
 	int maximumEnemyCount = 99;
 	int defaultEnemySpawningCount = 10;//Default count
@@ -428,7 +431,7 @@ public:
 	void addHiddenArea(const sf::FloatRect&);
 	void addLootSpawn(const sf::Vector2f& pos);
 	void addCrateSpawn(const sf::Vector2f& pos);
-	void addWeaponSpawn(const sf::Vector2f& pos);
+	//void addWeaponSpawn(const sf::Vector2f& pos);
 
 	virtual void modeLogic() {};
 	virtual void modeRenderWorld() {};
