@@ -94,6 +94,10 @@ private:
 
 	// creates varied grass tiles
 	void updateGrass();
+
+	// adds hidden areas to pre-existing or loaded buildings
+	void updateBuildings(GameMode* gmode);
+
 };
 
 #endif

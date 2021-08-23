@@ -187,6 +187,81 @@ void TileMap::updateGrass() {
 	}
 }
 
+void TileMap::updateBuildings(GameMode* gmode) {
+	// NOTE: only works for rectangle houses
+	/*
+	algorithm pseudocode:
+
+	box = {}
+	for tile in (row, col):
+		if tile = top_left:
+			box.top_left = (col, row)
+			while tile != bot_left:
+				row++
+				if row > map_height:
+					row = box.top_left.row
+					col = box.top_left.col
+					contine for loop
+			box.height = row - box.top_left.row
+			while tile != bot_right:
+				col++
+				if col > map_width:
+					row = box.top_left.row
+					col = box.top_left.col
+					continue for loop
+			box.width = col - box.top_left.col
+			row = box.top_left.row
+			col = box.top_left.col
+	*/
+
+	constexpr Tile TOP_LEFT = 8;
+	constexpr Tile BOT_LEFT = 24;
+	constexpr Tile BOT_RIGHT = 26;
+
+	sf::FloatRect area;
+	for (int y = 0; y < width; y++) {
+		for (int x = 0; x < height; x++) {
+			// search for top left wall tiles
+			if (map[y][x] == TOP_LEFT) {
+				// store top left position for hidden area
+				area.top = y*32.f;
+				area.left = x*32.;
+
+				// find bottom left
+				int returnY = y; 
+				while (map[y][x] != BOT_LEFT && y < height)
+					y++;
+				if (y == height) {
+					y = returnY;
+					continue;
+				}
+				area.height = y * 32.f - area.top;
+
+				// find bottom right
+				int returnX = x;
+				while (map[y][x] != BOT_RIGHT && x < width)
+					x++;
+				if (x == width) {
+					x = returnX;
+					continue;
+				}
+				area.width = x * 32.f - area.left;
+
+				// success, create hidden area for building
+				area.left += 32.f;
+				area.top += 32.f - 20.f;
+				area.width -= 32.f;
+				area.height -= 32.f - 20.f;
+				gmode->addHiddenArea(area);
+
+				// restore old position in tilemap
+				x = returnX;
+				y = returnY;
+			}
+		}
+	}
+}
+
 void TileMap::generate(GameMode* gmode) {
 	// change state to a reference
 	GameMode& state = *gmode;
@@ -232,7 +307,12 @@ void TileMap::generate(GameMode* gmode) {
 					setLootSpawn(state, x + offset.x, y + offset.y, buildings[bldg_num].tiles[y][x]);
 				}
 			}
-			state.addHiddenArea({ (offset.x + 1) * 32.f, (offset.y + 1) * 32.f - 20.f, (buildings[bldg_num].getWidth() - 2) * 32.f, (buildings[bldg_num].getHeight() - 2) * 32.f + 20.f });
+			state.addHiddenArea({
+				(offset.x + 1) * 32.f,
+				(offset.y + 1) * 32.f - 20.f,
+				(buildings[bldg_num].getWidth() - 2) * 32.f,
+				(buildings[bldg_num].getHeight() - 2) * 32.f + 20.f
+				});
 		}
 	}
 
@@ -292,7 +372,11 @@ void TileMap::loadMap(GameMode* gmode, const std::string& fname)
 		}
 	}
 	
+	// add variety in grass tiles
 	updateGrass();
+
+	// add hidden areas to buildings
+	updateBuildings(gmode);
 };
 
 void TileMap::saveMap(int gameType)

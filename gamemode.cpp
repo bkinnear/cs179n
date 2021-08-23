@@ -2035,29 +2035,31 @@ void GameMode::logic()
 	auto areaItr = hiddenAreas.begin();
 	while (areaItr != hiddenAreas.end()) {
 		if (player.getBounds().intersects(*areaItr)) {
+			// do not spawn items in story mode
+			if (type != MODE_STORY) {
+				// spawn hidden enemies (default is 1)
+				for (unsigned i = 0; i < areaItr->numEnemies; i++) {
+					Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
+					do {
+						float x = areaItr->left + rand() % (int)areaItr->width;
+						float y = areaItr->top + rand() % (int)areaItr->height;
+						enemy.setPosition(x, y);
+					} while (!tileMap.areaClear(enemy));
+					enemy.setColor(sf::Color(0xFF8888FF));
+					enemy.setSpeed(2);
+					enemy.setArmor(10);
+				}
 
-			// spawn hidden enemies (default is 1)
-			for (unsigned i = 0; i < areaItr->numEnemies; i++) {
-				Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
-				do {
-					float x = areaItr->left + rand() % (int)areaItr->width;
-					float y = areaItr->top + rand() % (int)areaItr->height;
-					enemy.setPosition(x, y);
-				} while (!tileMap.areaClear(enemy));
-				enemy.setColor(sf::Color(0xFF8888FF));
-				enemy.setSpeed(2);
-				enemy.setArmor(10);
-			}
-
-			// spawn hidden items (default is 2)
-			for (unsigned i = 0; i < areaItr->numItems; i++) {
-				Item::type item = Item::type::null;
-				int r = rand()%2;
-				if (r == 0)
-					item = Item::type::ammo_crate;
-				else if (r == 1)
-					item = Item::type::health_pack;
-				createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
+				// spawn hidden items (default is 2)
+				for (unsigned i = 0; i < areaItr->numItems; i++) {
+					Item::type item = Item::type::null;
+					int r = rand() % 2;
+					if (r == 0)
+						item = Item::type::ammo_crate;
+					else if (r == 1)
+						item = Item::type::health_pack;
+					createItem({ areaItr->left + 32 + (float)(rand() % (int)areaItr->width - 32), areaItr->top + 26.f + (float)(rand() % ((int)areaItr->height - 26 - 32)) }, item);
+				}
 			}
 
 			areaItr = hiddenAreas.erase(areaItr);
