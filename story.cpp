@@ -6,7 +6,9 @@
 // NOTE: we must call the original constructor and pass it the Game pointer
 StoryState::StoryState(Game& game) :
 	GameMode(MODE_STORY, game, PlayerClass::DEFAULT, gameMeta, npcSaveMeta, enemySaveMeta, inventorySaveMeta, false),
-	introNews(createTexture("res/news.png"))
+	introNews(createTexture("res/news.png")),
+	texSoldierRight(createTexture("res/soldier_r_strip.png")),
+	texSoldierLeft(createTexture("res/soldier_l_strip.png"))
 {
 	// populate decor
 	decor.emplace_back();
@@ -15,8 +17,16 @@ StoryState::StoryState(Game& game) :
 	flag.setAnimSpeed(15);
 	flag.setPosition(65*32.f, 78*32.f);
 
+	// place the player in the starting house
 	player.setPosition(16*32.f, 12*32.f);
 
+	// place soldiers
+	npcs.emplace_back(texSoldierLeft);
+	NPC& soldier1 = npcs.back();
+	soldier1.setMaskBounds({ 8, 0, 15, 32 });
+	soldier1.setPosition({ 65*32.f, 83*32.f });
+
+	// dont show intro right away
 	introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, 0x00));
 	introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, 0x00));
 
@@ -24,6 +34,7 @@ StoryState::StoryState(Game& game) :
 	createItem({ 17 * 32.f, 12 * 32.f }, Item::type::baseball_bat);
 
 	// execute intro
+	// execute first dialogue trigger
 	execTriggers();
 }
 
@@ -58,6 +69,11 @@ void StoryState::modeLogic() {
 }
 
 void StoryState::modeRenderWorld() {
+	for (NPC& npc : npcs) {
+		npc.animateFrame();
+		gwindow.draw(npc);
+	}
+
 	// draw decor sprites
 	for (AnimSprite& spr : decor) {
 		spr.animateFrame();
