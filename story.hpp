@@ -25,7 +25,6 @@ private:
 	};
 	
 	std::list<Trigger> triggers;
-	bool subTriggerDone = false;
 	bool triggerTimerActive = false;
 	sf::Clock triggerTimer;
 	float triggerWaitTime = 0.f;
