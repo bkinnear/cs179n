@@ -111,8 +111,8 @@ void StoryState::setTimedTrigger(int index, float time) {
 void StoryState::execTriggers() {
 	// execute trigger actions
 	switch (triggerIndex) {
+	// trigger 0 - intro
 	case 0:
-		// intro dialog
 		switch (triggerSubIndex) {
 		case 0:
 			frozen = true;
@@ -125,19 +125,19 @@ void StoryState::execTriggers() {
 			setDialog("You", "Right?");
 			break;
 		case 3:
-			setDialog("You", "Maybe I should check out that new evac center...");
+			setDialog("You", "Maybe I should check out that new\nevac center...");
 			break;
 		case 4:
 			frozen = false;
 			hideDialog();
-			// trigger 1 - step outside door
+			// add next trigger location
 			triggers.push_back({ 1, {16 * 32.f, 16 * 32.f, 32.f, 32.f} });
 			introShape.setFillColor(sf::Color(0x00, 0x00, 0x00, 0xFF));
 			introMessage.setFillColor(sf::Color(0xFF, 0xFF, 0xFF, 0xFF));
-			triggerSubIndex++;
 			break;
 		}
 		break;
+	// trigger 1 - attacked outside door
 	case 1:
 		switch (triggerSubIndex) {
 		case 0:
@@ -145,23 +145,24 @@ void StoryState::execTriggers() {
 			spawnEnemy({ 21 * 32.f, 16 * 32.f });
 			break;
 		case 1:
-			setDialog("You", "I really need find that evac shelter now.\nBefore I get myself killed");
+			setDialog("You", "Now I really need find that evac\nshelter. Before I get myself killed");
 			break;
 		case 2:
 			setDialog("You", "I think it was South-West of here.\nCan't be too far");
 			break;
 		case 3:
 			hideDialog();
-			// trigger 2 - approach soldiers
+			// add next trigger location
 			triggers.push_back({ 2, {63 * 32.f, 80 * 32.f, 3 * 32.f, 7 * 32.f} });
 			break;
 		}
 		break;
+	// trigger 2 - soldier convo
 	case 2:
 		switch (triggerSubIndex) {
 		case 0:
 			frozen = true;
-			setDialog("Soldier", "Halt! Civilians aren't allowed beyond this point");
+			setDialog("Soldier", "Halt! Only military personnel are\n allowed beyond this point");
 			break;
 		case 1:
 			setDialog("You", "Isn't this the evacuation center?");
@@ -172,22 +173,58 @@ void StoryState::execTriggers() {
 		case 3:
 			frozen = false;
 			hideDialog();
+			// add next trigger with timer
 			setTimedTrigger(3, 2.f);
 			break;
 		}
 		break;
+	// trigger 3 - mission to go to Yamasaki's house
 	case 3:
 		switch (triggerSubIndex) {
 		case 0:
-			setDialog("You", "Well that's not good. I better go find Yamasaki");
+			setDialog("You", "Well that's not good.\nI better go find Yamasaki");
 			break;
 		case 1:
-			setDialog("You", "If he's still alive...");
+			setDialog("You", "If she's still alive...");
 			break;
 		case 2:
-			setDialog("You", "He should be in the house South of mine");
+			setDialog("You", "She should be in her house south\n of mine");
 			break;
 		case 3:
+			hideDialog();
+			// add next trigger location
+			triggers.push_back({ 4, {16 * 32.f, 21 * 32.f, 32.f, 32.f} });
+			break;
+		}
+		break;
+	// trigger 4 - convo in Yamasaki's house
+	case 4:
+		switch (triggerSubIndex) {
+		case 0:
+			frozen = true;
+			setDialog("You", "Yamasaki?");
+			// create Yamasaki
+			allies.emplace_back(texShield);
+			allies.back().setPosition({ 17 * 32.f, 25 * 32.f });
+			allies.back().setMaskBounds({ 8, 0, 15, 32 });
+			break;
+		case 1:
+			setDialog("Yamasaki", "I almost shot you, be careful!");
+			break;
+		case 2:
+			setDialog("You", "The evac shelter turned me away\nWhat's going on?");
+			break;
+		case 3:
+			setDialog("Yamasaki", "I don't know, they sent me away too.\nWho doesn't need a medic!?");
+			break;
+		case 4:
+			setDialog("Yamasaki", "I saw some strange things out there...\nAre you okay?");
+			break;
+		case 5:
+			setDialog("You", "Yeah, but we should leave.\nI don't like what's going on here");
+			break;
+		case 6:
+			frozen = false;
 			hideDialog();
 			break;
 		}
