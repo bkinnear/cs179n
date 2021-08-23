@@ -14,9 +14,10 @@ public:
 	virtual void execTriggers();
 
 private:
-	std::list<AnimSprite> decor;
-	sf::Sprite introNews;
+	std::list<sf::Sprite> decor;
 	std::list<NPC> npcs;
+	sf::Sprite introNews;
+	AnimSprite flag;
 
 	struct Trigger {
 		int index;
@@ -33,6 +34,8 @@ private:
 
 	sf::Texture& texSoldierRight;
 	sf::Texture& texSoldierLeft;
+	sf::Texture& texHumvee;
+	sf::Texture& texTent;
 };
 
 #endif
