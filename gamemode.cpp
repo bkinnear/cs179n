@@ -25,10 +25,8 @@
 
 // line of sight radius around player
 #define LOS_RADIUS 600.f
-constexpr float SQR_LOS_RADIUS = LOS_RADIUS * LOS_RADIUS;
 // sharpness of LOS edge
 #define LOS_SHARPNESS 256.f
-constexpr float SQR_LOS_SHARPNESS = LOS_SHARPNESS * LOS_SHARPNESS;
 
 /* texture offsets */
 
@@ -1690,8 +1688,8 @@ void GameMode::render()
 
 	// update shader variables
 	shader.setParameter("center", { (float)gwindow.getSize().x / 2, (float)gwindow.getSize().y / 2 });
-	shader.setParameter("sqr_los_radius", SQR_LOS_RADIUS * (game.portWidth / mainView.getSize().x));
-	shader.setParameter("sqr_los_sharpness", SQR_LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("los_radius", LOS_RADIUS * (game.portWidth / mainView.getSize().x));
+	shader.setParameter("los_sharpness", LOS_SHARPNESS * (game.portWidth / mainView.getSize().x));
 
 	// move view target to center on player
 	mainViewTarget = { floor(player.getCenter().x), floor(player.getCenter().y) };
@@ -2086,7 +2084,7 @@ void GameMode::logic()
 				int chance = rand() % 10;
 				if (chance < 4) {
 					for (unsigned i = 0; i < areaItr->numEnemies; i++) {
-						Enemy& enemy = createEnemy({ 0.0f, 0.0f });
+						Enemy& enemy = spawnEnemy({ 0.0f, 0.0f });
 						do {
 							float x = areaItr->left + rand() % (int)areaItr->width;
 							float y = areaItr->top + rand() % (int)areaItr->height;
