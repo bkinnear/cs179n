@@ -62,7 +62,7 @@ public:
 	}
 
 	void damage(int dmg) {
-		health -= dmg - armor;
+		health -= std::max(0, dmg - armor);
 		if (health <= 0) {
 			health = 0;
 			alive = false;
