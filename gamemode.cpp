@@ -2019,6 +2019,10 @@ void GameMode::logic()
 		}			
 	}
 
+	if (player.isRage) {
+		player.setSpeed(player.getSpeed() * 2);
+	}
+
 	if ((player.movingLeft || player.movingRight || player.movingDown || player.movingUp) && player.isAlive()) {
 		if (player.getAnimSpeed() == -1) {
 			player.setAnimSpeed(12);
@@ -2886,7 +2890,6 @@ void GameMode::slasher_rage() {
 	onCoolDown3 = true;
 
 	player.isRage = true;
-	player.setSpeed(5);
 
 	rageFX.setIndex(0);
 
