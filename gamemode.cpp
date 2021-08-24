@@ -699,15 +699,6 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 
 		// set initial loadout
 		if (type != MODE_STORY) {
-			inventory.addItem(Item::type::Shotgun, 1);
-			inventory.addItem(Item::type::ammo_shotgun, 20);
-			inventory.addItem(Item::type::M240, 1);
-			inventory.addItem(Item::type::ammo_762, 200);
-			inventory.addItem(Item::type::M9, 1);
-			inventory.addItem(Item::type::ammo_9mm, 50);
-		}
-		else
-		{
 			// add some stuff to the inventory
 			inventory.addItem(Item::type::M9, 1);
 			inventory.addItem(Item::type::ammo_9mm, 250);
@@ -1321,6 +1312,14 @@ bool GameMode::handleEvents() {
 					spawnEnemy({ 4 * 32.f, 13 * 32.f });
 					spawnEnemy({ 17 * 32.f, 4 * 32.f });
 				}
+				break;
+			case sf::Keyboard::Tilde:
+				inventory.addItem(Item::type::Shotgun, 1);
+				inventory.addItem(Item::type::ammo_shotgun, 20);
+				inventory.addItem(Item::type::M240, 1);
+				inventory.addItem(Item::type::ammo_762, 200);
+				inventory.addItem(Item::type::MP5, 1);
+				inventory.addItem(Item::type::ammo_9mm, 50);
 				break;
 			case sf::Keyboard::L://Load game
 			{

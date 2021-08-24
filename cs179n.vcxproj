@@ -156,6 +156,7 @@
     <ClInclude Include="utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="README.md" />
     <None Include="frag_shader.hlsl" />
   </ItemGroup>
