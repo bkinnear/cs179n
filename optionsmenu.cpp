@@ -80,6 +80,7 @@ void OptionsMenu::logic() {
 			// user clicked return
 			if (sprReturnButton.getGlobalBounds().contains(mousePos)) {
 				game.menuSelect1.play();
+				game.menuSong.stop();
 				game.setState(returnState);
 				delete this;
 				return;
@@ -89,6 +90,7 @@ void OptionsMenu::logic() {
 		case sf::Event::KeyPressed:
 			switch (e.key.code) {
 			case sf::Keyboard::Escape:
+				game.menuSong.stop();
 				game.setState(returnState);
 				delete this;
 				return;
