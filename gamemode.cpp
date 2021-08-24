@@ -2025,6 +2025,10 @@ void GameMode::logic()
 		}			
 	}
 
+	if (player.isRage) {
+		player.setSpeed(player.getSpeed() * 2);
+	}
+
 	if ((player.movingLeft || player.movingRight || player.movingDown || player.movingUp) && player.isAlive()) {
 		if (player.getAnimSpeed() == -1) {
 			player.setAnimSpeed(12);
