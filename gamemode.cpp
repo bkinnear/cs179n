@@ -895,7 +895,7 @@ void GameMode::updateCooldowns() {
 		}
 		break;
 	case PlayerClass::ENGINEER:
-		if (onCoolDown1) {
+		if (onCoolDown1) { 
 			if (elapsed1.asSeconds() < cooldown1) {
 				if (cooldown1 - elapsed1.asSeconds() > 9) {
 					abilityClock1.setPosition(playerHPBack.getPosition().x + 225.5, playerHPBack.getPosition().y - 10);
@@ -950,7 +950,7 @@ void GameMode::updateCooldowns() {
 			}
 		}
 		break;
-	case PlayerClass::SLASHER:
+	case PlayerClass::SLASHER: 
 		if (onCoolDown1) {
 			if (elapsed1.asSeconds() < cooldown1) {
 				if (cooldown1 - elapsed1.asSeconds() > 9) {
@@ -1960,6 +1960,12 @@ void GameMode::logic()
 
 	// update player sprite
 	if ((player.lookingLeft || player.lookingRight) && player.isAlive()) {
+		if (player.isRage) {
+			player.setSpeed(PLAYER_SPEED * 3);
+		}
+		else {
+			player.setSpeed(PLAYER_SPEED);
+		}
 		Item::type weaponType = inventory.getWielded().itemType;
 		switch (weaponType) {
 		case Item::type::MP5:
@@ -2124,7 +2130,7 @@ void GameMode::logic()
 						} while (!tileMap.areaClear(enemy));
 						enemy.setColor(sf::Color(0xFF8888FF));
 						enemy.setSpeed(3);
-						enemy.setArmor(15);
+						enemy.setArmor(10);
 					}
 				}
 				else {
@@ -2886,7 +2892,6 @@ void GameMode::slasher_rage() {
 	onCoolDown3 = true;
 
 	player.isRage = true;
-	player.setSpeed(5);
 
 	rageFX.setIndex(0);
 
