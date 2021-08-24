@@ -800,9 +800,9 @@ void GameMode::updateCooldowns() {
 				}
 				abilityClock2.setString(std::to_string((cooldown2 - int(elapsed2.asSeconds()))));
 				elapsed2 = abilityTimer2.getElapsedTime();
-				if (elapsed2.asMilliseconds() > 100) { //dash for 100 milliseconds
+				if (elapsed2.asMilliseconds() > 250) { //dash for 100 milliseconds
 					player.isDash = false;
-					player.setSpeed(PLAYER_SPEED); //set back to default
+					//player.setSpeed(PLAYER_SPEED); //set back to default
 				}
 			}
 			else {
@@ -2182,7 +2182,7 @@ void GameMode::updateProjectiles() {
 	while (projItr != projectiles.end()) {
 		// get movement of projectile for this frame
 		sf::Vector2f moveVector = Utils::vectorInDirection(projItr->speed, projItr->direction);
-		if (tileMap.areaClear(*projItr, moveVector)) {
+		if (tileMap.areaClear(*projItr, moveVector)) { 
 			projItr->move(moveVector);
 		}
 		else {
@@ -2722,7 +2722,20 @@ void GameMode::medic_dash() {
 	onCoolDown2 = true;
 
 	player.isDash = true;
-	player.setSpeed(10);
+	//player.setSpeed(10);
+	 
+	if (player.movingLeft)
+		if (tileMap.areaClear(player, -player.getSpeed(), 0))
+			player.move(-20, 0);
+	if (player.movingUp)
+		if (tileMap.areaClear(player, 0, -player.getSpeed()))
+			player.move(0, -20);
+	if (player.movingRight)
+		if (tileMap.areaClear(player, player.getSpeed(), 0))
+			player.move(20, 0);
+	if (player.movingDown)
+		if (tileMap.areaClear(player, 0, player.getSpeed()))
+			player.move(0, 20);
 
 	dashFX.setIndex(0);
 
