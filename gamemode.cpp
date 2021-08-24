@@ -453,7 +453,7 @@ GameMode::GameMode(int type, Game& game, PlayerClass playerClass, GameMeta gameL
 	else if (type == MODE_STORY)
 		introMessage.setString("Mission 1: Find your way to the evac zone");
 	else if (type == MODE_DEMO)
-		introMessage.setString("Secret Demo Map. Hello, CS179n");
+		introMessage.setString("Secret Demo Map");
 	introMessage.setPosition(mainView.getCenter() - sf::Vector2f({ introMessage.getGlobalBounds().width / 2, -12.f }));
 
 	// create animated sprite for player
