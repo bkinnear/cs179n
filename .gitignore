@@ -9,7 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
-res/maps/save/*
+res/maps/save/
 *.dat
 
 # User-specific files (MonoDevelop/Xamarin Studio)
